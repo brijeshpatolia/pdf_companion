@@ -1,0 +1,685 @@
+<title>PDF Companion — Product Spec</title>
+<style>
+  :root {
+    /* palette — light: warm paper, ink-indigo pen, highlighter amber */
+    --bg:        #f8f7f2;
+    --surface:   #ffffff;
+    --surface-2: #f3f1ea;
+    --ink:       #1c1b22;
+    --ink-soft:  #56545f;
+    --muted:     #8b8896;
+    --line:      #e6e2d8;
+    --line-soft: #efece4;
+    --accent:    #4b45c4;
+    --accent-2:  #6f69e0;
+    --accent-wash:#edecfb;
+    --marker:    #e7b23d;
+    --marker-wash:#fbf1d3;
+    --good:      #3f8f6b;
+
+    --font-serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, Cambria, 'Times New Roman', serif;
+    --font-sans:  -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-mono:  'Cascadia Code', 'SF Mono', 'JetBrains Mono', Consolas, 'Roboto Mono', ui-monospace, monospace;
+
+    --t-hero:  clamp(2.5rem, 5.2vw, 3.6rem);
+    --t-h2:    clamp(1.55rem, 3vw, 2.05rem);
+    --t-h3:    1.2rem;
+    --t-body:  1.0625rem;
+    --t-small: 0.875rem;
+    --t-label: 0.72rem;
+
+    --maxw: 1120px;
+    --rail: 132px;
+    --prose: 68ch;
+    --radius: 14px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:        #121116;
+      --surface:   #1a191f;
+      --surface-2: #201f27;
+      --ink:       #ecEAf3;
+      --ink-soft:  #a8a4b4;
+      --muted:     #726e7f;
+      --line:      #2a2833;
+      --line-soft: #232129;
+      --accent:    #8f88f6;
+      --accent-2:  #a49ef8;
+      --accent-wash:#232041;
+      --marker:    #edc063;
+      --marker-wash:#2f2716;
+      --good:      #58b689;
+    }
+  }
+  :root[data-theme="light"] {
+    --bg:#f8f7f2; --surface:#ffffff; --surface-2:#f3f1ea; --ink:#1c1b22; --ink-soft:#56545f;
+    --muted:#8b8896; --line:#e6e2d8; --line-soft:#efece4; --accent:#4b45c4; --accent-2:#6f69e0;
+    --accent-wash:#edecfb; --marker:#e7b23d; --marker-wash:#fbf1d3; --good:#3f8f6b;
+  }
+  :root[data-theme="dark"] {
+    --bg:#121116; --surface:#1a191f; --surface-2:#201f27; --ink:#ecEAf3; --ink-soft:#a8a4b4;
+    --muted:#726e7f; --line:#2a2833; --line-soft:#232129; --accent:#8f88f6; --accent-2:#a49ef8;
+    --accent-wash:#232041; --marker:#edc063; --marker-wash:#2f2716; --good:#58b689;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--font-sans); font-size: var(--t-body); line-height: 1.65;
+    -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+  }
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 clamp(1.1rem, 4vw, 3rem); }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; text-underline-offset: 3px; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+
+  .label { font-family: var(--font-mono); font-size: var(--t-label); letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--muted); }
+  .hl { background: linear-gradient(180deg, transparent 12%, var(--marker-wash) 12% 88%, transparent 88%);
+    padding: 0 .12em; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+  em.ink { font-style: italic; color: var(--accent); }
+
+  /* ---- hero ---- */
+  .hero { padding: clamp(3rem, 8vw, 6rem) 0 clamp(2rem, 4vw, 3.2rem); border-bottom: 1px solid var(--line); }
+  .masthead { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
+    flex-wrap: wrap; margin-bottom: clamp(2rem, 6vw, 3.5rem); }
+  .brand { font-family: var(--font-mono); font-size: var(--t-small); letter-spacing: .06em; color: var(--ink); }
+  .brand b { color: var(--accent); }
+  .status { font-family: var(--font-mono); font-size: var(--t-label); letter-spacing: .1em;
+    text-transform: uppercase; color: var(--muted); display: flex; gap: .6rem; align-items: center; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--marker); display: inline-block; }
+  .hero h1 { font-family: var(--font-serif); font-weight: 600; font-size: var(--t-hero); line-height: 1.05;
+    letter-spacing: -0.015em; margin: 0 0 .4rem; text-wrap: balance; max-width: 16ch; }
+  .hero .tag { font-family: var(--font-serif); font-size: clamp(1.15rem, 2.4vw, 1.5rem); font-style: italic;
+    color: var(--ink-soft); margin: 0 0 1.6rem; max-width: 30ch; line-height: 1.3; }
+  .hero .lede { max-width: 60ch; color: var(--ink-soft); font-size: 1.12rem; }
+  .origin { margin-top: 1.8rem; padding: 1rem 1.2rem; border-left: 2px solid var(--marker);
+    background: var(--surface); border-radius: 0 10px 10px 0; max-width: 62ch; font-size: var(--t-small);
+    color: var(--ink-soft); }
+  .origin b { color: var(--ink); font-weight: 600; }
+
+  /* ---- table of contents ---- */
+  .toc { padding: clamp(2rem, 5vw, 3rem) 0; border-bottom: 1px solid var(--line); }
+  .toc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: .2rem 2rem; margin-top: 1rem; }
+  .toc a { display: flex; gap: .8rem; align-items: baseline; padding: .55rem 0; border-bottom: 1px solid var(--line-soft);
+    color: var(--ink); }
+  .toc a:hover { color: var(--accent); text-decoration: none; }
+  .toc .n { font-family: var(--font-mono); font-size: var(--t-small); color: var(--accent); min-width: 2.4ch;
+    font-variant-numeric: tabular-nums; }
+  .toc .t { font-family: var(--font-serif); font-size: 1.02rem; }
+
+  /* ---- section scaffold ---- */
+  .sec { padding: clamp(2.6rem, 6vw, 4.5rem) 0; border-bottom: 1px solid var(--line); }
+  .sec-grid { display: grid; grid-template-columns: var(--rail) 1fr; gap: clamp(1.2rem, 4vw, 3rem); align-items: start; }
+  .rail { position: sticky; top: 1.5rem; }
+  .rail .num { font-family: var(--font-mono); font-size: 1.1rem; color: var(--accent); font-weight: 500;
+    font-variant-numeric: tabular-nums; }
+  .rail .kick { display: block; margin-top: .35rem; font-family: var(--font-mono); font-size: var(--t-label);
+    letter-spacing: .1em; text-transform: uppercase; color: var(--muted); line-height: 1.4; }
+  .sec h2 { font-family: var(--font-serif); font-weight: 600; font-size: var(--t-h2); line-height: 1.12;
+    letter-spacing: -0.01em; margin: 0 0 1.1rem; text-wrap: balance; }
+  .sec h3 { font-family: var(--font-sans); font-weight: 650; font-size: var(--t-h3); margin: 2rem 0 .7rem; letter-spacing: -0.005em; }
+  .body > p, .body > ul, .body > ol { max-width: var(--prose); color: var(--ink-soft); }
+  .body p { margin: 0 0 1rem; }
+  .body strong { color: var(--ink); font-weight: 650; }
+  .body ul, .body ol { padding-left: 1.15rem; margin: 0 0 1rem; }
+  .body li { margin: .35rem 0; }
+  .lead-in { font-size: 1.14rem; color: var(--ink) !important; }
+
+  /* ---- callouts / asides ---- */
+  .callout { border-radius: 12px; padding: 1.1rem 1.3rem; margin: 1.6rem 0; font-size: var(--t-small);
+    max-width: var(--prose); }
+  .callout .ct { display: block; font-family: var(--font-mono); font-size: var(--t-label); letter-spacing: .12em;
+    text-transform: uppercase; margin-bottom: .5rem; }
+  .callout.principle { background: var(--accent-wash); border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent); }
+  .callout.principle .ct { color: var(--accent); }
+  .callout.warn { background: var(--marker-wash); border: 1px solid color-mix(in srgb, var(--marker) 45%, transparent); }
+  .callout.warn .ct { color: color-mix(in srgb, var(--marker) 72%, var(--ink)); }
+  .callout p { margin: 0; color: var(--ink-soft); }
+  .callout strong { color: var(--ink); }
+
+  /* ---- pills / chips ---- */
+  .chip { display: inline-flex; align-items: center; gap: .35rem; font-family: var(--font-mono);
+    font-size: .64rem; letter-spacing: .08em; text-transform: uppercase; padding: .16rem .5rem;
+    border-radius: 100px; white-space: nowrap; vertical-align: middle; }
+  .chip.mvp { background: var(--accent); color: #fff; }
+  :root[data-theme="dark"] .chip.mvp, .chip.mvp { color: #fff; }
+  .chip.v1 { background: var(--accent-wash); color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); }
+  .chip.v2 { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+  .legend { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; margin: 0 0 1.6rem; font-size: var(--t-small); color: var(--muted); }
+
+  /* ---- feature cards ---- */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(268px, 1fr)); gap: 1rem; margin-top: 1.4rem; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.3rem 1.35rem;
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+  .card:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
+    box-shadow: 0 12px 30px -18px color-mix(in srgb, var(--accent) 60%, transparent); }
+  .card .cn { font-family: var(--font-mono); font-size: var(--t-label); letter-spacing: .1em; text-transform: uppercase;
+    color: var(--accent); }
+  .card h3 { font-family: var(--font-serif); font-weight: 600; font-size: 1.28rem; margin: .5rem 0 .3rem; }
+  .card .intent { font-size: var(--t-small); color: var(--muted); margin: 0 0 .9rem; }
+  .card ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .5rem; }
+  .card li { font-size: .92rem; color: var(--ink-soft); display: flex; gap: .5rem; align-items: baseline; flex-wrap: wrap; }
+  .card li::before { content: "—"; color: var(--marker); }
+
+  /* ---- tables ---- */
+  .twrap { overflow-x: auto; margin: 1.5rem 0; border: 1px solid var(--line); border-radius: var(--radius); }
+  table { border-collapse: collapse; width: 100%; font-size: var(--t-small); min-width: 480px; }
+  th, td { text-align: left; padding: .8rem 1rem; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  thead th { background: var(--surface-2); font-family: var(--font-mono); font-size: var(--t-label); letter-spacing: .08em;
+    text-transform: uppercase; color: var(--ink-soft); font-weight: 500; }
+  tbody tr:last-child td { border-bottom: none; }
+  td strong { color: var(--ink); }
+  td.k { font-family: var(--font-sans); font-weight: 600; color: var(--ink); white-space: nowrap; }
+  .num-col { font-variant-numeric: tabular-nums; }
+
+  /* ---- diagrams ---- */
+  .flow { overflow-x: auto; padding: .4rem 0; margin: 1.3rem 0; }
+  .flow-row { display: flex; align-items: stretch; gap: .5rem; min-width: max-content; }
+  .node { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: .7rem .9rem;
+    font-size: .82rem; display: flex; flex-direction: column; gap: .15rem; min-width: 120px; }
+  .node .nl { font-family: var(--font-mono); font-size: .62rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .node b { color: var(--ink); font-weight: 600; }
+  .node.accent { border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); background: var(--accent-wash); }
+  .node.accent b { color: var(--accent); }
+  .node.mark { border-color: color-mix(in srgb, var(--marker) 55%, var(--line)); background: var(--marker-wash); }
+  .arrow { display: flex; align-items: center; color: var(--muted); font-size: 1.1rem; padding: 0 .1rem; }
+  .plus { display: flex; align-items: center; justify-content: center; color: var(--marker); font-weight: 700; font-size: 1.1rem; }
+  .stack3 { display: flex; flex-direction: column; gap: .4rem; }
+  .tiers { display: grid; gap: .6rem; margin: 1.3rem 0; }
+  .tier { display: grid; grid-template-columns: 150px 1fr; gap: 1rem; align-items: center; background: var(--surface);
+    border: 1px solid var(--line); border-radius: 10px; padding: .85rem 1.1rem; }
+  .tier .tt { font-family: var(--font-mono); font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+  .tier .td { font-size: .9rem; color: var(--ink-soft); }
+
+  /* ---- in/out grid ---- */
+  .io { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.4rem 0; }
+  .io-col { border: 1px solid var(--line); border-radius: var(--radius); padding: 1.2rem 1.3rem; background: var(--surface); }
+  .io-col h4 { margin: 0 0 .8rem; font-family: var(--font-mono); font-size: var(--t-label); letter-spacing: .1em;
+    text-transform: uppercase; display: flex; align-items: center; gap: .5rem; }
+  .io-col.in h4 { color: var(--good); }
+  .io-col.out h4 { color: var(--muted); }
+  .io-col ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .45rem; }
+  .io-col li { font-size: .9rem; color: var(--ink-soft); }
+  .io-col.in li::before { content: "✓ "; color: var(--good); font-weight: 700; }
+  .io-col.out li::before { content: "· "; color: var(--muted); }
+
+  /* ---- roadmap ---- */
+  .road { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 1.5rem 0; }
+  .phase { border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--surface); }
+  .phase .ph { padding: .85rem 1.1rem; border-bottom: 1px solid var(--line); }
+  .phase.p0 .ph { background: var(--accent); }
+  .phase.p0 .ph .pn, .phase.p0 .ph .pt { color: #fff; }
+  .phase .pn { font-family: var(--font-mono); font-size: var(--t-label); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .phase .pt { font-family: var(--font-serif); font-size: 1.15rem; font-weight: 600; color: var(--ink); display: block; margin-top: .2rem; }
+  .phase ul { list-style: none; margin: 0; padding: 1rem 1.1rem; display: flex; flex-direction: column; gap: .5rem; }
+  .phase li { font-size: .85rem; color: var(--ink-soft); padding-left: .9rem; position: relative; }
+  .phase li::before { content: ""; position: absolute; left: 0; top: .55em; width: 5px; height: 5px; border-radius: 50%; background: var(--marker); }
+
+  /* ---- footer ---- */
+  .foot { padding: clamp(2.5rem, 6vw, 4rem) 0 clamp(3rem, 8vw, 5rem); }
+  .foot .next { background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+    border-radius: 0 var(--radius) var(--radius) 0; padding: 1.4rem 1.6rem; max-width: 60ch; }
+  .foot .next .ct { color: var(--accent); }
+  .foot h3 { font-family: var(--font-serif); font-size: 1.35rem; margin: .3rem 0 .6rem; font-weight: 600; }
+  .foot .meta { margin-top: 2rem; display: flex; gap: 1.4rem; flex-wrap: wrap; font-family: var(--font-mono);
+    font-size: var(--t-label); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+
+  @media (max-width: 720px) {
+    .sec-grid { grid-template-columns: 1fr; gap: .5rem; }
+    .rail { position: static; display: flex; align-items: baseline; gap: .8rem; margin-bottom: .3rem; }
+    .rail .kick { margin-top: 0; }
+    .io, .road { grid-template-columns: 1fr; }
+    .tier { grid-template-columns: 1fr; gap: .3rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="hero">
+    <div class="masthead">
+      <span class="brand"><b>PDF&nbsp;Companion</b> &nbsp;·&nbsp; working name</span>
+      <span class="status"><span class="dot"></span> Draft v0.1 &nbsp;·&nbsp; 06 Jul 2026</span>
+    </div>
+    <h1>An AI that reads with you.</h1>
+    <p class="tag">Always on your page. Holding the whole book in mind.</p>
+    <p class="lede">A reading companion for hard books. Instead of breaking your flow to paste a page into ChatGPT — or Googling a term with none of the book's context — the AI sits beside the page you're on, <span class="hl">remembers everything you've read</span>, and answers grounded in the book itself. Ask, highlight, sketch, and keep the explanations worth keeping.</p>
+    <div class="origin">
+      <b>Where it came from.</b> Two books. <em>The Last Days of Socrates</em> — wanting to argue with the text, one page at a time. And <em>Designing Data-Intensive Applications</em> — wanting a term explained in the book's own context, without losing your place. The same tool serves both: a slow dialectic on one page, and a fast in-context lookup on the next.
+    </div>
+  </header>
+
+  <nav class="toc" aria-label="Contents">
+    <span class="label">Contents</span>
+    <div class="toc-grid">
+      <a href="#s01"><span class="n">01</span><span class="t">The problem</span></a>
+      <a href="#s02"><span class="n">02</span><span class="t">The core idea</span></a>
+      <a href="#s03"><span class="n">03</span><span class="t">Feature map</span></a>
+      <a href="#s04"><span class="n">04</span><span class="t">The AI model</span></a>
+      <a href="#s05"><span class="n">05</span><span class="t">Money</span></a>
+      <a href="#s06"><span class="n">06</span><span class="t">Sharing</span></a>
+      <a href="#s07"><span class="n">07</span><span class="t">Architecture</span></a>
+      <a href="#s08"><span class="n">08</span><span class="t">Tech stack</span></a>
+      <a href="#s09"><span class="n">09</span><span class="t">MVP &amp; roadmap</span></a>
+      <a href="#s10"><span class="n">10</span><span class="t">Risks &amp; open questions</span></a>
+    </div>
+  </nav>
+
+  <!-- 01 -->
+  <section class="sec" id="s01">
+    <div class="sec-grid">
+      <div class="rail"><div class="num">§ 01</div><span class="kick">The problem</span></div>
+      <div class="body">
+        <h2>Reading a hard book is a solitary negotiation.</h2>
+        <p class="lead-in">There's help you want in two very different moments — and neither is available on the page.</p>
+        <h3>The detour</h3>
+        <p>You hit a term — say <em class="ink">linearizability</em> in a systems book. To understand it you leave the book, ask a blank ChatGPT or Google, get a generic definition with none of the chapter's context, and lose your place. The answer doesn't know what the author meant by it, three pages ago.</p>
+        <h3>The silent read</h3>
+        <p>For a dense argument — Socrates on whether the soul outlives the body — you want to push back, ask "what did he actually mean," go deeper. So you copy the page into a chat. Then the next page. Then the next. Each time, it has forgotten what came before.</p>
+        <div class="callout principle">
+          <span class="ct">The through-line</span>
+          <p>The help has to be <strong>on the page</strong> and it has to <strong>carry the whole book's context</strong>. Copy-pasting pages into a chatbot is the manual, forgetful version of exactly this. We automate it and give it memory.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section class="sec" id="s02">
+    <div class="sec-grid">
+      <div class="rail"><div class="num">§ 02</div><span class="kick">The core idea</span></div>
+      <div class="body">
+        <h2>The AI is always on your current page, and remembers everything you've read.</h2>
+        <p>That single sentence is the whole product. A split view: the book on one side, the companion on the other, kept in sync as you turn pages. From there, three moves:</p>
+        <div class="cards">
+          <div class="card">
+            <span class="cn">Move 01</span>
+            <h3>Ask in context</h3>
+            <p class="intent">Select anything → get an answer grounded in the book so far.</p>
+            <ul><li>A term explained the way <em>this</em> author uses it</li><li>Argue, go deeper, or get the one-line version</li></ul>
+          </div>
+          <div class="card">
+            <span class="cn">Move 02</span>
+            <h3>Capture what's worth it</h3>
+            <p class="intent">Highlight, note, sketch — and clip the AI answers you love.</p>
+            <ul><li>Build your own annotated edition of the book</li><li>Every keeper anchored to the exact passage</li></ul>
+          </div>
+          <div class="card">
+            <span class="cn">Move 03</span>
+            <h3>Retain it later</h3>
+            <p class="intent">Your highlights and saved answers become review material.</p>
+            <ul><li>Chapter summaries as you finish</li><li>Flashcards, so reading becomes remembering</li></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section class="sec" id="s03">
+    <div class="sec-grid">
+      <div class="rail"><div class="num">§ 03</div><span class="kick">Feature map</span></div>
+      <div class="body">
+        <h2>What it does — and when we build it.</h2>
+        <div class="legend">
+          <span><span class="chip mvp">MVP</span> prove the magic</span>
+          <span><span class="chip v1">V1</span> real product</span>
+          <span><span class="chip v2">V2</span> later</span>
+        </div>
+        <div class="cards">
+          <div class="card">
+            <span class="cn">A</span><h3>The reading loop</h3>
+            <p class="intent">The AI that reads with you.</p>
+            <ul>
+              <li>Split-view PDF + companion <span class="chip mvp">MVP</span></li>
+              <li>Page-aware context, in sync as you read <span class="chip mvp">MVP</span></li>
+              <li>Rolling memory of the whole book <span class="chip mvp">MVP</span></li>
+              <li>Citations back to the page <span class="chip v1">V1</span></li>
+            </ul>
+          </div>
+          <div class="card">
+            <span class="cn">B</span><h3>Ask, your way</h3>
+            <p class="intent">Select text → choose an intent.</p>
+            <ul>
+              <li>Select-to-ask on any passage <span class="chip mvp">MVP</span></li>
+              <li>Define-in-context · Deep dive · ELI5 <span class="chip mvp">MVP</span></li>
+              <li>Analogy · Why it matters · Prerequisites <span class="chip v1">V1</span></li>
+              <li>Socratic dialogue mode <span class="chip v1">V1</span></li>
+            </ul>
+          </div>
+          <div class="card">
+            <span class="cn">C</span><h3>Capture</h3>
+            <p class="intent">Mark the book up, keep the good answers.</p>
+            <ul>
+              <li>Multi-color highlights <span class="chip mvp">MVP</span></li>
+              <li>Clip &amp; save an AI answer to a highlight <span class="chip mvp">MVP</span></li>
+              <li>Margin notes anchored to text <span class="chip v1">V1</span></li>
+              <li>Embedded Excalidraw sketches <span class="chip v1">V1</span></li>
+            </ul>
+          </div>
+          <div class="card">
+            <span class="cn">D</span><h3>Your second brain</h3>
+            <p class="intent">Everything you kept, in one place.</p>
+            <ul>
+              <li>Per-book notebook of highlights + saves <span class="chip mvp">MVP</span></li>
+              <li>Search across all your notes <span class="chip v1">V1</span></li>
+              <li>Export to Notion / Obsidian / Markdown <span class="chip v1">V1</span></li>
+            </ul>
+          </div>
+          <div class="card">
+            <span class="cn">E</span><h3>Retain</h3>
+            <p class="intent">The part most reading apps skip.</p>
+            <ul>
+              <li>Auto chapter summaries <span class="chip v1">V1</span></li>
+              <li>Spaced-repetition flashcards <span class="chip v2">V2</span></li>
+              <li>"Where was this introduced?" <span class="chip v2">V2</span></li>
+            </ul>
+          </div>
+          <div class="card">
+            <span class="cn">F</span><h3>Share</h3>
+            <p class="intent">Your annotated copy, handed to someone else.</p>
+            <ul>
+              <li>Snapshot share of your marked-up reading <span class="chip v2">V2</span></li>
+              <li>Study groups · teacher → student <span class="chip v2">V2</span></li>
+              <li>Live co-reading <span class="chip v2">V2</span></li>
+            </ul>
+          </div>
+        </div>
+        <p style="margin-top:1.4rem; font-size:var(--t-small); color:var(--muted); max-width:var(--prose);">On the horizon, past V2: cross-book Q&amp;A ("compare Plato and Kant on the soul"), a concept map of the book, read-aloud audio, and reading stats.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 -->
+  <section class="sec" id="s04">
+    <div class="sec-grid">
+      <div class="rail"><div class="num">§ 04</div><span class="kick">The AI model</span></div>
+      <div class="body">
+        <h2>Two axes: whose key, and which model.</h2>
+        <p>The AI is a separate concern from the app. A user picks how it's fueled, and which model does the thinking — and always sees what it costs.</p>
+        <div class="twrap">
+          <table>
+            <thead><tr><th>Fuel</th><th>Pays for AI how</th><th>Sees usage?</th></tr></thead>
+            <tbody>
+              <tr><td class="k">BYOK</td><td>Their own key — their provider bills them directly</td><td>Yes — every request metered in-app</td></tr>
+              <tr><td class="k">Managed pool</td><td>Buys our credits; we route through our keys, ~20–30% markup</td><td>Yes — same meter, plus balance</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Model selection, via a gateway</h3>
+        <p>Rather than wiring each provider by hand, build on an <strong>AI gateway (OpenRouter)</strong>: one API exposes hundreds of models — GPT, Claude, Gemini and more — and returns the exact cost per request. A BYOK user can paste a provider key <em>or</em> their own OpenRouter key to unlock the full model list.</p>
+        <div class="callout principle">
+          <span class="ct">Nice differentiator</span>
+          <p><strong>Per-mode routing.</strong> A quick term-lookup runs on a cheap, fast model; a deep Socratic dialogue runs on a powerful one. Set once, or auto-route. Saves the user money and makes the app feel smart.</p>
+        </div>
+        <h3>The usage meter — for everyone, including BYOK</h3>
+        <p>Every response returns token counts; multiply by the model's price and you can show <strong>this chat ≈ $0.02 · today $0.34 · this month $4.10</strong>, broken down by book and by model, with an optional budget alert. This is the "I'm paying for the AI, and I can see my meter" feeling — and it works identically for BYOK and managed.</p>
+        <div class="callout warn">
+          <span class="ct">One honest limit</span>
+          <p>For a BYOK key you can show usage <strong>through the app</strong>, but not their provider account's global balance ("$12 left on OpenAI") — no API exposes that from a normal key. Fine in practice: people care what they spent <em>reading</em>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 -->
+  <section class="sec" id="s05">
+    <div class="sec-grid">
+      <div class="rail"><div class="num">§ 05</div><span class="kick">Money</span></div>
+      <div class="body">
+        <h2>You pay for the app. You pay for the AI. They're separate.</h2>
+        <p>The mistake would be making the app free for anyone who brings a key — they still use the servers, storage, and the whole reading experience. So: a flat subscription for the <em>Companion</em>, and AI as its own axis on top.</p>
+        <div class="tiers">
+          <div class="tier"><span class="tt">Trial</span><span class="td">A limited taste — time-boxed or capped (e.g. one book, no sync). The funnel, not a free tier. Nobody subscribes before they've felt the magic.</span></div>
+          <div class="tier"><span class="tt">Companion Pro</span><span class="td">~$8–10 / mo, paid by <strong>everyone</strong> incl. BYOK. Unlocks unlimited books, sync, notes, Excalidraw, flashcards, export, the saved-explanation library.</span></div>
+          <div class="tier"><span class="tt">+ AI axis</span><span class="td">BYOK (fuel it yourself) <em>or</em> managed credits (our pool, with markup). Chosen independently of the subscription.</span></div>
+        </div>
+        <div class="callout principle">
+          <span class="ct">Principle</span>
+          <p><strong>BYOK is not free.</strong> It only means the user covers their own tokens — the Companion subscription still applies. Two revenue streams: subscriptions + credit markup. Avoid a flat "pay to open the app" wall; keep the trial friction-free at the top of funnel.</p>
+        </div>
+        <p style="font-size:var(--t-small); color:var(--muted);">None of this billing exists in the MVP — pricing is a V1 concern. It's captured here only so the data model doesn't paint us into a corner.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 -->
+  <section class="sec" id="s06">
+    <div class="sec-grid">
+      <div class="rail"><div class="num">§ 06</div><span class="kick">Sharing</span></div>
+      <div class="body">
+        <h2>Hand someone your annotated copy.</h2>
+        <p>"Here's how I read this" is a growth engine — every shared link is a new reader walking in. Three modes, sequenced by cost:</p>
+        <div class="tiers">
+          <div class="tier"><span class="tt">Snapshot · V2</span><span class="td">A frozen, read-only view of your book as you marked it up — highlights, notes, saved AI answers. Matches "share the current condition." Simple and viral.</span></div>
+          <div class="tier"><span class="tt">Fork · later</span><span class="td">The recipient gets an editable copy to build on. Easy once snapshots exist.</span></div>
+          <div class="tier"><span class="tt">Live co-read · later</span><span class="td">A book club annotating together in real time. Needs real-time sync + presence — a bigger build.</span></div>
+        </div>
+        <div class="callout warn">
+          <span class="ct">Copyright — do not skip</span>
+          <p>Share the <strong>annotation layer</strong>, never the raw PDF. Redistributing a copyrighted book file to other users is piracy, and it's the platform's liability. Safe design: the recipient brings their own copy; the app overlays the shared notes. Share files freely only for public-domain or user-owned content.</p>
+        </div>
+        <div class="callout principle">
+          <span class="ct">Why this shapes the build</span>
+          <p>It forces a decision we want anyway: <strong>annotations are a portable, first-class layer, separate from the PDF.</strong> Once they're their own objects, sharing, export, and sync all fall out for free. See §07.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 07 -->
+  <section class="sec" id="s07">
+    <div class="sec-grid">
+      <div class="rail"><div class="num">§ 07</div><span class="kick">Architecture</span></div>
+      <div class="body">
+        <h2>The context engine is the hard, valuable part.</h2>
+        <p>"Remembers everything you've read" can't mean "stuff the whole book into every prompt" — that's slow and expensive. Instead, assemble a focused context from three sources on every ask:</p>
+        <div class="flow">
+          <div class="flow-row">
+            <div class="stack3">
+              <div class="node accent"><span class="nl">Now</span><b>Current page text</b></div>
+              <div class="node accent"><span class="nl">Behind you</span><b>Rolling summary of pages read</b></div>
+              <div class="node accent"><span class="nl">Anywhere</span><b>Retrieved chunks (semantic search)</b></div>
+            </div>
+            <div class="plus">→</div>
+            <div class="node mark"><span class="nl">Assemble</span><b>Grounded prompt</b></div>
+            <div class="arrow">→</div>
+            <div class="node"><span class="nl">Model</span><b>via gateway</b></div>
+            <div class="arrow">→</div>
+            <div class="node"><span class="nl">Output</span><b>Answer + page citations</b></div>
+          </div>
+        </div>
+        <p>The <strong>rolling summary</strong> keeps the "whole book in mind" compact — updated as you finish sections. <strong>Retrieval</strong> (semantic search over the book) handles grounding and powers "where was this introduced." A hard cap on assembled context keeps cost predictable.</p>
+
+        <h3>Ingestion, once per book</h3>
+        <div class="flow">
+          <div class="flow-row">
+            <div class="node"><span class="nl">1</span><b>Upload PDF</b></div>
+            <div class="arrow">→</div>
+            <div class="node"><span class="nl">2</span><b>Extract text / page</b></div>
+            <div class="arrow">→</div>
+            <div class="node"><span class="nl">3</span><b>Chunk</b></div>
+            <div class="arrow">→</div>
+            <div class="node"><span class="nl">4</span><b>Embed</b></div>
+            <div class="arrow">→</div>
+            <div class="node accent"><span class="nl">5</span><b>Store in pgvector</b></div>
+          </div>
+        </div>
+
+        <h3>Data model — the entities that matter</h3>
+        <div class="twrap">
+          <table>
+            <thead><tr><th>Entity</th><th>Holds</th></tr></thead>
+            <tbody>
+              <tr><td class="k">Book</td><td>File reference, title, page count, ingestion status, owner</td></tr>
+              <tr><td class="k">Chunk</td><td>Book + page + text + embedding — the RAG index</td></tr>
+              <tr><td class="k">Annotation</td><td><strong>The portable layer.</strong> Type (highlight · note · sketch · saved-answer), text anchor, color, content, linked answer</td></tr>
+              <tr><td class="k">Conversation</td><td>Messages, page context, model used, token usage + cost</td></tr>
+              <tr><td class="k">Share</td><td>Snapshot of an annotation layer, access rule, permission</td></tr>
+              <tr><td class="k">UsageRecord</td><td>Per-request tokens, model, cost — feeds the meter</td></tr>
+              <tr><td class="k">User / Subscription</td><td>Account, encrypted BYOK keys, model prefs, plan status</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>System shape</h3>
+        <div class="flow">
+          <div class="flow-row">
+            <div class="node accent"><span class="nl">Client · PWA</span><b>Reader (PDF.js) · Companion chat · Annotation layer</b></div>
+            <div class="arrow">→</div>
+            <div class="node"><span class="nl">API</span><b>App + context engine</b></div>
+            <div class="arrow">→</div>
+            <div class="stack3">
+              <div class="node"><span class="nl">Data</span><b>Postgres + pgvector</b></div>
+              <div class="node"><span class="nl">Files</span><b>Object storage (PDFs)</b></div>
+              <div class="node mark"><span class="nl">AI</span><b>Gateway → providers</b></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 08 -->
+  <section class="sec" id="s08">
+    <div class="sec-grid">
+      <div class="rail"><div class="num">§ 08</div><span class="kick">Tech stack</span></div>
+      <div class="body">
+        <h2>A stack a solo builder can move fast on.</h2>
+        <div class="twrap">
+          <table>
+            <thead><tr><th>Layer</th><th>Recommendation</th><th>Why</th></tr></thead>
+            <tbody>
+              <tr><td class="k">Client</td><td>Next.js (React, TypeScript) as a PWA + Tailwind</td><td>One codebase, desktop → mobile, installable without app stores</td></tr>
+              <tr><td class="k">PDF</td><td>PDF.js / react-pdf</td><td>Renders pages <em>and</em> exposes the text layer — needed to anchor highlights and select-to-ask</td></tr>
+              <tr><td class="k">Sketching</td><td>@excalidraw/excalidraw</td><td>Drop-in embeddable canvas, exactly the feature described</td></tr>
+              <tr><td class="k">Backend</td><td>Next.js API routes / Node</td><td>Colocated with the client, simplest possible start</td></tr>
+              <tr><td class="k">Data · Auth · Files</td><td>Supabase</td><td>Postgres + pgvector + Auth + Storage + Realtime in one platform — covers RAG, accounts, PDFs, and future live-collab</td></tr>
+              <tr><td class="k">Embeddings</td><td>text-embedding-3-small (or peer) into pgvector</td><td>Cheap, good enough for retrieval; no separate vector DB to run</td></tr>
+              <tr><td class="k">AI gateway</td><td>OpenRouter</td><td>Many models via one API + per-request cost; powers BYOK and the managed pool alike</td></tr>
+              <tr><td class="k">Payments</td><td>Stripe <span class="chip v1">V1</span></td><td>Subscriptions + credit top-ups; not in the MVP</td></tr>
+              <tr><td class="k">Hosting</td><td>Vercel + Supabase</td><td>Push-to-deploy, scales without ops work</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 09 -->
+  <section class="sec" id="s09">
+    <div class="sec-grid">
+      <div class="rail"><div class="num">§ 09</div><span class="kick">MVP &amp; roadmap</span></div>
+      <div class="body">
+        <h2>Build the magic first. Everything else layers on.</h2>
+        <p class="lead-in">The first version is <strong>personal-first</strong> — just you, no accounts, no billing. The fastest way to feel whether the core actually works.</p>
+        <div class="io">
+          <div class="io-col in">
+            <h4>In the MVP</h4>
+            <ul>
+              <li>Upload a PDF, split-view reader</li>
+              <li>Page-aware chat (BYOK, with model select)</li>
+              <li>Select-to-ask on any passage</li>
+              <li>Highlights</li>
+              <li>Clip &amp; save an AI answer to a highlight</li>
+              <li>Basic per-book notebook</li>
+              <li>Simple local/single-user persistence</li>
+            </ul>
+          </div>
+          <div class="io-col out">
+            <h4>Deliberately out</h4>
+            <ul>
+              <li>Accounts &amp; billing</li>
+              <li>Managed AI pool</li>
+              <li>Sharing</li>
+              <li>Flashcards &amp; spaced repetition</li>
+              <li>Excalidraw</li>
+              <li>Export</li>
+              <li>Mobile polish</li>
+            </ul>
+          </div>
+        </div>
+        <div class="road">
+          <div class="phase p0">
+            <div class="ph"><span class="pn">Phase 0</span><span class="pt">MVP — the magic</span></div>
+            <ul>
+              <li>Reader + context engine</li>
+              <li>Page-aware chat + select-to-ask</li>
+              <li>Highlights + save-answer</li>
+              <li>BYOK, one gateway</li>
+            </ul>
+          </div>
+          <div class="phase">
+            <div class="ph"><span class="pn">Phase 1</span><span class="pt">Real product</span></div>
+            <ul>
+              <li>Accounts, trial, Companion Pro</li>
+              <li>Managed pool + usage dashboard</li>
+              <li>Notes, Excalidraw, summaries</li>
+              <li>Export + PWA / mobile polish</li>
+            </ul>
+          </div>
+          <div class="phase">
+            <div class="ph"><span class="pn">Phase 2</span><span class="pt">Network &amp; recall</span></div>
+            <ul>
+              <li>Snapshot sharing</li>
+              <li>Flashcards + sync</li>
+              <li>Live co-reading</li>
+              <li>Cross-book Q&amp;A, concept map</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 -->
+  <section class="sec" id="s10">
+    <div class="sec-grid">
+      <div class="rail"><div class="num">§ 10</div><span class="kick">Risks &amp; open questions</span></div>
+      <div class="body">
+        <h2>What could bite, and what's undecided.</h2>
+        <div class="twrap">
+          <table>
+            <thead><tr><th>Risk</th><th>Mitigation</th></tr></thead>
+            <tbody>
+              <tr><td class="k">Copyright / redistribution</td><td>Never share raw PDFs; share the annotation layer only; recipient brings their own copy. The one thing that could take the app down.</td></tr>
+              <tr><td class="k">BYOK key security</td><td>Encrypt at rest (KMS / envelope), never log, never return to the client after entry</td></tr>
+              <tr><td class="k">Managed-pool cost runaway</td><td>Hard credit balance, block at zero, per-user spend caps, per-model credit rates</td></tr>
+              <tr><td class="k">Context-window cost creep</td><td>Rolling summary + retrieval caps; a hard ceiling on assembled context per request</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Open questions</h3>
+        <ul>
+          <li><strong>Product name.</strong> "PDF Companion" is a placeholder — candidates: <em>Gloss</em>, <em>Marginalia</em>, <em>Sidenote</em>, <em>Codex</em>, <em>Recto</em>.</li>
+          <li><strong>Confirm personal-first MVP</strong> (vs. building accounts from day one).</li>
+          <li><strong>MVP provider</strong> — start with OpenRouter-only, or a single direct provider?</li>
+          <li><strong>Ingestion</strong> — client-side PDF.js text extraction, or a server-side parser for messy/scanned PDFs (OCR)?</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <div class="sec-grid">
+      <div class="rail"><div class="num">→</div><span class="kick">Next</span></div>
+      <div class="body">
+        <div class="next">
+          <span class="ct label">Next step</span>
+          <h3>Build the reader + context engine.</h3>
+          <p style="margin:0; color:var(--ink-soft);">Confirm the personal-first MVP, then start with the split-view reader and the three-source context engine — the part that has to feel like magic before anything else matters.</p>
+        </div>
+        <div class="meta">
+          <span>PDF Companion — working name</span>
+          <span>Draft v0.1</span>
+          <span>06 Jul 2026</span>
+          <span>Living document</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</div>
