@@ -1,7 +1,7 @@
 <!--
-PRD draft — not yet published to the issue tracker.
-Intended destination: GitHub issue in brijeshpatolia/pdf_companion, label `ready-for-agent`.
-Publish once `gh` is installed:  gh issue create --title "PRD: Reading loop core — the AI that reads with you" --body-file docs/prd/reading-loop-core.md --label ready-for-agent
+PUBLISHED: https://github.com/brijeshpatolia/pdf_companion/issues/1 (label: ready-for-agent).
+Broken into 11 vertical slices as sub-issues #2–#12 with native blocking edges; #2 (walking skeleton) is the starting frontier.
+This file is the canonical text; if it changes materially, update issue #1 to match.
 
 Revision history:
 - v2: after a /grilling session that resolved 10 load-bearing decisions (see "Design decisions").
