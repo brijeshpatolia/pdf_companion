@@ -16,6 +16,9 @@ create table if not exists public.books (
   created_at  timestamptz not null default now()
 );
 
+-- Supabase roles need explicit privileges on tables this migration creates.
+grant all on public.books to anon, authenticated, service_role;
+
 -- Object-storage bucket for raw PDFs (private; recipients bring their own copy).
 insert into storage.buckets (id, name, public)
 values ('pdfs', 'pdfs', false)

@@ -9,7 +9,10 @@ import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
  * using the same PDF.js family the reader renders with (PRD decision 3).
  */
 export async function readPdfMetadata(bytes: Uint8Array): Promise<PdfMetadata> {
-  const doc = await getDocument({ data: bytes, isEvalSupported: false }).promise;
+  // pdfjs transfers (detaches) the ArrayBuffer backing `data`, which would
+  // destroy the caller's buffer — later reused to store the file. Hand it a
+  // copy so this adapter never mutates its input.
+  const doc = await getDocument({ data: bytes.slice(), isEvalSupported: false }).promise;
   try {
     const pageCount: number = doc.numPages;
     const { info } = await doc.getMetadata();

@@ -58,5 +58,5 @@ describe.skipIf(!url || !key)("supabase adapters (integration)", () => {
     const { data: file } = await client.storage.from(bucket).download(path);
     expect(file).toBeTruthy();
     expect((await file!.arrayBuffer()).byteLength).toBe(fixtureBytes.byteLength);
-  });
+  }, 30_000);
 });
