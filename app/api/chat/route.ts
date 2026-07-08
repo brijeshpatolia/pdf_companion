@@ -9,6 +9,7 @@ import { supabasePageText } from "../../../src/adapters/supabase/supabasePageTex
 import { supabaseRetrieval } from "../../../src/adapters/supabase/supabaseRetrieval.js";
 import { supabaseProgress } from "../../../src/adapters/supabase/supabaseProgress.js";
 import { getProgress } from "../../../src/core/progress/progress.js";
+import { embedSingle } from "../../../src/adapters/embedder/localEmbedder.js";
 import { writeUsageRecord } from "../../../src/adapters/supabase/supabaseUsage.js";
 import type { GatewayPort } from "../../../src/core/chat/types.js";
 
@@ -52,13 +53,11 @@ export async function POST(req: NextRequest) {
 
   const progress = await getProgress(bookId, supabaseProgress(client));
 
-  const placeholderEmbed = async (_text: string) => new Array(384).fill(0) as number[];
-
   const deps: AskDeps = {
     gateway,
     pageText: supabasePageText(client),
     conversation: supabaseConversation(client),
-    retrieval: supabaseRetrieval(client, placeholderEmbed),
+    retrieval: supabaseRetrieval(client, embedSingle),
     furthestReadPage: progress.furthestReadPage,
     model,
   };

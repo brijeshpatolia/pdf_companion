@@ -5,23 +5,7 @@ import { supabaseServer } from "../../../src/adapters/supabase/serverClient.js";
 import { supabaseChunks } from "../../../src/adapters/supabase/supabaseChunks.js";
 import { supabaseIngestBooks } from "../../../src/adapters/supabase/supabaseIngestBooks.js";
 import { supabaseIngestStorage } from "../../../src/adapters/supabase/supabaseIngestStorage.js";
-import type { EmbedderPort } from "../../../src/core/ingestion/types.js";
-
-// Placeholder local embedder — produces deterministic 384-dim vectors from text hash.
-// Will be replaced with a real local embedding model in a later slice.
-function placeholderEmbedder(): EmbedderPort {
-  return {
-    async embed(texts) {
-      return texts.map((t) => {
-        let hash = 0;
-        for (let i = 0; i < t.length; i++) {
-          hash = ((hash << 5) - hash + t.charCodeAt(i)) | 0;
-        }
-        return Array.from({ length: 384 }, (_, i) => Math.sin(hash + i) * 0.5);
-      });
-    },
-  };
-}
+import { createLocalEmbedder } from "../../../src/adapters/embedder/localEmbedder.js";
 
 export async function POST(req: NextRequest) {
   let body: { bookId?: string };
@@ -40,7 +24,7 @@ export async function POST(req: NextRequest) {
 
   const deps = {
     pdfText: createPdfTextExtractor(),
-    embedder: placeholderEmbedder(),
+    embedder: createLocalEmbedder(),
     chunks: supabaseChunks(client),
     books: supabaseIngestBooks(client),
     storage: supabaseIngestStorage(client),
