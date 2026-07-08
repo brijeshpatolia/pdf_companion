@@ -13,6 +13,10 @@ node_modules/
 out/
 dist/
 build/
+next-env.d.ts
+
+# Generated at postinstall from node_modules (version must match react-pdf's pdfjs)
+public/pdf.worker.min.mjs
 
 # Logs
 *.log
