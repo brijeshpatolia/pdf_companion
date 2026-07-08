@@ -10,6 +10,8 @@ import { supabaseRetrieval } from "../../../src/adapters/supabase/supabaseRetrie
 import { supabaseProgress } from "../../../src/adapters/supabase/supabaseProgress.js";
 import { getProgress } from "../../../src/core/progress/progress.js";
 import { embedSingle } from "../../../src/adapters/embedder/localEmbedder.js";
+import { supabaseSummary } from "../../../src/adapters/supabase/supabaseSummary.js";
+import { createSummaryGateway } from "../../../src/adapters/summary/summaryGateway.js";
 import { writeUsageRecord } from "../../../src/adapters/supabase/supabaseUsage.js";
 import type { GatewayPort } from "../../../src/core/chat/types.js";
 
@@ -53,11 +55,19 @@ export async function POST(req: NextRequest) {
 
   const progress = await getProgress(bookId, supabaseProgress(client));
 
+  const pageTextPort = supabasePageText(client);
+
   const deps: AskDeps = {
     gateway,
-    pageText: supabasePageText(client),
+    pageText: pageTextPort,
     conversation: supabaseConversation(client),
     retrieval: supabaseRetrieval(client, embedSingle),
+    summaryDeps: {
+      summaryPort: supabaseSummary(client),
+      pageText: pageTextPort,
+      gateway: createSummaryGateway(gateway, model),
+      pageThreshold: 5,
+    },
     furthestReadPage: progress.furthestReadPage,
     model,
   };

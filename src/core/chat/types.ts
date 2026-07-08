@@ -39,6 +39,7 @@ export interface AskDeps {
   pageText: PageTextPort;
   conversation: ConversationPort;
   retrieval?: import("./context.js").RetrievalPort;
+  summaryDeps?: import("../summary/types.js").FoldDeps;
   furthestReadPage?: number;
   model: string;
 }

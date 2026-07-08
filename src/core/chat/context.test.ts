@@ -15,6 +15,7 @@ const SMALL_CONFIG: ContextConfig = {
   pageReserve: 500,
   turnsReserve: 300,
   retrievalReserve: 500,
+  summaryReserve: 300,
   questionReserve: 200,
 };
 
@@ -92,6 +93,20 @@ describe("assembleContext", () => {
     );
     expect(ctx).toContain("Latest question");
     expect(ctx).not.toContain("A".repeat(1000));
+  });
+
+  it("includes rolling summary when provided", () => {
+    const ctx = assembleContext(
+      { ...BASE_SLOTS, rollingSummary: "Socrates discussed the immortality of the soul." },
+      SMALL_CONFIG,
+    );
+    expect(ctx).toContain("Summary of what the reader has covered");
+    expect(ctx).toContain("Socrates discussed the immortality of the soul.");
+  });
+
+  it("omits summary section when not provided", () => {
+    const ctx = assembleContext(BASE_SLOTS, SMALL_CONFIG);
+    expect(ctx).not.toContain("Summary of what the reader");
   });
 
   it("truncates page text when over page reserve", () => {
