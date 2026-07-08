@@ -13,6 +13,7 @@ interface BookSummary {
 export default function Home() {
   const [books, setBooks] = useState<BookSummary[]>([]);
   const [busy, setBusy] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function refresh() {
@@ -30,6 +31,23 @@ export default function Home() {
     const id = setInterval(refresh, 2000);
     return () => clearInterval(id);
   }, [books]);
+
+  async function onDelete(bookId: string) {
+    setDeleting(bookId);
+    setError(null);
+    try {
+      const res = await fetch(`/api/books?bookId=${bookId}`, { method: "DELETE" });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? `delete failed (${res.status})`);
+      }
+      await refresh();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setDeleting(null);
+    }
+  }
 
   const MAX_SIZE = 50 * 1024 * 1024; // 50 MB
 
@@ -109,6 +127,22 @@ export default function Home() {
               <Link href={`/reader/${b.id}`}>{b.title}</Link>
               <span style={{ color: "var(--muted)" }}> · {b.page_count} pages · {b.status}</span>
             </span>
+            <button
+              onClick={() => onDelete(b.id)}
+              disabled={deleting === b.id}
+              style={{
+                background: "none",
+                border: "1px solid #7f1d1d",
+                borderRadius: 6,
+                color: "#fca5a5",
+                padding: "0.25rem 0.6rem",
+                cursor: deleting === b.id ? "not-allowed" : "pointer",
+                opacity: deleting === b.id ? 0.5 : 1,
+                fontSize: "0.8rem",
+              }}
+            >
+              {deleting === b.id ? "Deleting…" : "Delete"}
+            </button>
           </li>
         ))}
         {books.length === 0 && (

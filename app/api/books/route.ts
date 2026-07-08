@@ -64,3 +64,36 @@ export async function GET() {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data);
 }
+
+/** Delete a book, its storage file, and all cascaded data. */
+export async function DELETE(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const bookId = searchParams.get("bookId");
+  if (!bookId) {
+    return NextResponse.json({ error: "missing bookId" }, { status: 400 });
+  }
+
+  const client = supabaseServer();
+
+  const { data: book } = await client
+    .from("books")
+    .select("file_ref")
+    .eq("id", bookId)
+    .single();
+
+  if (!book) {
+    return NextResponse.json({ error: "book not found" }, { status: 404 });
+  }
+
+  const slash = book.file_ref.indexOf("/");
+  const bucket = book.file_ref.slice(0, slash);
+  const path = book.file_ref.slice(slash + 1);
+  await client.storage.from(bucket).remove([path]);
+
+  const { error } = await client.from("books").delete().eq("id", bookId);
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ ok: true });
+}
