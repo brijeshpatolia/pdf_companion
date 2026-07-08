@@ -35,6 +35,7 @@ export default async function ReaderPage({
 
   return (
     <Reader
+      bookId={book.id}
       title={book.title}
       pageCount={book.page_count}
       fileUrl={signed?.signedUrl ?? ""}
