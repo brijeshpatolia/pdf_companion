@@ -1,4 +1,5 @@
 import type { AskDeps, AskInput, AskEvent } from "./types.js";
+import { assembleContext } from "./context.js";
 
 export async function* ask(
   input: AskInput,
@@ -8,11 +9,31 @@ export async function* ask(
 
   const history = await deps.conversation.load(input.bookId);
 
+  const maxPage = deps.furthestReadPage ?? input.currentPage;
+  let retrievedChunks: import("./context.js").RetrievedChunk[] = [];
+  if (deps.retrieval) {
+    try {
+      retrievedChunks = await deps.retrieval.search(
+        input.bookId,
+        input.question,
+        maxPage,
+        5,
+      );
+    } catch {
+      // retrieval failure is non-fatal — continue without chunks
+    }
+  }
+
+  const systemContent = assembleContext({
+    currentPageText: pageText,
+    currentPage: input.currentPage,
+    retrievedChunks,
+    recentTurns: history,
+    question: input.question,
+  });
+
   const messages: Array<{ role: string; content: string }> = [
-    {
-      role: "system",
-      content: `You are a reading companion. The user is currently on page ${input.currentPage}. Here is the text of that page:\n\n${pageText}\n\nAnswer the user's question based on this page.`,
-    },
+    { role: "system", content: systemContent },
     ...history.map((m) => ({ role: m.role, content: m.content })),
     { role: "user", content: input.question },
   ];

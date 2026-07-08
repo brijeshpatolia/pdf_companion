@@ -6,6 +6,9 @@ import { createOpenRouterGateway } from "../../../src/adapters/openrouter/gatewa
 import { createAnthropicGateway } from "../../../src/adapters/anthropic/gateway.js";
 import { supabaseConversation } from "../../../src/adapters/supabase/supabaseConversation.js";
 import { supabasePageText } from "../../../src/adapters/supabase/supabasePageText.js";
+import { supabaseRetrieval } from "../../../src/adapters/supabase/supabaseRetrieval.js";
+import { supabaseProgress } from "../../../src/adapters/supabase/supabaseProgress.js";
+import { getProgress } from "../../../src/core/progress/progress.js";
 import { writeUsageRecord } from "../../../src/adapters/supabase/supabaseUsage.js";
 import type { GatewayPort } from "../../../src/core/chat/types.js";
 
@@ -47,10 +50,16 @@ export async function POST(req: NextRequest) {
   const client = supabaseServer();
   const { gateway, model } = resolveGateway();
 
+  const progress = await getProgress(bookId, supabaseProgress(client));
+
+  const placeholderEmbed = async (_text: string) => new Array(384).fill(0) as number[];
+
   const deps: AskDeps = {
     gateway,
     pageText: supabasePageText(client),
     conversation: supabaseConversation(client),
+    retrieval: supabaseRetrieval(client, placeholderEmbed),
+    furthestReadPage: progress.furthestReadPage,
     model,
   };
 
