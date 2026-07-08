@@ -1,14 +1,12 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/TextLayer.css";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import Companion from "./Companion";
 
-// Serve the worker from /public so its version matches react-pdf's pdfjs
-// exactly (see scripts: worker is copied there from node_modules).
 pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 
 interface ReaderProps {
@@ -16,18 +14,41 @@ interface ReaderProps {
   title: string;
   pageCount: number;
   fileUrl: string;
+  initialPage?: number;
+  furthestReadPage?: number;
 }
 
-export default function Reader({ bookId, title, pageCount, fileUrl }: ReaderProps) {
+export default function Reader({ bookId, title, pageCount, fileUrl, initialPage = 1, furthestReadPage: initialFurthest = 1 }: ReaderProps) {
   const [numPages, setNumPages] = useState(pageCount);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(initialPage);
+  const [furthest, setFurthest] = useState(initialFurthest);
   const [jump, setJump] = useState("");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const onLoad = useCallback(({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
   }, []);
 
-  const go = (n: number) => setPage((p) => Math.min(Math.max(1, n), numPages || pageCount));
+  const go = (n: number) => setPage(Math.min(Math.max(1, n), numPages || pageCount));
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      fetch("/api/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookId, page }),
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.furthestReadPage) setFurthest(data.furthestReadPage);
+        })
+        .catch(() => {});
+    }, 500);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [page, bookId]);
 
   const onJump = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,6 +81,11 @@ export default function Reader({ bookId, title, pageCount, fileUrl }: ReaderProp
           <span style={{ color: "var(--muted)", minWidth: 90, textAlign: "center" }}>
             Page {page} / {numPages || pageCount}
           </span>
+          {furthest > 1 && (
+            <span style={{ color: "var(--muted)", fontSize: "0.8rem" }} title="Furthest page read sequentially">
+              read to p{furthest}
+            </span>
+          )}
           <button onClick={() => go(page + 1)} disabled={page >= (numPages || pageCount)} aria-label="Next page">
             Next ›
           </button>

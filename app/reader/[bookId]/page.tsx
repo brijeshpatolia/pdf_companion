@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { supabaseServer } from "@/adapters/supabase/serverClient.js";
+import { supabaseProgress } from "@/adapters/supabase/supabaseProgress.js";
+import { getProgress } from "@/core/progress/progress.js";
 import Reader from "./Reader";
 
 export const runtime = "nodejs";
@@ -33,12 +35,16 @@ export default async function ReaderPage({
   const path = book.file_ref.slice(slash + 1);
   const { data: signed } = await client.storage.from(bucket).createSignedUrl(path, 3600);
 
+  const progress = await getProgress(book.id, supabaseProgress(client));
+
   return (
     <Reader
       bookId={book.id}
       title={book.title}
       pageCount={book.page_count}
       fileUrl={signed?.signedUrl ?? ""}
+      initialPage={progress.currentPage}
+      furthestReadPage={progress.furthestReadPage}
     />
   );
 }
