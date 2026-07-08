@@ -38,6 +38,8 @@ export interface AskDeps {
   gateway: GatewayPort;
   pageText: PageTextPort;
   conversation: ConversationPort;
+  retrieval?: import("./context.js").RetrievalPort;
+  furthestReadPage?: number;
   model: string;
 }
 
