@@ -31,9 +31,18 @@ export default function Home() {
     return () => clearInterval(id);
   }, [books]);
 
+  const MAX_SIZE = 50 * 1024 * 1024; // 50 MB
+
   async function onUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (file.size > MAX_SIZE) {
+      setError(`File too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Maximum is 50 MB.`);
+      e.target.value = "";
+      return;
+    }
+
     setBusy(true);
     setError(null);
     try {

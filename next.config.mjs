@@ -1,7 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // pdfjs-dist (used server-side for metadata) must not be bundled by Next.
-  serverExternalPackages: ["pdfjs-dist"],
+  serverExternalPackages: ["pdfjs-dist", "@huggingface/transformers"],
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "55mb",
+    },
+  },
   webpack: (config) => {
     // react-pdf's pdfjs references an optional Node 'canvas' dep we don't use.
     config.resolve.alias = { ...config.resolve.alias, canvas: false };

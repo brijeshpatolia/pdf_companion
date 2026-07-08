@@ -6,6 +6,9 @@ import { supabaseStorage } from "@/adapters/supabase/supabaseStorage.js";
 import { supabaseServer } from "@/adapters/supabase/serverClient.js";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
+
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
 /** Upload a PDF: store it + create a Book row via the createBook seam. */
 export async function POST(req: Request) {
@@ -16,6 +19,12 @@ export async function POST(req: Request) {
   }
   if (file.type && file.type !== "application/pdf") {
     return NextResponse.json({ error: "only PDF files are supported" }, { status: 415 });
+  }
+  if (file.size > MAX_FILE_SIZE) {
+    return NextResponse.json(
+      { error: `File too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Maximum is 50 MB.` },
+      { status: 413 },
+    );
   }
 
   const fileBytes = new Uint8Array(await file.arrayBuffer());
