@@ -1,0 +1,37 @@
+import { pipeline, type FeatureExtractionPipeline } from "@huggingface/transformers";
+import type { EmbedderPort } from "../../core/ingestion/types.js";
+
+const MODEL_ID = "Xenova/all-MiniLM-L6-v2";
+
+let instance: FeatureExtractionPipeline | null = null;
+
+async function getEmbedder(): Promise<FeatureExtractionPipeline> {
+  if (!instance) {
+    instance = await pipeline("feature-extraction", MODEL_ID, {
+      dtype: "fp32",
+    }) as FeatureExtractionPipeline;
+  }
+  return instance;
+}
+
+export function createLocalEmbedder(): EmbedderPort {
+  return {
+    async embed(texts: string[]): Promise<number[][]> {
+      const embedder = await getEmbedder();
+      const results: number[][] = [];
+
+      for (const text of texts) {
+        const output = await embedder(text, { pooling: "mean", normalize: true });
+        results.push(Array.from(output.data as Float32Array));
+      }
+
+      return results;
+    },
+  };
+}
+
+export async function embedSingle(text: string): Promise<number[]> {
+  const embedder = await getEmbedder();
+  const output = await embedder(text, { pooling: "mean", normalize: true });
+  return Array.from(output.data as Float32Array);
+}

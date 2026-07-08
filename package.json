@@ -22,6 +22,7 @@
     "vitest": "^2.1.8"
   },
   "dependencies": {
+    "@huggingface/transformers": "^4.2.0",
     "@supabase/supabase-js": "^2.110.1",
     "next": "^15.5.20",
     "pdfjs-dist": "^4.10.38",
