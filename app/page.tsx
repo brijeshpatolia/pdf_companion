@@ -10,10 +10,18 @@ interface BookSummary {
   status: string;
 }
 
+const STATUS_STYLES: Record<string, { color: string; bg: string; label: string }> = {
+  uploaded: { color: "#93c5fd", bg: "#1e3a5f", label: "Uploaded" },
+  processing: { color: "#fbbf24", bg: "#422006", label: "Processing…" },
+  ready: { color: "#4ade80", bg: "#052e16", label: "Ready" },
+  failed: { color: "#fca5a5", bg: "#450a0a", label: "Failed" },
+};
+
 export default function Home() {
   const [books, setBooks] = useState<BookSummary[]>([]);
   const [busy, setBusy] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [retrying, setRetrying] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function refresh() {
@@ -46,6 +54,26 @@ export default function Home() {
       setError((err as Error).message);
     } finally {
       setDeleting(null);
+    }
+  }
+
+  async function onRetry(bookId: string) {
+    setRetrying(bookId);
+    setError(null);
+    try {
+      const res = await fetch("/api/ingest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookId }),
+      });
+      if (!res.ok) {
+        throw new Error(`retry failed (${res.status})`);
+      }
+      await refresh();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setRetrying(null);
     }
   }
 
@@ -110,41 +138,82 @@ export default function Home() {
       {error && <p style={{ color: "#ff6b6b" }}>{error}</p>}
 
       <ul style={{ listStyle: "none", padding: 0, marginTop: "1.5rem" }}>
-        {books.map((b) => (
-          <li
-            key={b.id}
-            style={{
-              border: "1px solid var(--border)",
-              borderRadius: 10,
-              padding: "0.8rem 1rem",
-              marginBottom: "0.6rem",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <span>
-              <Link href={`/reader/${b.id}`}>{b.title}</Link>
-              <span style={{ color: "var(--muted)" }}> · {b.page_count} pages · {b.status}</span>
-            </span>
-            <button
-              onClick={() => onDelete(b.id)}
-              disabled={deleting === b.id}
+        {books.map((b) => {
+          const s = STATUS_STYLES[b.status] ?? STATUS_STYLES.uploaded!;
+          return (
+            <li
+              key={b.id}
               style={{
-                background: "none",
-                border: "1px solid #7f1d1d",
-                borderRadius: 6,
-                color: "#fca5a5",
-                padding: "0.25rem 0.6rem",
-                cursor: deleting === b.id ? "not-allowed" : "pointer",
-                opacity: deleting === b.id ? 0.5 : 1,
-                fontSize: "0.8rem",
+                border: "1px solid var(--border)",
+                borderRadius: 10,
+                padding: "0.8rem 1rem",
+                marginBottom: "0.6rem",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: "0.5rem",
               }}
             >
-              {deleting === b.id ? "Deleting…" : "Delete"}
-            </button>
-          </li>
-        ))}
+              <span style={{ flex: 1, minWidth: 0 }}>
+                {b.status === "ready" ? (
+                  <Link href={`/reader/${b.id}`}>{b.title}</Link>
+                ) : (
+                  <span style={{ color: b.status === "failed" ? "#fca5a5" : "var(--text)" }}>{b.title}</span>
+                )}
+                <span style={{ color: "var(--muted)" }}> · {b.page_count} pages</span>
+                <span
+                  style={{
+                    display: "inline-block",
+                    marginLeft: "0.5rem",
+                    padding: "0.1rem 0.5rem",
+                    borderRadius: 12,
+                    fontSize: "0.75rem",
+                    color: s.color,
+                    background: s.bg,
+                  }}
+                >
+                  {s.label}
+                </span>
+              </span>
+              <div style={{ display: "flex", gap: "0.4rem", flexShrink: 0 }}>
+                {b.status === "failed" && (
+                  <button
+                    onClick={() => onRetry(b.id)}
+                    disabled={retrying === b.id}
+                    style={{
+                      background: "none",
+                      border: "1px solid #854d0e",
+                      borderRadius: 6,
+                      color: "#fbbf24",
+                      padding: "0.25rem 0.6rem",
+                      cursor: retrying === b.id ? "not-allowed" : "pointer",
+                      opacity: retrying === b.id ? 0.5 : 1,
+                      fontSize: "0.8rem",
+                    }}
+                  >
+                    {retrying === b.id ? "Retrying…" : "Retry"}
+                  </button>
+                )}
+                <button
+                  onClick={() => onDelete(b.id)}
+                  disabled={deleting === b.id}
+                  style={{
+                    background: "none",
+                    border: "1px solid #7f1d1d",
+                    borderRadius: 6,
+                    color: "#fca5a5",
+                    padding: "0.25rem 0.6rem",
+                    cursor: deleting === b.id ? "not-allowed" : "pointer",
+                    opacity: deleting === b.id ? 0.5 : 1,
+                    fontSize: "0.8rem",
+                  }}
+                >
+                  {deleting === b.id ? "Deleting…" : "Delete"}
+                </button>
+              </div>
+            </li>
+          );
+        })}
         {books.length === 0 && (
           <li style={{ color: "var(--muted)" }}>No books yet — upload one to start reading.</li>
         )}
