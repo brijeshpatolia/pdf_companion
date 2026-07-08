@@ -6,6 +6,9 @@ import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/TextLayer.css";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import Companion from "./Companion";
+import SelectionTooltip from "./SelectionTooltip";
+import { buildIntentQuestion } from "@/core/chat/intents.js";
+import type { Intent } from "@/core/chat/intents.js";
 
 pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 
@@ -23,6 +26,8 @@ export default function Reader({ bookId, title, pageCount, fileUrl, initialPage 
   const [page, setPage] = useState(initialPage);
   const [furthest, setFurthest] = useState(initialFurthest);
   const [jump, setJump] = useState("");
+  const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
+  const pdfSectionRef = useRef<HTMLElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const onLoad = useCallback(({ numPages }: { numPages: number }) => {
@@ -49,6 +54,10 @@ export default function Reader({ bookId, title, pageCount, fileUrl, initialPage 
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, [page, bookId]);
+
+  const onSelectToAsk = useCallback((selection: string, intent: Intent) => {
+    setPendingQuestion(buildIntentQuestion(intent, selection));
+  }, []);
 
   const onJump = (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,6 +122,7 @@ export default function Reader({ bookId, title, pageCount, fileUrl, initialPage 
       {/* split view: reader | companion */}
       <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
         <section
+          ref={pdfSectionRef}
           style={{
             flex: "1 1 60%",
             overflow: "auto",
@@ -120,6 +130,7 @@ export default function Reader({ bookId, title, pageCount, fileUrl, initialPage 
             justifyContent: "center",
             padding: "1rem",
             background: "#0f131b",
+            position: "relative",
           }}
         >
           {fileUrl ? (
@@ -129,9 +140,15 @@ export default function Reader({ bookId, title, pageCount, fileUrl, initialPage 
           ) : (
             <p style={{ color: "#ff6b6b" }}>Could not load the file.</p>
           )}
+          <SelectionTooltip containerRef={pdfSectionRef} onSelect={onSelectToAsk} />
         </section>
 
-        <Companion bookId={bookId} currentPage={page} />
+        <Companion
+          bookId={bookId}
+          currentPage={page}
+          pendingQuestion={pendingQuestion}
+          onQuestionConsumed={() => setPendingQuestion(null)}
+        />
       </div>
     </div>
   );

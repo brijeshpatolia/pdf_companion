@@ -10,9 +10,11 @@ interface Message {
 interface CompanionProps {
   bookId: string;
   currentPage: number;
+  pendingQuestion?: string | null;
+  onQuestionConsumed?: () => void;
 }
 
-export default function Companion({ bookId, currentPage }: CompanionProps) {
+export default function Companion({ bookId, currentPage, pendingQuestion, onQuestionConsumed }: CompanionProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
@@ -35,11 +37,8 @@ export default function Companion({ bookId, currentPage }: CompanionProps) {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const send = useCallback(async () => {
-    const question = input.trim();
+  const sendQuestion = useCallback(async (question: string) => {
     if (!question || streaming) return;
-
-    setInput("");
     setError(null);
     setStreaming(true);
 
@@ -108,7 +107,21 @@ export default function Companion({ bookId, currentPage }: CompanionProps) {
       setStreaming(false);
       abortRef.current = null;
     }
-  }, [input, streaming, bookId, currentPage]);
+  }, [streaming, bookId, currentPage]);
+
+  const send = useCallback(() => {
+    const question = input.trim();
+    if (!question) return;
+    setInput("");
+    sendQuestion(question);
+  }, [input, sendQuestion]);
+
+  useEffect(() => {
+    if (pendingQuestion && !streaming) {
+      sendQuestion(pendingQuestion);
+      onQuestionConsumed?.();
+    }
+  }, [pendingQuestion, streaming, sendQuestion, onQuestionConsumed]);
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
