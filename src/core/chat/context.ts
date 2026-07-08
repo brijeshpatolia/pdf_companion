@@ -20,6 +20,7 @@ export interface ContextSlots {
   currentPage: number;
   retrievedChunks: RetrievedChunk[];
   recentTurns: Message[];
+  rollingSummary?: string;
   question: string;
 }
 
@@ -28,6 +29,7 @@ export interface ContextConfig {
   pageReserve: number;
   turnsReserve: number;
   retrievalReserve: number;
+  summaryReserve: number;
   questionReserve: number;
 }
 
@@ -36,6 +38,7 @@ const DEFAULT_CONFIG: ContextConfig = {
   pageReserve: 3000,
   turnsReserve: 2000,
   retrievalReserve: 4000,
+  summaryReserve: 1500,
   questionReserve: 1000,
 };
 
@@ -85,6 +88,11 @@ export function assembleContext(
         `Relevant passages from earlier in the book:\n\n${retrievalText.trim()}`,
       );
     }
+  }
+
+  if (slots.rollingSummary) {
+    const summaryText = truncateToTokens(slots.rollingSummary, config.summaryReserve);
+    parts.push(`Summary of what the reader has covered so far:\n\n${summaryText}`);
   }
 
   if (slots.recentTurns.length > 0) {

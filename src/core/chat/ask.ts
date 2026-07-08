@@ -1,5 +1,6 @@
 import type { AskDeps, AskInput, AskEvent } from "./types.js";
 import { assembleContext } from "./context.js";
+import { maybeFoldSummary } from "../summary/fold.js";
 
 export async function* ask(
   input: AskInput,
@@ -24,11 +25,22 @@ export async function* ask(
     }
   }
 
+  let rollingSummary: string | undefined;
+  if (deps.summaryDeps) {
+    try {
+      const folded = await maybeFoldSummary(input.bookId, maxPage, deps.summaryDeps);
+      rollingSummary = folded?.summary || undefined;
+    } catch {
+      // summary fold failure is non-fatal
+    }
+  }
+
   const systemContent = assembleContext({
     currentPageText: pageText,
     currentPage: input.currentPage,
     retrievedChunks,
     recentTurns: history,
+    rollingSummary,
     question: input.question,
   });
 
