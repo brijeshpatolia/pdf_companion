@@ -69,13 +69,25 @@ describe("updateReadingProgress", () => {
     expect(p.currentPage).toBe(380);
   });
 
+  it("small forward skip (debounce) still advances furthestReadPage", async () => {
+    const port = fakeProgressStore();
+
+    await updateReadingProgress("book-1", 1, port);
+    // debounce skips page 2, reports page 3 directly
+    await updateReadingProgress("book-1", 3, port);
+
+    const p = await getProgress("book-1", port);
+    expect(p.currentPage).toBe(3);
+    expect(p.furthestReadPage).toBe(3);
+  });
+
   it("reopen lands on saved currentPage", async () => {
     const port = fakeProgressStore();
 
     await updateReadingProgress("book-1", 1, port);
-    await updateReadingProgress("book-1", 5, port);
+    await updateReadingProgress("book-1", 2, port);
 
     const p = await getProgress("book-1", port);
-    expect(p.currentPage).toBe(5);
+    expect(p.currentPage).toBe(2);
   });
 });

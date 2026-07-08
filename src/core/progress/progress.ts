@@ -14,11 +14,12 @@ export async function updateReadingProgress(
   port: ReadingProgressPort,
 ): Promise<void> {
   const prev = await getProgress(bookId, port);
-  const isContiguous = page === prev.currentPage + 1 || prev.currentPage === 0;
-  const furthestReadPage =
-    isContiguous && page > prev.furthestReadPage
-      ? page
-      : prev.furthestReadPage;
+  // Allow small forward jumps (debounce may skip intermediate pages)
+  const CONTIGUOUS_WINDOW = 3;
+  const isForwardRead =
+    page > prev.furthestReadPage &&
+    page <= prev.furthestReadPage + CONTIGUOUS_WINDOW;
+  const furthestReadPage = isForwardRead ? page : prev.furthestReadPage;
 
   await port.save(bookId, {
     bookId,
