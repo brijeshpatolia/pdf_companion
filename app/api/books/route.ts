@@ -29,6 +29,16 @@ export async function POST(req: Request) {
         pdfMeta: { read: readPdfMetadata },
       },
     );
+
+    // Fire-and-forget: trigger ingestion in the background
+    const origin = req.headers.get("origin") ?? req.headers.get("host") ?? "http://localhost:3000";
+    const base = origin.startsWith("http") ? origin : `http://${origin}`;
+    fetch(`${base}/api/ingest`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bookId: book.id }),
+    }).catch(() => {});
+
     return NextResponse.json(book, { status: 201 });
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 500 });

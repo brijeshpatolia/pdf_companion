@@ -24,6 +24,13 @@ export default function Home() {
     void refresh();
   }, []);
 
+  useEffect(() => {
+    const hasProcessing = books.some((b) => b.status === "processing" || b.status === "uploaded");
+    if (!hasProcessing) return;
+    const id = setInterval(refresh, 2000);
+    return () => clearInterval(id);
+  }, [books]);
+
   async function onUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
