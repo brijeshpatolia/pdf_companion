@@ -1,7 +1,6 @@
 import type { PdfMetadata } from "./types.js";
 // Legacy build runs in Node without a browser worker; we only read metadata
 // (page count + document info), so no canvas/font rendering is needed.
-// @ts-expect-error - the legacy subpath ships no type declarations
 import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 
 /**

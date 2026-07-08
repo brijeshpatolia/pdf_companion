@@ -5,18 +5,20 @@ import Link from "next/link";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/TextLayer.css";
 import "react-pdf/dist/Page/AnnotationLayer.css";
+import Companion from "./Companion";
 
 // Serve the worker from /public so its version matches react-pdf's pdfjs
 // exactly (see scripts: worker is copied there from node_modules).
 pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 
 interface ReaderProps {
+  bookId: string;
   title: string;
   pageCount: number;
   fileUrl: string;
 }
 
-export default function Reader({ title, pageCount, fileUrl }: ReaderProps) {
+export default function Reader({ bookId, title, pageCount, fileUrl }: ReaderProps) {
   const [numPages, setNumPages] = useState(pageCount);
   const [page, setPage] = useState(1);
   const [jump, setJump] = useState("");
@@ -103,23 +105,7 @@ export default function Reader({ title, pageCount, fileUrl }: ReaderProps) {
           )}
         </section>
 
-        <aside
-          style={{
-            flex: "1 1 40%",
-            minWidth: 280,
-            borderLeft: "1px solid var(--border)",
-            padding: "1rem",
-            background: "var(--panel)",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          <h2 style={{ marginTop: 0, fontSize: "1rem" }}>Companion</h2>
-          <p style={{ color: "var(--muted)" }}>
-            The AI companion lands in a later slice. It will read along with you, always on
-            this page, remembering everything you&apos;ve read.
-          </p>
-        </aside>
+        <Companion bookId={bookId} currentPage={page} />
       </div>
     </div>
   );
