@@ -9,7 +9,8 @@
     "start": "next start",
     "postinstall": "node scripts/copy-pdf-worker.mjs",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@types/node": "20.17.6",
@@ -28,6 +29,8 @@
     "pdfjs-dist": "^4.10.38",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "react-pdf": "^9.2.1"
+    "react-markdown": "^10.1.0",
+    "react-pdf": "^9.2.1",
+    "remark-gfm": "^4.0.1"
   }
 }

@@ -6,6 +6,24 @@ import Reader from "./Reader";
 
 export const runtime = "nodejs";
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ bookId: string }>;
+}) {
+  const { bookId } = await params;
+  try {
+    const { data: book } = await supabaseServer()
+      .from("books")
+      .select("title")
+      .eq("id", bookId)
+      .single();
+    return { title: book?.title ?? "Reader" };
+  } catch {
+    return { title: "Reader" };
+  }
+}
+
 export default async function ReaderPage({
   params,
 }: {

@@ -14,6 +14,7 @@ out/
 dist/
 build/
 next-env.d.ts
+tsconfig.tsbuildinfo
 
 # Generated at postinstall from node_modules (version must match react-pdf's pdfjs)
 public/pdf.worker.min.mjs

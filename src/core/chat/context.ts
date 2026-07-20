@@ -61,7 +61,9 @@ export function assembleContext(
   parts.push(
     "You are a reading companion. Help the user understand the book they are reading. " +
     "Do NOT reveal plot points, concepts, or information from pages the user has not yet read. " +
-    "Only discuss content from the provided context.",
+    "Only discuss content from the provided context. " +
+    "Keep answers concise and format them in Markdown: bold key terms, use short lists where they " +
+    "aid scanning, and code blocks only for actual code. Avoid headings in short answers.",
   );
 
   const pageText = truncateToTokens(slots.currentPageText, config.pageReserve);

@@ -34,7 +34,32 @@ export default function Reader({ bookId, title, pageCount, fileUrl, initialPage 
     setNumPages(numPages);
   }, []);
 
-  const go = (n: number) => setPage(Math.min(Math.max(1, n), numPages || pageCount));
+  const go = useCallback(
+    (n: number) => setPage(Math.min(Math.max(1, n), numPages || pageCount)),
+    [numPages, pageCount],
+  );
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        setPage((p) => Math.max(1, p - 1));
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        setPage((p) => Math.min(numPages || pageCount, p + 1));
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [numPages, pageCount]);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -84,40 +109,52 @@ export default function Reader({ bookId, title, pageCount, fileUrl, initialPage 
           {title}
         </strong>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <button onClick={() => go(page - 1)} disabled={page <= 1} aria-label="Previous page">
+          <button
+            onClick={() => go(page - 1)}
+            disabled={page <= 1}
+            aria-label="Previous page"
+            title="Previous page (←)"
+          >
             ‹ Prev
           </button>
-          <span style={{ color: "var(--muted)", minWidth: 90, textAlign: "center" }}>
+          <span style={{ color: "var(--muted)", minWidth: 90, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>
             Page {page} / {numPages || pageCount}
           </span>
           {furthest > 1 && (
-            <span style={{ color: "var(--muted)", fontSize: "0.8rem" }} title="Furthest page read sequentially">
+            <span className="badge badge-info" title="Furthest page read sequentially">
               read to p{furthest}
             </span>
           )}
-          <button onClick={() => go(page + 1)} disabled={page >= (numPages || pageCount)} aria-label="Next page">
+          <button
+            onClick={() => go(page + 1)}
+            disabled={page >= (numPages || pageCount)}
+            aria-label="Next page"
+            title="Next page (→)"
+          >
             Next ›
           </button>
           <form onSubmit={onJump} style={{ display: "flex", gap: "0.3rem" }}>
             <input
+              className="input"
               value={jump}
               onChange={(e) => setJump(e.target.value)}
               inputMode="numeric"
               placeholder="Go to…"
               aria-label="Jump to page"
-              style={{
-                width: 70,
-                background: "var(--panel)",
-                border: "1px solid var(--border)",
-                borderRadius: 6,
-                color: "var(--text)",
-                padding: "0.35rem 0.5rem",
-              }}
+              style={{ width: 70 }}
             />
             <button type="submit">Go</button>
           </form>
         </div>
       </header>
+
+      {/* reading progress */}
+      <div className="progress-track" aria-hidden="true">
+        <div
+          className="progress-fill"
+          style={{ width: `${(page / (numPages || pageCount || 1)) * 100}%` }}
+        />
+      </div>
 
       {/* split view: reader | companion */}
       <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
@@ -134,11 +171,19 @@ export default function Reader({ bookId, title, pageCount, fileUrl, initialPage 
           }}
         >
           {fileUrl ? (
-            <Document file={fileUrl} onLoadSuccess={onLoad} loading={<p>Loading PDF…</p>}>
+            <Document
+              file={fileUrl}
+              onLoadSuccess={onLoad}
+              loading={
+                <p style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--muted)" }}>
+                  <span className="spinner" /> Loading PDF…
+                </p>
+              }
+            >
               <Page pageNumber={page} renderTextLayer renderAnnotationLayer={false} width={640} />
             </Document>
           ) : (
-            <p style={{ color: "#ff6b6b" }}>Could not load the file.</p>
+            <p style={{ color: "var(--danger)" }}>Could not load the file.</p>
           )}
           <SelectionTooltip containerRef={pdfSectionRef} onSelect={onSelectToAsk} />
         </section>
