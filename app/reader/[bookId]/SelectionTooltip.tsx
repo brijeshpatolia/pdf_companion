@@ -76,6 +76,7 @@ export default function SelectionTooltip({
   return (
     <div
       data-selection-tooltip
+      className="fade-in"
       style={{
         position: "absolute",
         left: tooltip.x,
@@ -84,31 +85,23 @@ export default function SelectionTooltip({
         display: "flex",
         gap: "0.25rem",
         padding: "0.35rem 0.5rem",
-        background: "#1a1f2e",
-        border: "1px solid #2d3548",
-        borderRadius: 8,
-        boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
+        background: "var(--surface)",
+        border: "1px solid var(--border-strong)",
+        borderRadius: "var(--radius)",
+        boxShadow: "var(--shadow-pop)",
         zIndex: 100,
       }}
     >
       {INTENTS.map(({ intent, label }) => (
         <button
           key={intent}
+          className="btn-ghost btn-sm"
           onClick={() => {
             onSelect(tooltip.text, intent);
             setTooltip(null);
             window.getSelection()?.removeAllRanges();
           }}
-          style={{
-            background: "none",
-            border: "1px solid #3d4558",
-            borderRadius: 6,
-            color: "#e2e8f0",
-            padding: "0.3rem 0.6rem",
-            cursor: "pointer",
-            fontSize: "0.8rem",
-            whiteSpace: "nowrap",
-          }}
+          style={{ whiteSpace: "nowrap" }}
         >
           {label}
         </button>

@@ -21,6 +21,7 @@ export default function Companion({ bookId, currentPage, pendingQuestion, onQues
   const [error, setError] = useState<{ code: string; message: string } | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const lastQuestionRef = useRef<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -41,6 +42,7 @@ export default function Companion({ bookId, currentPage, pendingQuestion, onQues
     if (!question || streaming) return;
     setError(null);
     setStreaming(true);
+    lastQuestionRef.current = question;
 
     setMessages((prev) => [...prev, { role: "user", content: question }]);
     setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
@@ -99,7 +101,13 @@ export default function Companion({ bookId, currentPage, pendingQuestion, onQues
         }
       }
     } catch (err: unknown) {
-      if ((err as any)?.name !== "AbortError") {
+      if ((err as any)?.name === "AbortError") {
+        // Stopped by the user — keep the partial answer, drop an empty bubble.
+        setMessages((prev) => {
+          const last = prev[prev.length - 1];
+          return last?.role === "assistant" && last.content === "" ? prev.slice(0, -1) : prev;
+        });
+      } else {
         setError({ code: "gateway-error", message: err instanceof Error ? err.message : "Unknown error" });
         setMessages((prev) => prev.slice(0, -1));
       }
@@ -115,6 +123,22 @@ export default function Companion({ bookId, currentPage, pendingQuestion, onQues
     setInput("");
     sendQuestion(question);
   }, [input, sendQuestion]);
+
+  const stop = useCallback(() => {
+    abortRef.current?.abort();
+  }, []);
+
+  const retry = useCallback(() => {
+    if (lastQuestionRef.current) {
+      // The failed exchange was already removed from the thread; drop the
+      // orphaned user turn before resending so it isn't duplicated.
+      setMessages((prev) => {
+        const last = prev[prev.length - 1];
+        return last?.role === "user" ? prev.slice(0, -1) : prev;
+      });
+      sendQuestion(lastQuestionRef.current);
+    }
+  }, [sendQuestion]);
 
   useEffect(() => {
     if (pendingQuestion && !streaming) {
@@ -154,59 +178,44 @@ export default function Companion({ bookId, currentPage, pendingQuestion, onQues
         }}
       >
         {messages.length === 0 && !error && (
-          <p style={{ color: "var(--muted)", textAlign: "center", marginTop: "2rem" }}>
-            Ask a question about page {currentPage}
-          </p>
+          <div style={{ color: "var(--muted)", textAlign: "center", marginTop: "2rem", fontSize: "0.9rem" }}>
+            <p style={{ margin: 0 }}>Ask a question about page {currentPage},</p>
+            <p style={{ margin: "0.25rem 0 0" }}>or select text in the book to Define · Deep Dive · ELI5.</p>
+          </div>
         )}
 
-        {messages.map((m, i) => (
-          <div
-            key={i}
-            style={{
-              alignSelf: m.role === "user" ? "flex-end" : "flex-start",
-              background: m.role === "user" ? "var(--accent, #2563eb)" : "var(--surface, #1e293b)",
-              color: m.role === "user" ? "#fff" : "var(--text)",
-              padding: "0.5rem 0.75rem",
-              borderRadius: 12,
-              maxWidth: "85%",
-              whiteSpace: "pre-wrap",
-              wordBreak: "break-word",
-              fontSize: "0.9rem",
-              lineHeight: 1.5,
-            }}
-          >
-            {m.content || (streaming && i === messages.length - 1 ? "..." : "")}
-          </div>
-        ))}
+        {messages.map((m, i) => {
+          const isTyping = streaming && i === messages.length - 1 && m.role === "assistant" && !m.content;
+          return (
+            <div key={i} className={`bubble fade-in ${m.role === "user" ? "bubble-user" : "bubble-assistant"}`}>
+              {isTyping ? (
+                <span className="typing-dots" aria-label="Thinking…">
+                  <span /><span /><span />
+                </span>
+              ) : (
+                m.content
+              )}
+            </div>
+          );
+        })}
 
         {error && (
           <div
             role="alert"
+            className="card fade-in"
             style={{
-              background: "#2d1b1b",
-              border: "1px solid #7f1d1d",
-              borderRadius: 8,
+              borderColor: "rgba(239, 68, 68, 0.45)",
+              background: "var(--danger-soft)",
               padding: "0.75rem",
               fontSize: "0.85rem",
             }}
           >
-            <strong style={{ color: "#fca5a5" }}>
+            <strong style={{ color: "var(--danger)" }}>
               {error.code === "missing-key" ? "API Key Required" : "Error"}
             </strong>
-            <p style={{ margin: "0.25rem 0 0", color: "#fecaca" }}>{error.message}</p>
+            <p style={{ margin: "0.25rem 0 0", color: "var(--danger)" }}>{error.message}</p>
             {error.code === "gateway-error" && (
-              <button
-                onClick={send}
-                style={{
-                  marginTop: "0.5rem",
-                  background: "#7f1d1d",
-                  color: "#fecaca",
-                  border: "none",
-                  borderRadius: 6,
-                  padding: "0.3rem 0.75rem",
-                  cursor: "pointer",
-                }}
-              >
+              <button className="btn-danger btn-sm" onClick={retry} style={{ marginTop: "0.5rem" }}>
                 Retry
               </button>
             )}
@@ -226,37 +235,23 @@ export default function Companion({ bookId, currentPage, pendingQuestion, onQues
         }}
       >
         <input
+          className="input"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder={`Ask about page ${currentPage}…`}
           disabled={streaming}
           aria-label="Ask a question"
-          style={{
-            flex: 1,
-            background: "var(--surface, #1e293b)",
-            border: "1px solid var(--border)",
-            borderRadius: 8,
-            color: "var(--text)",
-            padding: "0.5rem 0.75rem",
-            fontSize: "0.9rem",
-          }}
+          style={{ flex: 1, fontSize: "0.9rem" }}
         />
-        <button
-          type="submit"
-          disabled={streaming || !input.trim()}
-          aria-label="Send question"
-          style={{
-            background: "var(--accent, #2563eb)",
-            color: "#fff",
-            border: "none",
-            borderRadius: 8,
-            padding: "0.5rem 1rem",
-            cursor: streaming || !input.trim() ? "not-allowed" : "pointer",
-            opacity: streaming || !input.trim() ? 0.5 : 1,
-          }}
-        >
-          {streaming ? "…" : "Ask"}
-        </button>
+        {streaming ? (
+          <button type="button" className="btn-danger" onClick={stop} aria-label="Stop generating">
+            ◼ Stop
+          </button>
+        ) : (
+          <button type="submit" className="btn-primary" disabled={!input.trim()} aria-label="Send question">
+            Ask
+          </button>
+        )}
       </form>
     </aside>
   );
