@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface Message {
   role: "user" | "assistant";
@@ -192,6 +194,10 @@ export default function Companion({ bookId, currentPage, pendingQuestion, onQues
                 <span className="typing-dots" aria-label="Thinking…">
                   <span /><span /><span />
                 </span>
+              ) : m.role === "assistant" ? (
+                <div className="md">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.content}</ReactMarkdown>
+                </div>
               ) : (
                 m.content
               )}
