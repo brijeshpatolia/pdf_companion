@@ -155,9 +155,13 @@ export default function Home() {
         <AuthButton />
       </div>
 
+      <p style={{ marginTop: "1rem", marginBottom: 0 }}>
+        <Link href="/catalog">📚 Browse free public-domain books →</Link>
+      </p>
+
       <label
         className={`dropzone${dragover ? " is-dragover" : ""}${busy ? " is-busy" : ""}`}
-        style={{ marginTop: "1.25rem" }}
+        style={{ marginTop: "0.75rem" }}
         onDragOver={(e) => {
           e.preventDefault();
           if (!busy) setDragover(true);
