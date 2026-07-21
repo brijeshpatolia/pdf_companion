@@ -58,7 +58,11 @@ export default function SelectionTooltip({
     const container = containerRef.current;
     if (!container) return;
 
+    // Touch selection finalizes just after touchend; defer the read.
+    const handleTouchEnd = () => setTimeout(handleMouseUp, 50);
+
     container.addEventListener("mouseup", handleMouseUp);
+    container.addEventListener("touchend", handleTouchEnd);
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       if (!target.closest("[data-selection-tooltip]")) {
@@ -69,6 +73,7 @@ export default function SelectionTooltip({
 
     return () => {
       container.removeEventListener("mouseup", handleMouseUp);
+      container.removeEventListener("touchend", handleTouchEnd);
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [containerRef, handleMouseUp]);

@@ -189,6 +189,67 @@ input, button {
   border-bottom-left-radius: var(--radius-sm);
 }
 
+/* ---------- reader split view ---------- */
+
+.reader-split {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.pane-book {
+  flex: 1 1 60%;
+  overflow: auto;
+  display: flex;
+  justify-content: center;
+  padding: 1rem;
+  background: var(--bg-raised);
+  position: relative;
+}
+
+.pane-companion {
+  flex: 1 1 40%;
+  min-width: 280px;
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+}
+
+.jump-form {
+  display: flex;
+  gap: 0.3rem;
+}
+
+/* Book/Chat switcher — only exists on narrow screens */
+.mobile-toggle { display: none; }
+
+@media (max-width: 768px) {
+  .mobile-toggle {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel);
+  }
+  .mobile-toggle .tab {
+    flex: 1;
+    text-align: center;
+  }
+
+  .hidden-narrow { display: none !important; }
+
+  .pane-book { padding: 0.5rem; }
+  .pane-companion {
+    border-left: none;
+    min-width: 0;
+    flex: 1;
+  }
+  /* 16px stops iOS Safari from zooming the page on focus */
+  .pane-companion .input { font-size: 16px !important; }
+
+  .reader-header { padding: 0.5rem 0.75rem; gap: 0.5rem; }
+  .reader-header .jump-form { display: none; }
+}
+
 /* ---------- companion tabs ---------- */
 
 .tab {
