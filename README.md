@@ -11,7 +11,7 @@ A reading companion for hard books. Instead of pausing to paste a page into Chat
 - **🔐 Accounts** — passwordless magic-link sign-in (Supabase Auth). Every book, highlight, chat, and page of progress is scoped to its owner by Row-Level Security.
 - **📚 Library** — drag-and-drop **PDF and EPUB** upload (50 MB guardrail), live ingestion status, retry failed ingestions, delete with full storage + data cleanup.
 - **📗 EPUB support** — DRM-free EPUBs are parsed and split into synthetic pages, so the whole page-aware pipeline (chat, retrieval, progress, highlights) works on them too; the reader renders them as clean prose.
-- **📚 Free books catalog** — a curated shelf of public-domain "hard books" (Plato, Marcus Aurelius, Darwin, Nietzsche…) from Project Gutenberg; add one with a click and it flows through the normal EPUB ingestion.
+- **📚 Free books catalog** — a curated shelf of public-domain "hard books" (Plato, Marcus Aurelius, Darwin, Nietzsche…) plus **live search over the full Project Gutenberg catalog** (via Gutendex); add any title with a click and it flows through the normal EPUB ingestion.
 - **📖 Split-view reader** — PDF.js rendering beside the companion, keyboard navigation (`←`/`→`), jump-to-page, and a reading-progress bar. Your furthest sequentially-read page is tracked and restored.
 - **💬 Page-aware companion** — streaming answers grounded in a 4-source context: the page you're on, semantically retrieved passages, a rolling summary of everything read so far, and the conversation history. Stop generation mid-stream, retry on errors.
 - **✨ Select-to-ask** — highlight any passage and choose **Define · Deep Dive · ELI5**.
