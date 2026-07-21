@@ -7,6 +7,7 @@ import "react-pdf/dist/Page/TextLayer.css";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import Companion from "./Companion";
 import SelectionTooltip from "./SelectionTooltip";
+import EpubPage from "./EpubPage";
 import { buildIntentQuestion } from "@/core/chat/intents.js";
 import type { Intent } from "@/core/chat/intents.js";
 
@@ -16,12 +17,13 @@ interface ReaderProps {
   bookId: string;
   title: string;
   pageCount: number;
+  format?: "pdf" | "epub";
   fileUrl: string;
   initialPage?: number;
   furthestReadPage?: number;
 }
 
-export default function Reader({ bookId, title, pageCount, fileUrl, initialPage = 1, furthestReadPage: initialFurthest = 1 }: ReaderProps) {
+export default function Reader({ bookId, title, pageCount, format = "pdf", fileUrl, initialPage = 1, furthestReadPage: initialFurthest = 1 }: ReaderProps) {
   const [numPages, setNumPages] = useState(pageCount);
   const [page, setPage] = useState(initialPage);
   const [furthest, setFurthest] = useState(initialFurthest);
@@ -238,7 +240,9 @@ export default function Reader({ bookId, title, pageCount, fileUrl, initialPage 
           ref={pdfSectionRef}
           className={`pane-book${mobileView === "chat" ? " hidden-narrow" : ""}`}
         >
-          {fileUrl ? (
+          {format === "epub" ? (
+            <EpubPage bookId={bookId} page={page} />
+          ) : fileUrl ? (
             <Document
               file={fileUrl}
               onLoadSuccess={onLoad}
