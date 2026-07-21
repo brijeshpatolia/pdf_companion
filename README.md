@@ -12,6 +12,7 @@ A reading companion for hard books. Instead of pausing to paste a page into Chat
 - **📖 Split-view reader** — PDF.js rendering beside the companion, keyboard navigation (`←`/`→`), jump-to-page, and a reading-progress bar. Your furthest sequentially-read page is tracked and restored.
 - **💬 Page-aware companion** — streaming answers grounded in a 4-source context: the page you're on, semantically retrieved passages, a rolling summary of everything read so far, and the conversation history. Stop generation mid-stream, retry on errors.
 - **✨ Select-to-ask** — highlight any passage and choose **Define · Deep Dive · ELI5**.
+- **📌 Capture** — save highlights straight from the selection tooltip and star AI answers worth keeping; browse them in the companion's **Saved** tab with jump-to-page.
 - **🧠 Local embeddings** — all-MiniLM-L6-v2 runs in-process (no embedding API cost); retrieval via Supabase pgvector.
 - **🔁 Ingestion pipeline** — text extraction, chunking, embedding, and status lifecycle (`uploaded → processing → ready / failed`) with retry.
 
@@ -40,7 +41,7 @@ The complete product spec lives in **[SPEC.md](./SPEC.md)** — problem, feature
 
 ## Roadmap
 
-- **Phase 0 — MVP:** ✅ split-view reader + page-aware chat + select-to-ask *(done)* · highlights + save-AI-answer *(next)*
+- **Phase 0 — MVP:** ✅ split-view reader + page-aware chat + select-to-ask + highlights + save-AI-answer *(done)*
 - **Phase 1:** accounts, managed AI pool + usage dashboard, notes, Excalidraw, export
 - **Phase 2:** sharing, flashcards, sync, live co-reading, cross-book Q&A
 

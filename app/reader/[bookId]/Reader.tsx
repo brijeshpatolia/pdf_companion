@@ -27,8 +27,11 @@ export default function Reader({ bookId, title, pageCount, fileUrl, initialPage 
   const [furthest, setFurthest] = useState(initialFurthest);
   const [jump, setJump] = useState("");
   const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
+  const [savedVersion, setSavedVersion] = useState(0);
+  const [flash, setFlash] = useState<{ text: string; ok: boolean } | null>(null);
   const pdfSectionRef = useRef<HTMLElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const flashRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const onLoad = useCallback(({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
@@ -84,6 +87,36 @@ export default function Reader({ bookId, title, pageCount, fileUrl, initialPage 
     setPendingQuestion(buildIntentQuestion(intent, selection));
   }, []);
 
+  const showFlash = useCallback((text: string, ok: boolean) => {
+    setFlash({ text, ok });
+    if (flashRef.current) clearTimeout(flashRef.current);
+    flashRef.current = setTimeout(() => setFlash(null), 2500);
+  }, []);
+
+  const onHighlight = useCallback(
+    async (selection: string) => {
+      try {
+        const res = await fetch("/api/saved", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ bookId, kind: "highlight", page, text: selection }),
+        });
+        if (!res.ok) throw new Error();
+        setSavedVersion((v) => v + 1);
+        showFlash("Highlight saved ✓", true);
+      } catch {
+        showFlash("Couldn't save highlight", false);
+      }
+    },
+    [bookId, page, showFlash],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (flashRef.current) clearTimeout(flashRef.current);
+    };
+  }, []);
+
   const onJump = (e: React.FormEvent) => {
     e.preventDefault();
     const n = parseInt(jump, 10);
@@ -108,6 +141,11 @@ export default function Reader({ bookId, title, pageCount, fileUrl, initialPage 
         <strong style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {title}
         </strong>
+        {flash && (
+          <span className={`badge ${flash.ok ? "badge-ok" : "badge-danger"} fade-in`} role="status">
+            {flash.text}
+          </span>
+        )}
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <button
             onClick={() => go(page - 1)}
@@ -185,7 +223,11 @@ export default function Reader({ bookId, title, pageCount, fileUrl, initialPage 
           ) : (
             <p style={{ color: "var(--danger)" }}>Could not load the file.</p>
           )}
-          <SelectionTooltip containerRef={pdfSectionRef} onSelect={onSelectToAsk} />
+          <SelectionTooltip
+            containerRef={pdfSectionRef}
+            onSelect={onSelectToAsk}
+            onHighlight={onHighlight}
+          />
         </section>
 
         <Companion
@@ -193,6 +235,8 @@ export default function Reader({ bookId, title, pageCount, fileUrl, initialPage 
           currentPage={page}
           pendingQuestion={pendingQuestion}
           onQuestionConsumed={() => setPendingQuestion(null)}
+          savedVersion={savedVersion}
+          onJumpToPage={go}
         />
       </div>
     </div>

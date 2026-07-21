@@ -6,6 +6,7 @@ import type { Intent } from "@/core/chat/intents.js";
 interface SelectionTooltipProps {
   containerRef: React.RefObject<HTMLElement | null>;
   onSelect: (selection: string, intent: Intent) => void;
+  onHighlight?: (selection: string) => void;
 }
 
 interface TooltipState {
@@ -23,6 +24,7 @@ const INTENTS: { intent: Intent; label: string }[] = [
 export default function SelectionTooltip({
   containerRef,
   onSelect,
+  onHighlight,
 }: SelectionTooltipProps) {
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
 
@@ -92,6 +94,22 @@ export default function SelectionTooltip({
         zIndex: 100,
       }}
     >
+      {onHighlight && (
+        <>
+          <button
+            className="btn-ghost btn-sm"
+            onClick={() => {
+              onHighlight(tooltip.text);
+              setTooltip(null);
+              window.getSelection()?.removeAllRanges();
+            }}
+            style={{ whiteSpace: "nowrap", color: "var(--warn)" }}
+          >
+            ✦ Highlight
+          </button>
+          <span style={{ width: 1, background: "var(--border)", margin: "0.15rem 0.1rem" }} />
+        </>
+      )}
       {INTENTS.map(({ intent, label }) => (
         <button
           key={intent}
