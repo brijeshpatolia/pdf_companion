@@ -12,7 +12,10 @@ export const maxDuration = 60;
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB, matching uploads
 
-/** Add a curated public-domain book to the caller's library. */
+/**
+ * Add a public-domain book to the caller's library — either a curated entry
+ * (`catalogId`) or any Gutenberg book from live search (`gutenbergId`).
+ */
 export async function POST(req: Request) {
   const client = await supabaseUser();
   const {
@@ -20,26 +23,39 @@ export async function POST(req: Request) {
   } = await client.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const body = await req.json().catch(() => null);
-  const catalogId = (body ?? {}).catalogId as string | undefined;
-  const entry = catalogId ? getCatalogBook(catalogId) : undefined;
-  if (!entry) {
-    return NextResponse.json({ error: "unknown catalog book" }, { status: 404 });
+  const body = (await req.json().catch(() => null)) ?? {};
+
+  // Resolve a Gutenberg id (and, when known, a title for de-duping) from
+  // either a curated catalog id or a direct gutenbergId from search.
+  let gutenbergId: number;
+  let knownTitle: string | undefined;
+  if (typeof body.catalogId === "string") {
+    const entry = getCatalogBook(body.catalogId);
+    if (!entry) return NextResponse.json({ error: "unknown catalog book" }, { status: 404 });
+    gutenbergId = entry.gutenbergId;
+    knownTitle = entry.title;
+  } else if (Number.isInteger(body.gutenbergId) && body.gutenbergId > 0) {
+    gutenbergId = body.gutenbergId;
+    knownTitle = typeof body.title === "string" && body.title.trim() ? body.title.trim() : undefined;
+  } else {
+    return NextResponse.json({ error: "provide a catalogId or a valid gutenbergId" }, { status: 400 });
   }
 
-  // Skip re-importing a book the user already has (by title).
-  const { data: existing } = await client
-    .from("books")
-    .select("id,title,page_count,status,format")
-    .eq("title", entry.title)
-    .maybeSingle();
-  if (existing) {
-    return NextResponse.json({ book: existing, alreadyAdded: true });
+  // Skip re-importing a book the user already has (by title, when we know it).
+  if (knownTitle) {
+    const { data: existing } = await client
+      .from("books")
+      .select("id,title,page_count,status,format")
+      .eq("title", knownTitle)
+      .maybeSingle();
+    if (existing) {
+      return NextResponse.json({ book: existing, alreadyAdded: true });
+    }
   }
 
   let fileBytes: Uint8Array;
   try {
-    fileBytes = await downloadEpubBytes(gutenbergEpubUrl(entry.gutenbergId), {
+    fileBytes = await downloadEpubBytes(gutenbergEpubUrl(gutenbergId), {
       fetchImpl: (url) => fetch(url, { redirect: "follow" }),
       maxBytes: MAX_FILE_SIZE,
     });
@@ -52,7 +68,8 @@ export async function POST(req: Request) {
 
   try {
     const book = await createBook(
-      { fileBytes, filename: `${entry.title}.epub`, format: "epub" },
+      // createBook derives the real title from the EPUB; this filename is a fallback.
+      { fileBytes, filename: `${knownTitle ?? `gutenberg-${gutenbergId}`}.epub`, format: "epub" },
       {
         storage: supabaseStorage(client, "pdfs", user.id),
         books: supabaseBooks(client),
