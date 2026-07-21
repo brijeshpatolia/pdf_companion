@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Book, BooksPort, IngestionStatus } from "../../core/library/types.js";
+import type { Book, BookFormat, BooksPort, IngestionStatus } from "../../core/library/types.js";
 
 interface BookRow {
   id: string;
@@ -8,6 +8,7 @@ interface BookRow {
   page_count: number;
   file_ref: string;
   status: IngestionStatus;
+  format: BookFormat;
 }
 
 function rowToBook(r: BookRow): Book {
@@ -18,6 +19,7 @@ function rowToBook(r: BookRow): Book {
     pageCount: r.page_count,
     fileRef: r.file_ref,
     status: r.status,
+    format: r.format ?? "pdf",
   };
 }
 
@@ -33,6 +35,7 @@ export function supabaseBooks(client: SupabaseClient): BooksPort {
         page_count: book.pageCount,
         file_ref: book.fileRef,
         status: book.status,
+        format: book.format,
       };
       if (book.ownerId != null) row.owner_id = book.ownerId;
 

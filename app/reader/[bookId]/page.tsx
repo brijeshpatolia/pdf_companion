@@ -41,7 +41,7 @@ export default async function ReaderPage({
   // RLS returns nothing unless the signed-in user owns this book.
   const { data: book } = await client
     .from("books")
-    .select("id,title,page_count,file_ref")
+    .select("id,title,page_count,file_ref,format")
     .eq("id", bookId)
     .single();
 
@@ -54,11 +54,18 @@ export default async function ReaderPage({
     );
   }
 
-  // The pdfs bucket is private, so hand the reader a short-lived signed URL.
-  const slash = book.file_ref.indexOf("/");
-  const bucket = book.file_ref.slice(0, slash);
-  const path = book.file_ref.slice(slash + 1);
-  const { data: signed } = await client.storage.from(bucket).createSignedUrl(path, 3600);
+  const format = book.format === "epub" ? "epub" : "pdf";
+
+  // PDFs render from a short-lived signed URL (the bucket is private). EPUBs
+  // render from page text fetched on demand, so they need no file URL.
+  let fileUrl = "";
+  if (format === "pdf") {
+    const slash = book.file_ref.indexOf("/");
+    const bucket = book.file_ref.slice(0, slash);
+    const path = book.file_ref.slice(slash + 1);
+    const { data: signed } = await client.storage.from(bucket).createSignedUrl(path, 3600);
+    fileUrl = signed?.signedUrl ?? "";
+  }
 
   const progress = await getProgress(book.id, supabaseProgress(client));
 
@@ -67,7 +74,8 @@ export default async function ReaderPage({
       bookId={book.id}
       title={book.title}
       pageCount={book.page_count}
-      fileUrl={signed?.signedUrl ?? ""}
+      format={format}
+      fileUrl={fileUrl}
       initialPage={progress.currentPage}
       furthestReadPage={progress.furthestReadPage}
     />

@@ -1,16 +1,29 @@
 import { NextResponse } from "next/server";
 import { createBook } from "@/core/library/createBook.js";
 import { readPdfMetadata } from "@/core/library/pdfMeta.js";
+import { readEpubMetadata } from "@/core/epub/extractEpubPages.js";
 import { supabaseBooks } from "@/adapters/supabase/supabaseBooks.js";
 import { supabaseStorage } from "@/adapters/supabase/supabaseStorage.js";
 import { supabaseUser } from "@/adapters/supabase/userClient.js";
+import type { BookFormat } from "@/core/library/types.js";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
-/** Upload a PDF: store it + create a Book row via the createBook seam. */
+const PDF_TYPE = "application/pdf";
+const EPUB_TYPE = "application/epub+zip";
+
+/** Detects the book format from the file's MIME type or extension. */
+function detectFormat(file: File): BookFormat | null {
+  const name = file.name.toLowerCase();
+  if (file.type === PDF_TYPE || name.endsWith(".pdf")) return "pdf";
+  if (file.type === EPUB_TYPE || name.endsWith(".epub")) return "epub";
+  return null;
+}
+
+/** Upload a PDF or EPUB: store it + create a Book row via the createBook seam. */
 export async function POST(req: Request) {
   const client = await supabaseUser();
   const {
@@ -23,8 +36,9 @@ export async function POST(req: Request) {
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "expected a 'file' field" }, { status: 400 });
   }
-  if (file.type && file.type !== "application/pdf") {
-    return NextResponse.json({ error: "only PDF files are supported" }, { status: 415 });
+  const format = detectFormat(file);
+  if (!format) {
+    return NextResponse.json({ error: "only PDF and EPUB files are supported" }, { status: 415 });
   }
   if (file.size > MAX_FILE_SIZE) {
     return NextResponse.json(
@@ -36,11 +50,11 @@ export async function POST(req: Request) {
   const fileBytes = new Uint8Array(await file.arrayBuffer());
   try {
     const book = await createBook(
-      { fileBytes, filename: file.name },
+      { fileBytes, filename: file.name, format },
       {
         storage: supabaseStorage(client, "pdfs", user.id),
         books: supabaseBooks(client),
-        pdfMeta: { read: readPdfMetadata },
+        pdfMeta: { read: format === "epub" ? readEpubMetadata : readPdfMetadata },
       },
     );
 

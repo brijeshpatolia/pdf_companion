@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ingest } from "../../../src/core/ingestion/ingest.js";
 import { createPdfTextExtractor } from "../../../src/core/ingestion/extractText.js";
+import { createEpubTextExtractor } from "../../../src/core/epub/extractEpubPages.js";
 import { supabaseServer } from "../../../src/adapters/supabase/serverClient.js";
 import { supabaseChunks } from "../../../src/adapters/supabase/supabaseChunks.js";
 import { supabaseIngestBooks } from "../../../src/adapters/supabase/supabaseIngestBooks.js";
@@ -22,8 +23,17 @@ export async function POST(req: NextRequest) {
 
   const client = supabaseServer();
 
+  // Pick the text extractor by the book's format (defaults to PDF).
+  const { data: bookRow } = await client
+    .from("books")
+    .select("format")
+    .eq("id", bookId)
+    .single();
+  const extractor =
+    bookRow?.format === "epub" ? createEpubTextExtractor() : createPdfTextExtractor();
+
   const deps = {
-    pdfText: createPdfTextExtractor(),
+    pdfText: extractor,
     embedder: createLocalEmbedder(),
     chunks: supabaseChunks(client),
     books: supabaseIngestBooks(client),

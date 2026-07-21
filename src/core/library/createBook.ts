@@ -16,6 +16,7 @@ export async function createBook(
     pageCount: meta.pageCount,
     fileRef: ref,
     status: "uploaded",
+    format: input.format ?? "pdf",
   });
 }
 

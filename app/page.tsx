@@ -97,8 +97,11 @@ export default function Home() {
   }
 
   async function uploadFile(file: File) {
-    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
-      setError("Only PDF files are supported.");
+    const name = file.name.toLowerCase();
+    const isPdf = file.type === "application/pdf" || name.endsWith(".pdf");
+    const isEpub = file.type === "application/epub+zip" || name.endsWith(".epub");
+    if (!isPdf && !isEpub) {
+      setError("Only PDF and EPUB files are supported.");
       return;
     }
     if (file.size > MAX_SIZE) {
@@ -168,13 +171,13 @@ export default function Home() {
           </span>
         ) : (
           <>
-            <span style={{ fontWeight: 600 }}>Drop a PDF here, or click to browse</span>
+            <span style={{ fontWeight: 600 }}>Drop a PDF or EPUB here, or click to browse</span>
             <span style={{ color: "var(--faint)", fontSize: "0.8rem" }}>Up to 50 MB</span>
           </>
         )}
         <input
           type="file"
-          accept="application/pdf"
+          accept="application/pdf,application/epub+zip,.pdf,.epub"
           onChange={onUpload}
           disabled={busy}
           style={{ display: "none" }}

@@ -9,7 +9,8 @@ A reading companion for hard books. Instead of pausing to paste a page into Chat
 ## What works today
 
 - **🔐 Accounts** — passwordless magic-link sign-in (Supabase Auth). Every book, highlight, chat, and page of progress is scoped to its owner by Row-Level Security.
-- **📚 Library** — drag-and-drop PDF upload (50 MB guardrail), live ingestion status, retry failed ingestions, delete with full storage + data cleanup.
+- **📚 Library** — drag-and-drop **PDF and EPUB** upload (50 MB guardrail), live ingestion status, retry failed ingestions, delete with full storage + data cleanup.
+- **📗 EPUB support** — DRM-free EPUBs are parsed and split into synthetic pages, so the whole page-aware pipeline (chat, retrieval, progress, highlights) works on them too; the reader renders them as clean prose.
 - **📖 Split-view reader** — PDF.js rendering beside the companion, keyboard navigation (`←`/`→`), jump-to-page, and a reading-progress bar. Your furthest sequentially-read page is tracked and restored.
 - **💬 Page-aware companion** — streaming answers grounded in a 4-source context: the page you're on, semantically retrieved passages, a rolling summary of everything read so far, and the conversation history. Stop generation mid-stream, retry on errors.
 - **✨ Select-to-ask** — highlight any passage and choose **Define · Deep Dive · ELI5**.
@@ -19,7 +20,9 @@ A reading companion for hard books. Instead of pausing to paste a page into Chat
 
 ## Stack
 
-Next.js (App Router) · PDF.js / react-pdf · Supabase (Postgres + pgvector + Storage) · OpenRouter / Anthropic gateways · @huggingface/transformers (local embedder) · Vitest
+Next.js (App Router) · PDF.js / react-pdf · fflate (EPUB parsing) · Supabase (Postgres + pgvector + Auth + Storage) · OpenRouter / Anthropic gateways · @huggingface/transformers (local embedder) · Vitest
+
+> **Note on Kindle books:** Amazon Kindle purchases are DRM-locked with no API for third-party access, so they can't be imported. EPUB (the open standard, widely sold DRM-free) is the supported path for bringing your own books.
 
 ## Getting started
 

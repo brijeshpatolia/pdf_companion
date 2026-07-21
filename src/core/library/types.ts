@@ -9,6 +9,8 @@
 
 export type IngestionStatus = "uploaded" | "processing" | "ready" | "failed";
 
+export type BookFormat = "pdf" | "epub";
+
 export interface Book {
   id: string;
   ownerId: string | null;
@@ -16,6 +18,7 @@ export interface Book {
   pageCount: number;
   fileRef: string;
   status: IngestionStatus;
+  format: BookFormat;
 }
 
 export interface PdfMetadata {
@@ -47,4 +50,6 @@ export interface CreateBookDeps {
 export interface CreateBookInput {
   fileBytes: Uint8Array;
   filename: string;
+  /** Defaults to "pdf" when omitted. */
+  format?: BookFormat;
 }
