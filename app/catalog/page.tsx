@@ -12,17 +12,26 @@ interface CuratedBook {
   gutenbergId: number;
 }
 
+type BookSource = "gutenberg" | "archive";
+
 interface SearchResult {
-  gutenbergId: number;
+  gutenbergId?: number;
+  archiveId?: string;
   title: string;
   author: string;
   coverUrl?: string;
-  downloadCount: number;
-  languages: string[];
 }
 
 type AddState = "idle" | "adding" | "added" | "error";
-type ImportBody = { catalogId: string } | { gutenbergId: number; title: string };
+type ImportBody =
+  | { catalogId: string }
+  | { gutenbergId: number; title: string }
+  | { archiveId: string; title: string };
+
+const SOURCES: { id: BookSource; label: string }[] = [
+  { id: "gutenberg", label: "Project Gutenberg" },
+  { id: "archive", label: "Internet Archive" },
+];
 
 interface Card {
   key: string;
@@ -72,9 +81,10 @@ function Cover({ url }: { url?: string }) {
 export default function CatalogPage() {
   const router = useRouter();
   const [curated, setCurated] = useState<CuratedBook[]>([]);
-  const [source, setSource] = useState("");
+  const [curatedSource, setCuratedSource] = useState("");
   const [loaded, setLoaded] = useState(false);
 
+  const [bookSource, setBookSource] = useState<BookSource>("gutenberg");
   const [query, setQuery] = useState("");
   const [debounced, setDebounced] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -92,7 +102,7 @@ export default function CatalogPage() {
       .then((r) => r.json())
       .then((data) => {
         if (Array.isArray(data.books)) setCurated(data.books);
-        if (data.source) setSource(data.source);
+        if (data.source) setCuratedSource(data.source);
       })
       .catch(() => {})
       .finally(() => setLoaded(true));
@@ -104,7 +114,7 @@ export default function CatalogPage() {
     return () => clearTimeout(id);
   }, [query]);
 
-  const runSearch = useCallback(async (q: string, p: number) => {
+  const runSearch = useCallback(async (q: string, p: number, src: BookSource) => {
     if (!q) {
       setResults([]);
       setHasMore(false);
@@ -115,7 +125,7 @@ export default function CatalogPage() {
     setSearching(true);
     setSearchError(null);
     try {
-      const res = await fetch(`/api/catalog/search?q=${encodeURIComponent(q)}&page=${p}`);
+      const res = await fetch(`/api/catalog/search?q=${encodeURIComponent(q)}&page=${p}&source=${src}`);
       const data = await res.json();
       if (mine !== reqId.current) return; // a newer search superseded this one
       if (!res.ok) throw new Error(data.error ?? `search failed (${res.status})`);
@@ -130,8 +140,8 @@ export default function CatalogPage() {
 
   useEffect(() => {
     setPage(1);
-    void runSearch(debounced, 1);
-  }, [debounced, runSearch]);
+    void runSearch(debounced, 1, bookSource);
+  }, [debounced, bookSource, runSearch]);
 
   async function add(key: string, body: ImportBody) {
     setState((s) => ({ ...s, [key]: "adding" }));
@@ -155,13 +165,15 @@ export default function CatalogPage() {
 
   const isSearch = debounced.length > 0;
   const cards: Card[] = isSearch
-    ? results.map((r) => ({
-        key: `g-${r.gutenbergId}`,
+    ? results.map((r): Card => ({
+        key: r.archiveId ? `a-${r.archiveId}` : `g-${r.gutenbergId}`,
         title: r.title,
         author: r.author,
         coverUrl: r.coverUrl,
         showCover: true,
-        body: { gutenbergId: r.gutenbergId, title: r.title },
+        body: r.archiveId
+          ? { archiveId: r.archiveId, title: r.title }
+          : { gutenbergId: r.gutenbergId!, title: r.title },
       }))
     : curated.map((b) => ({
         key: b.id,
@@ -181,7 +193,7 @@ export default function CatalogPage() {
             Free books
           </h1>
           <p style={{ color: "var(--muted)", marginTop: 0 }}>
-            Search the full {source || "Project Gutenberg"} catalog, or pick from the shelf below.
+            Search public-domain books, or pick from the {curatedSource || "Project Gutenberg"} shelf below.
           </p>
         </div>
         <Link href="/" className="btn-ghost btn-sm" style={{ whiteSpace: "nowrap" }}>
@@ -200,6 +212,27 @@ export default function CatalogPage() {
         />
         {searching && (
           <span className="spinner" style={{ position: "absolute", right: 14, top: 14, color: "var(--muted)" }} />
+        )}
+      </div>
+
+      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginTop: "0.6rem", flexWrap: "wrap" }}>
+        <div role="tablist" aria-label="Book source" style={{ display: "flex", gap: "0.3rem" }}>
+          {SOURCES.map((s) => (
+            <button
+              key={s.id}
+              role="tab"
+              aria-selected={bookSource === s.id}
+              className={`btn-sm${bookSource === s.id ? " btn-primary" : " btn-ghost"}`}
+              onClick={() => setBookSource(s.id)}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+        {bookSource === "archive" && (
+          <span style={{ color: "var(--faint)", fontSize: "0.78rem" }}>
+            Scanned public-domain books — text quality varies (OCR).
+          </span>
         )}
       </div>
 
@@ -290,7 +323,7 @@ export default function CatalogPage() {
             onClick={() => {
               const next = page + 1;
               setPage(next);
-              void runSearch(debounced, next);
+              void runSearch(debounced, next, bookSource);
             }}
             disabled={searching}
           >
