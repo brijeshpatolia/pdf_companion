@@ -27,6 +27,8 @@ export default function Reader({ bookId, title, pageCount, fileUrl, initialPage 
   const [furthest, setFurthest] = useState(initialFurthest);
   const [jump, setJump] = useState("");
   const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
+  const [mobileView, setMobileView] = useState<"book" | "chat">("book");
+  const [pageWidth, setPageWidth] = useState(640);
   const [savedVersion, setSavedVersion] = useState(0);
   const [flash, setFlash] = useState<{ text: string; ok: boolean } | null>(null);
   const pdfSectionRef = useRef<HTMLElement>(null);
@@ -85,6 +87,7 @@ export default function Reader({ bookId, title, pageCount, fileUrl, initialPage 
 
   const onSelectToAsk = useCallback((selection: string, intent: Intent) => {
     setPendingQuestion(buildIntentQuestion(intent, selection));
+    setMobileView("chat"); // on narrow screens, surface the answer
   }, []);
 
   const showFlash = useCallback((text: string, ok: boolean) => {
@@ -117,6 +120,20 @@ export default function Reader({ bookId, title, pageCount, fileUrl, initialPage 
     };
   }, []);
 
+  // Fit the PDF page to the pane on narrow screens (640px cap on desktop).
+  useEffect(() => {
+    const el = pdfSectionRef.current;
+    if (!el) return;
+    const update = () => {
+      const w = el.clientWidth;
+      if (w > 100) setPageWidth(Math.min(640, w - 24));
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   const onJump = (e: React.FormEvent) => {
     e.preventDefault();
     const n = parseInt(jump, 10);
@@ -128,6 +145,7 @@ export default function Reader({ bookId, title, pageCount, fileUrl, initialPage 
     <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
       {/* top bar */}
       <header
+        className="reader-header"
         style={{
           display: "flex",
           alignItems: "center",
@@ -171,7 +189,7 @@ export default function Reader({ bookId, title, pageCount, fileUrl, initialPage 
           >
             Next ›
           </button>
-          <form onSubmit={onJump} style={{ display: "flex", gap: "0.3rem" }}>
+          <form onSubmit={onJump} className="jump-form">
             <input
               className="input"
               value={jump}
@@ -194,19 +212,31 @@ export default function Reader({ bookId, title, pageCount, fileUrl, initialPage 
         />
       </div>
 
+      {/* Book/Chat switcher (narrow screens only) */}
+      <div className="mobile-toggle" role="tablist" aria-label="Reader view">
+        <button
+          role="tab"
+          aria-selected={mobileView === "book"}
+          className={`tab${mobileView === "book" ? " active" : ""}`}
+          onClick={() => setMobileView("book")}
+        >
+          📖 Book
+        </button>
+        <button
+          role="tab"
+          aria-selected={mobileView === "chat"}
+          className={`tab${mobileView === "chat" ? " active" : ""}`}
+          onClick={() => setMobileView("chat")}
+        >
+          💬 Companion
+        </button>
+      </div>
+
       {/* split view: reader | companion */}
-      <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
+      <div className="reader-split">
         <section
           ref={pdfSectionRef}
-          style={{
-            flex: "1 1 60%",
-            overflow: "auto",
-            display: "flex",
-            justifyContent: "center",
-            padding: "1rem",
-            background: "#0f131b",
-            position: "relative",
-          }}
+          className={`pane-book${mobileView === "chat" ? " hidden-narrow" : ""}`}
         >
           {fileUrl ? (
             <Document
@@ -218,7 +248,7 @@ export default function Reader({ bookId, title, pageCount, fileUrl, initialPage 
                 </p>
               }
             >
-              <Page pageNumber={page} renderTextLayer renderAnnotationLayer={false} width={640} />
+              <Page pageNumber={page} renderTextLayer renderAnnotationLayer={false} width={pageWidth} />
             </Document>
           ) : (
             <p style={{ color: "var(--danger)" }}>Could not load the file.</p>
@@ -236,7 +266,11 @@ export default function Reader({ bookId, title, pageCount, fileUrl, initialPage 
           pendingQuestion={pendingQuestion}
           onQuestionConsumed={() => setPendingQuestion(null)}
           savedVersion={savedVersion}
-          onJumpToPage={go}
+          onJumpToPage={(n) => {
+            go(n);
+            setMobileView("book");
+          }}
+          mobileHidden={mobileView === "book"}
         />
       </div>
     </div>

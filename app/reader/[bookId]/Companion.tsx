@@ -27,6 +27,8 @@ interface CompanionProps {
   /** Bumped by the reader whenever it creates a saved item (e.g. a highlight). */
   savedVersion?: number;
   onJumpToPage?: (page: number) => void;
+  /** On narrow screens the reader toggles between panes; true hides this one. */
+  mobileHidden?: boolean;
 }
 
 export default function Companion({
@@ -36,6 +38,7 @@ export default function Companion({
   onQuestionConsumed,
   savedVersion = 0,
   onJumpToPage,
+  mobileHidden = false,
 }: CompanionProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -227,16 +230,7 @@ export default function Companion({
   };
 
   return (
-    <aside
-      style={{
-        flex: "1 1 40%",
-        minWidth: 280,
-        borderLeft: "1px solid var(--border)",
-        display: "flex",
-        flexDirection: "column",
-        background: "var(--panel)",
-      }}
-    >
+    <aside className={`pane-companion${mobileHidden ? " hidden-narrow" : ""}`}>
       <div style={{ display: "flex", borderBottom: "1px solid var(--border)" }}>
         <button className={`tab${tab === "chat" ? " active" : ""}`} onClick={() => setTab("chat")}>
           Chat
