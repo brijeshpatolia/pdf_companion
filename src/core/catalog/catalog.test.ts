@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { CATALOG, getCatalogBook, gutenbergEpubUrl } from "./catalog.js";
+import { CATALOG, CATALOG_SUBJECTS, getCatalogBook, gutenbergEpubUrl } from "./catalog.js";
 
 describe("CATALOG", () => {
   it("has unique, well-formed entries", () => {
@@ -14,7 +14,15 @@ describe("CATALOG", () => {
       expect(book.gutenbergId).toBeGreaterThan(0);
       // The id encodes the Gutenberg id.
       expect(book.id).toBe(`gutenberg-${book.gutenbergId}`);
+      // Every book has a known subject.
+      expect(CATALOG_SUBJECTS).toContain(book.subject);
     }
+  });
+
+  it("covers more than one subject, including science & technology", () => {
+    const subjects = new Set(CATALOG.map((b) => b.subject));
+    expect(subjects.size).toBeGreaterThan(1);
+    expect(subjects.has("Science & Technology")).toBe(true);
   });
 
   it("looks up a book by id", () => {

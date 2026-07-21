@@ -9,6 +9,7 @@ interface CuratedBook {
   title: string;
   author: string;
   description: string;
+  subject: string;
   gutenbergId: number;
 }
 
@@ -38,6 +39,7 @@ interface Card {
   title: string;
   author: string;
   description?: string;
+  subject?: string;
   coverUrl?: string;
   showCover?: boolean;
   body: ImportBody;
@@ -180,10 +182,74 @@ export default function CatalogPage() {
         title: b.title,
         author: b.author,
         description: b.description,
+        subject: b.subject,
         body: { catalogId: b.id },
       }));
 
+  // Curated books are grouped by subject; search results are a flat list.
+  const groups: { subject: string; cards: Card[] }[] = [];
+  if (!isSearch) {
+    for (const c of cards) {
+      const subject = c.subject ?? "Books";
+      let group = groups.find((g) => g.subject === subject);
+      if (!group) {
+        group = { subject, cards: [] };
+        groups.push(group);
+      }
+      group.cards.push(c);
+    }
+  }
+
   const anyAdded = Object.values(state).some((s) => s === "added");
+
+  const renderCard = (c: Card) => {
+    const st = state[c.key] ?? "idle";
+    return (
+      <div key={c.key} className="card fade-in" style={{ padding: "1rem", display: "flex", gap: "0.8rem" }}>
+        {c.showCover && <Cover url={c.coverUrl} />}
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", minWidth: 0, flex: 1 }}>
+          <strong style={{ lineHeight: 1.3 }}>{c.title}</strong>
+          <span style={{ color: "var(--muted)", fontSize: "0.85rem" }}>{c.author}</span>
+          {c.description && (
+            <p style={{ margin: "0.1rem 0 0", color: "var(--faint)", fontSize: "0.82rem", lineHeight: 1.45, flex: 1 }}>
+              {c.description}
+            </p>
+          )}
+          {st === "added" ? (
+            <button className="btn-sm" disabled style={{ color: "var(--ok)", borderColor: "transparent", marginTop: "auto" }}>
+              ✓ Added
+            </button>
+          ) : (
+            <button
+              className="btn-primary btn-sm"
+              onClick={() => add(c.key, c.body)}
+              disabled={st === "adding"}
+              style={{ marginTop: "auto", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.4rem" }}
+            >
+              {st === "adding" ? (
+                <>
+                  <span className="spinner" /> Adding…
+                </>
+              ) : (
+                "Add to library"
+              )}
+            </button>
+          )}
+          {st === "error" && (
+            <p role="alert" style={{ margin: 0, color: "var(--danger)", fontSize: "0.78rem" }}>
+              {errors[c.key]}
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const gridStyle = {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+    gap: "0.8rem",
+  } as const;
 
   return (
     <main style={{ maxWidth: 900, margin: "0 auto", padding: "2.5rem 1.25rem" }}>
@@ -258,64 +324,24 @@ export default function CatalogPage() {
         </p>
       )}
 
-      <div
-        style={{
-          marginTop: "1.5rem",
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
-          gap: "0.8rem",
-        }}
-      >
-        {!loaded && !isSearch &&
-          [0, 1, 2, 3, 4, 5].map((i) => <div key={i} className="skeleton" style={{ height: 150 }} />)}
-
-        {cards.map((c) => {
-          const st = state[c.key] ?? "idle";
-          return (
-            <div
-              key={c.key}
-              className="card fade-in"
-              style={{ padding: "1rem", display: "flex", gap: "0.8rem" }}
-            >
-              {c.showCover && <Cover url={c.coverUrl} />}
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", minWidth: 0, flex: 1 }}>
-                <strong style={{ lineHeight: 1.3 }}>{c.title}</strong>
-                <span style={{ color: "var(--muted)", fontSize: "0.85rem" }}>{c.author}</span>
-                {c.description && (
-                  <p style={{ margin: "0.1rem 0 0", color: "var(--faint)", fontSize: "0.82rem", lineHeight: 1.45, flex: 1 }}>
-                    {c.description}
-                  </p>
-                )}
-                {st === "added" ? (
-                  <button className="btn-sm" disabled style={{ color: "var(--ok)", borderColor: "transparent", marginTop: "auto" }}>
-                    ✓ Added
-                  </button>
-                ) : (
-                  <button
-                    className="btn-primary btn-sm"
-                    onClick={() => add(c.key, c.body)}
-                    disabled={st === "adding"}
-                    style={{ marginTop: "auto", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.4rem" }}
-                  >
-                    {st === "adding" ? (
-                      <>
-                        <span className="spinner" /> Adding…
-                      </>
-                    ) : (
-                      "Add to library"
-                    )}
-                  </button>
-                )}
-                {st === "error" && (
-                  <p role="alert" style={{ margin: 0, color: "var(--danger)", fontSize: "0.78rem" }}>
-                    {errors[c.key]}
-                  </p>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      {isSearch ? (
+        <div style={{ ...gridStyle, marginTop: "1.5rem" }}>{cards.map(renderCard)}</div>
+      ) : !loaded ? (
+        <div style={{ ...gridStyle, marginTop: "1.5rem" }}>
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="skeleton" style={{ height: 150 }} />
+          ))}
+        </div>
+      ) : (
+        groups.map((g) => (
+          <section key={g.subject} style={{ marginTop: "1.75rem" }}>
+            <h2 style={{ fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted)", margin: "0 0 0.75rem" }}>
+              {g.subject}
+            </h2>
+            <div style={gridStyle}>{g.cards.map(renderCard)}</div>
+          </section>
+        ))
+      )}
 
       {isSearch && hasMore && (
         <div style={{ textAlign: "center", marginTop: "1.25rem" }}>
