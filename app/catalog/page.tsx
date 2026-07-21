@@ -30,7 +30,43 @@ interface Card {
   author: string;
   description?: string;
   coverUrl?: string;
+  showCover?: boolean;
   body: ImportBody;
+}
+
+/** Fixed-size cover slot: the image fills it, with a book placeholder when
+ *  there's no cover or it fails to load. */
+function Cover({ url }: { url?: string }) {
+  const [failed, setFailed] = useState(false);
+  const showImage = url && !failed;
+  return (
+    <div
+      style={{
+        width: 52,
+        height: 76,
+        flexShrink: 0,
+        borderRadius: 4,
+        border: "1px solid var(--border)",
+        background: "var(--bg-raised)",
+        overflow: "hidden",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      {showImage ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={url}
+          alt=""
+          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <span style={{ fontSize: "1.3rem", opacity: 0.5 }}>📖</span>
+      )}
+    </div>
+  );
 }
 
 export default function CatalogPage() {
@@ -124,6 +160,7 @@ export default function CatalogPage() {
         title: r.title,
         author: r.author,
         coverUrl: r.coverUrl,
+        showCover: true,
         body: { gutenbergId: r.gutenbergId, title: r.title },
       }))
     : curated.map((b) => ({
@@ -207,18 +244,7 @@ export default function CatalogPage() {
               className="card fade-in"
               style={{ padding: "1rem", display: "flex", gap: "0.8rem" }}
             >
-              {c.coverUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={c.coverUrl}
-                  alt=""
-                  width={56}
-                  style={{ height: "fit-content", borderRadius: 4, flexShrink: 0, border: "1px solid var(--border)" }}
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).style.display = "none";
-                  }}
-                />
-              )}
+              {c.showCover && <Cover url={c.coverUrl} />}
               <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", minWidth: 0, flex: 1 }}>
                 <strong style={{ lineHeight: 1.3 }}>{c.title}</strong>
                 <span style={{ color: "var(--muted)", fontSize: "0.85rem" }}>{c.author}</span>
