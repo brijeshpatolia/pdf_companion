@@ -16,6 +16,7 @@ A reading companion for hard books. Instead of pausing to paste a page into Chat
 - **💬 Page-aware companion** — streaming answers grounded in a 4-source context: the page you're on, semantically retrieved passages, a rolling summary of everything read so far, and the conversation history. Stop generation mid-stream, retry on errors.
 - **✨ Select-to-ask** — highlight any passage and choose **Define · Deep Dive · ELI5**.
 - **📌 Capture** — save highlights straight from the selection tooltip and star AI answers worth keeping; browse them in the companion's **Saved** tab with jump-to-page.
+- **📝 Notes** — write your own free-form, editable notes anchored to the page you're on, in the companion's **Notes** tab (create, edit, delete, jump-to-page).
 - **🧠 Local embeddings** — all-MiniLM-L6-v2 runs in-process (no embedding API cost); retrieval via Supabase pgvector.
 - **🔁 Ingestion pipeline** — text extraction, chunking, embedding, and status lifecycle (`uploaded → processing → ready / failed`) with retry.
 - **📊 Usage & cost dashboard** — every answer records tokens and cost; the dashboard shows total spend, per-book and per-model breakdowns, and a daily-spend chart (all RLS-scoped to you).
@@ -48,7 +49,7 @@ The complete product spec lives in **[SPEC.md](./SPEC.md)** — problem, feature
 ## Roadmap
 
 - **Phase 0 — MVP:** ✅ split-view reader + page-aware chat + select-to-ask + highlights + save-AI-answer *(done)*
-- **Phase 1:** ✅ accounts · ✅ usage dashboard *(done)* · managed AI pool, notes, Excalidraw, export *(next)*
+- **Phase 1:** ✅ accounts · ✅ usage dashboard · ✅ notes *(done)* · managed AI pool, Excalidraw, export *(next)*
 - **Phase 2:** sharing, flashcards, sync, live co-reading, cross-book Q&A
 
 ---
