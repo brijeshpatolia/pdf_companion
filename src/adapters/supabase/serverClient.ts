@@ -2,7 +2,12 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 let cached: SupabaseClient | null = null;
 
-/** Server-side Supabase client (service role). Never import into client code. */
+/**
+ * Service-role Supabase client — **bypasses Row-Level Security**. Reserve it
+ * for trusted server-to-server work with no user session (the background
+ * ingestion job). All user-facing access must go through `supabaseUser()` so
+ * RLS enforces per-user ownership. Never import into client code.
+ */
 export function supabaseServer(): SupabaseClient {
   if (cached) return cached;
   const url = process.env.SUPABASE_URL;

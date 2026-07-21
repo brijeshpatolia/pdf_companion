@@ -8,6 +8,7 @@ A reading companion for hard books. Instead of pausing to paste a page into Chat
 
 ## What works today
 
+- **🔐 Accounts** — passwordless magic-link sign-in (Supabase Auth). Every book, highlight, chat, and page of progress is scoped to its owner by Row-Level Security.
 - **📚 Library** — drag-and-drop PDF upload (50 MB guardrail), live ingestion status, retry failed ingestions, delete with full storage + data cleanup.
 - **📖 Split-view reader** — PDF.js rendering beside the companion, keyboard navigation (`←`/`→`), jump-to-page, and a reading-progress bar. Your furthest sequentially-read page is tracked and restored.
 - **💬 Page-aware companion** — streaming answers grounded in a 4-source context: the page you're on, semantically retrieved passages, a rolling summary of everything read so far, and the conversation history. Stop generation mid-stream, retry on errors.
@@ -42,7 +43,7 @@ The complete product spec lives in **[SPEC.md](./SPEC.md)** — problem, feature
 ## Roadmap
 
 - **Phase 0 — MVP:** ✅ split-view reader + page-aware chat + select-to-ask + highlights + save-AI-answer *(done)*
-- **Phase 1:** accounts, managed AI pool + usage dashboard, notes, Excalidraw, export
+- **Phase 1:** ✅ accounts *(done)* · managed AI pool + usage dashboard, notes, Excalidraw, export *(next)*
 - **Phase 2:** sharing, flashcards, sync, live co-reading, cross-book Q&A
 
 ---

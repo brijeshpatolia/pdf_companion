@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import AuthButton from "./AuthButton";
 
 interface BookSummary {
   id: string;
@@ -139,12 +140,17 @@ export default function Home() {
 
   return (
     <main style={{ maxWidth: 720, margin: "0 auto", padding: "2.5rem 1.25rem" }}>
-      <h1 className="wordmark" style={{ marginBottom: "0.25rem", fontSize: "2rem" }}>
-        PDF Companion
-      </h1>
-      <p style={{ color: "var(--muted)", marginTop: 0 }}>
-        An AI that reads with you — always on your page, holding the whole book in mind.
-      </p>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem" }}>
+        <div>
+          <h1 className="wordmark" style={{ marginBottom: "0.25rem", fontSize: "2rem" }}>
+            PDF Companion
+          </h1>
+          <p style={{ color: "var(--muted)", marginTop: 0 }}>
+            An AI that reads with you — always on your page, holding the whole book in mind.
+          </p>
+        </div>
+        <AuthButton />
+      </div>
 
       <label
         className={`dropzone${dragover ? " is-dragover" : ""}${busy ? " is-busy" : ""}`}

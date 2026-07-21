@@ -10,11 +10,33 @@
 
 ```bash
 npm install
-npx supabase start      # first run pulls ~2-4 GB of images; cached after
+cp .env.example .env.local   # then fill in the values below
+npx supabase start           # first run pulls ~2-4 GB of images; cached after
 ```
 
 `supabase start` applies the migrations in `supabase/migrations/` automatically,
-including the `books` table and the private `pdfs` storage bucket.
+including the `books` table, the private `pdfs` storage bucket, and the
+Row-Level Security policies that scope every row to its owner.
+
+After `supabase start`, populate `.env.local` from `npx supabase status`:
+
+- `SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_URL` → the **API URL**
+- `SUPABASE_SERVICE_ROLE_KEY` → the **service_role key** (server-only)
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` → the **anon key** (safe for the browser)
+
+## Auth (magic link)
+
+Sign-in is passwordless: the login page emails a one-time link that lands on
+`/auth/callback` and establishes the session. Access is gated by `middleware.ts`,
+and every data route runs as the signed-in user so RLS enforces ownership.
+
+Local Supabase captures outbound email instead of sending it — open **Inbucket**
+at the URL shown by `npx supabase status` (default <http://127.0.0.1:54324>) to
+click the magic link. No SMTP setup is needed for local dev.
+
+On a hosted Supabase project you'll need to add your app's `/auth/callback` URL
+under **Authentication → URL Configuration → Redirect URLs**, and configure an
+SMTP sender for real email delivery.
 
 ## Tests
 

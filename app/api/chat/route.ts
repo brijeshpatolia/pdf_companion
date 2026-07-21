@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { ask } from "../../../src/core/chat/ask.js";
 import type { AskDeps } from "../../../src/core/chat/types.js";
-import { supabaseServer } from "../../../src/adapters/supabase/serverClient.js";
+import { supabaseUser } from "../../../src/adapters/supabase/userClient.js";
 import { createOpenRouterGateway } from "../../../src/adapters/openrouter/gateway.js";
 import { createAnthropicGateway } from "../../../src/adapters/anthropic/gateway.js";
 import { supabaseConversation } from "../../../src/adapters/supabase/supabaseConversation.js";
@@ -31,7 +31,12 @@ export async function GET(req: NextRequest) {
   const bookId = req.nextUrl.searchParams.get("bookId");
   if (!bookId) return NextResponse.json([], { status: 200 });
 
-  const client = supabaseServer();
+  const client = await supabaseUser();
+  const {
+    data: { user },
+  } = await client.auth.getUser();
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
   const conv = supabaseConversation(client);
   const messages = await conv.load(bookId);
   return NextResponse.json(messages);
@@ -50,7 +55,12 @@ export async function POST(req: NextRequest) {
     return new Response("Missing bookId, currentPage, or question", { status: 400 });
   }
 
-  const client = supabaseServer();
+  const client = await supabaseUser();
+  const {
+    data: { user },
+  } = await client.auth.getUser();
+  if (!user) return new Response("unauthorized", { status: 401 });
+
   const { gateway, model } = resolveGateway();
 
   const progress = await getProgress(bookId, supabaseProgress(client));

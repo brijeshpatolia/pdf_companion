@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabaseServer } from "@/adapters/supabase/serverClient.js";
+import { supabaseUser } from "@/adapters/supabase/userClient.js";
 import { supabaseSavedItems } from "@/adapters/supabase/supabaseSavedItems.js";
 import { saveItem, listSavedItems, removeSavedItem } from "@/core/saved/saved.js";
 import type { SavedItemKind } from "@/core/saved/types.js";
@@ -11,7 +11,13 @@ export async function GET(req: Request) {
   const bookId = searchParams.get("bookId");
   if (!bookId) return NextResponse.json({ error: "missing bookId" }, { status: 400 });
 
-  const port = supabaseSavedItems(supabaseServer());
+  const client = await supabaseUser();
+  const {
+    data: { user },
+  } = await client.auth.getUser();
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  const port = supabaseSavedItems(client);
   const items = await listSavedItems(bookId, port);
   return NextResponse.json(items);
 }
@@ -32,7 +38,13 @@ export async function POST(req: Request) {
     );
   }
 
-  const port = supabaseSavedItems(supabaseServer());
+  const client = await supabaseUser();
+  const {
+    data: { user },
+  } = await client.auth.getUser();
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  const port = supabaseSavedItems(client);
   try {
     const saved = await saveItem({ bookId, kind, page, text, question }, port);
     return NextResponse.json(saved, { status: 201 });
@@ -46,7 +58,13 @@ export async function DELETE(req: Request) {
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "missing id" }, { status: 400 });
 
-  const port = supabaseSavedItems(supabaseServer());
+  const client = await supabaseUser();
+  const {
+    data: { user },
+  } = await client.auth.getUser();
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  const port = supabaseSavedItems(client);
   await removeSavedItem(id, port);
   return NextResponse.json({ ok: true });
 }

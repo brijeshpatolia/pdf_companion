@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { supabaseServer } from "@/adapters/supabase/serverClient.js";
+import { redirect } from "next/navigation";
+import { supabaseUser } from "@/adapters/supabase/userClient.js";
 import { supabaseProgress } from "@/adapters/supabase/supabaseProgress.js";
 import { getProgress } from "@/core/progress/progress.js";
 import Reader from "./Reader";
@@ -13,7 +14,8 @@ export async function generateMetadata({
 }) {
   const { bookId } = await params;
   try {
-    const { data: book } = await supabaseServer()
+    const client = await supabaseUser();
+    const { data: book } = await client
       .from("books")
       .select("title")
       .eq("id", bookId)
@@ -30,8 +32,13 @@ export default async function ReaderPage({
   params: Promise<{ bookId: string }>;
 }) {
   const { bookId } = await params;
-  const client = supabaseServer();
+  const client = await supabaseUser();
+  const {
+    data: { user },
+  } = await client.auth.getUser();
+  if (!user) redirect(`/login?redirect=/reader/${bookId}`);
 
+  // RLS returns nothing unless the signed-in user owns this book.
   const { data: book } = await client
     .from("books")
     .select("id,title,page_count,file_ref")
