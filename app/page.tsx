@@ -155,8 +155,9 @@ export default function Home() {
         <AuthButton />
       </div>
 
-      <p style={{ marginTop: "1rem", marginBottom: 0 }}>
+      <p style={{ marginTop: "1rem", marginBottom: 0, display: "flex", gap: "1.25rem", flexWrap: "wrap" }}>
         <Link href="/catalog">📚 Browse free public-domain books →</Link>
+        <Link href="/usage">📊 Usage &amp; cost →</Link>
       </p>
 
       <label
