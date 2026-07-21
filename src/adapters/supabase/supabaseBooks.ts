@@ -25,15 +25,20 @@ function rowToBook(r: BookRow): Book {
 export function supabaseBooks(client: SupabaseClient): BooksPort {
   return {
     async insert(book) {
+      // When ownerId is null we omit the column so the DB default (auth.uid())
+      // stamps the authenticated caller as owner; the RLS insert policy then
+      // enforces it. An explicit ownerId is passed straight through.
+      const row: Record<string, unknown> = {
+        title: book.title,
+        page_count: book.pageCount,
+        file_ref: book.fileRef,
+        status: book.status,
+      };
+      if (book.ownerId != null) row.owner_id = book.ownerId;
+
       const { data, error } = await client
         .from("books")
-        .insert({
-          owner_id: book.ownerId,
-          title: book.title,
-          page_count: book.pageCount,
-          file_ref: book.fileRef,
-          status: book.status,
-        })
+        .insert(row)
         .select()
         .single();
       if (error) throw new Error(`books.insert failed: ${error.message}`);

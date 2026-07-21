@@ -3,7 +3,7 @@ import { createBook } from "@/core/library/createBook.js";
 import { readPdfMetadata } from "@/core/library/pdfMeta.js";
 import { supabaseBooks } from "@/adapters/supabase/supabaseBooks.js";
 import { supabaseStorage } from "@/adapters/supabase/supabaseStorage.js";
-import { supabaseServer } from "@/adapters/supabase/serverClient.js";
+import { supabaseUser } from "@/adapters/supabase/userClient.js";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -12,6 +12,12 @@ const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
 /** Upload a PDF: store it + create a Book row via the createBook seam. */
 export async function POST(req: Request) {
+  const client = await supabaseUser();
+  const {
+    data: { user },
+  } = await client.auth.getUser();
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
   const form = await req.formData();
   const file = form.get("file");
   if (!(file instanceof File)) {
@@ -28,12 +34,11 @@ export async function POST(req: Request) {
   }
 
   const fileBytes = new Uint8Array(await file.arrayBuffer());
-  const client = supabaseServer();
   try {
     const book = await createBook(
       { fileBytes, filename: file.name },
       {
-        storage: supabaseStorage(client),
+        storage: supabaseStorage(client, "pdfs", user.id),
         books: supabaseBooks(client),
         pdfMeta: { read: readPdfMetadata },
       },
@@ -54,9 +59,15 @@ export async function POST(req: Request) {
   }
 }
 
-/** List uploaded books for the library view. */
+/** List the signed-in user's books for the library view. */
 export async function GET() {
-  const client = supabaseServer();
+  const client = await supabaseUser();
+  const {
+    data: { user },
+  } = await client.auth.getUser();
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  // RLS restricts this to the caller's own rows.
   const { data, error } = await client
     .from("books")
     .select("id,title,page_count,status")
@@ -73,8 +84,13 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: "missing bookId" }, { status: 400 });
   }
 
-  const client = supabaseServer();
+  const client = await supabaseUser();
+  const {
+    data: { user },
+  } = await client.auth.getUser();
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
+  // RLS scopes both the lookup and the delete to the owner.
   const { data: book } = await client
     .from("books")
     .select("file_ref")
