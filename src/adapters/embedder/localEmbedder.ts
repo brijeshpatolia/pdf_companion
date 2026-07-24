@@ -3,12 +3,16 @@ import type { EmbedderPort } from "../../core/ingestion/types.js";
 
 const MODEL_ID = "Xenova/all-MiniLM-L6-v2";
 
+// Quantized (int8) weights: ~23 MB instead of ~90 MB for fp32. This keeps the
+// model inside serverless memory limits (e.g. Vercel Hobby's 1 GB) with a small
+// quality trade-off. Chunk and query embeddings share this loader, so they stay
+// consistent — cosine similarity is unaffected by the shared precision choice.
 let instance: FeatureExtractionPipeline | null = null;
 
 async function getEmbedder(): Promise<FeatureExtractionPipeline> {
   if (!instance) {
     instance = await pipeline("feature-extraction", MODEL_ID, {
-      dtype: "fp32",
+      dtype: "q8",
     }) as FeatureExtractionPipeline;
   }
   return instance;

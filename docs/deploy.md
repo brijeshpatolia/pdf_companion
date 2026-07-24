@@ -112,28 +112,28 @@ retrieval, chat, capture, dashboard) is live.
 
 Ingestion — the step that turns an uploaded/added book into searchable chunks —
 runs the **embedding model (`all-MiniLM-L6-v2`) in-process** inside the
-`/api/ingest` serverless function. On Vercel this has two real limits:
+`/api/ingest` serverless function. The embedder uses the **quantized (q8, ~23 MB)**
+model precisely so it fits inside serverless memory limits (e.g. Vercel Hobby's
+1 GB), so small and medium books ingest fine on the free tier. Two limits still
+apply for very large books:
 
-- **Memory / cold starts.** The model (fp32, ~90 MB) is loaded per cold start
-  and its cache is ephemeral, so it re-downloads and can push memory past
-  Hobby's 1 GB. `vercel.json` in this repo requests more memory for the heavy
-  functions, **but memory above 1 GB requires the Vercel Pro plan.** On Hobby,
-  ingestion of large books may fail with OOM.
+- **Memory / cold starts.** The model is loaded per cold start and its cache is
+  ephemeral, so it re-downloads each cold start. `vercel.json` in this repo
+  requests more memory for the heavy functions, **but memory above 1 GB requires
+  the Vercel Pro plan.**
 - **Time.** The function is capped at `maxDuration = 60` (Hobby/Pro allow up to
-  60/300 s). A big book (hundreds of pages) embedded sequentially can exceed
-  that.
+  60/300 s). A very large book (hundreds of pages) embedded sequentially can
+  exceed that.
 
-**So:** small books ingest fine on Hobby; larger books and consistent
-reliability want Pro. If you hit OOM or timeouts, the mitigations, in order of
-effort:
+If you hit OOM or timeouts on big books, in order of effort:
 
-1. **Use a smaller model precision.** In `src/adapters/embedder/localEmbedder.ts`
-   change `dtype: "fp32"` to `dtype: "q8"` (~23 MB, small quality trade-off).
-   Query and chunk embeddings both use this function, so they stay consistent.
-2. **Upgrade to Vercel Pro** and keep the `vercel.json` memory/duration bumps.
-3. **Move embeddings off the request path** (the real fix at scale): run them in
+1. **Upgrade to Vercel Pro** and keep the `vercel.json` memory/duration bumps.
+2. **Move embeddings off the request path** (the real fix at scale): run them in
    a Supabase Edge Function or a queue/worker, or swap the local embedder for a
    hosted embedding API. This keeps the web functions light.
+
+(The precision is set in `src/adapters/embedder/localEmbedder.ts` — raise it back
+to `dtype: "fp32"` if you want maximum embedding quality and have the memory.)
 
 Everything else in the app — reader, chat streaming, catalog search, auth,
 dashboard, notes — is ordinary Next.js and deploys without special handling.
