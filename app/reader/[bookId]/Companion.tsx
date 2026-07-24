@@ -219,6 +219,28 @@ export default function Companion({
     [refreshSaved],
   );
 
+  const [exporting, setExporting] = useState(false);
+  const exportBook = useCallback(async () => {
+    setExporting(true);
+    try {
+      const res = await fetch(`/api/export?bookId=${bookId}`);
+      if (!res.ok) throw new Error();
+      const blob = await res.blob();
+      const disposition = res.headers.get("Content-Disposition") ?? "";
+      const name = /filename="([^"]+)"/.exec(disposition)?.[1] ?? "book.md";
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {} finally {
+      setExporting(false);
+    }
+  }, [bookId]);
+
   useEffect(() => {
     if (pendingQuestion && !streaming) {
       sendQuestion(pendingQuestion);
@@ -374,8 +396,19 @@ export default function Companion({
             gap: "0.6rem",
           }}
         >
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <button
+              className="btn-ghost btn-sm"
+              onClick={exportBook}
+              disabled={exporting}
+              title="Download highlights, saved answers, and notes as Markdown"
+            >
+              {exporting ? "Exporting…" : "⬇ Export book"}
+            </button>
+          </div>
+
           {saved.length === 0 && (
-            <div style={{ color: "var(--muted)", textAlign: "center", marginTop: "2rem", fontSize: "0.9rem" }}>
+            <div style={{ color: "var(--muted)", textAlign: "center", marginTop: "1rem", fontSize: "0.9rem" }}>
               <p style={{ margin: 0, fontSize: "1.3rem" }}>✦</p>
               <p style={{ margin: "0.5rem 0 0" }}>
                 Nothing saved yet — highlight a passage in the book, or save an answer worth keeping.
