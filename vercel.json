@@ -1,0 +1,17 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "app/api/ingest/route.ts": {
+      "maxDuration": 60,
+      "memory": 3009
+    },
+    "app/api/books/route.ts": {
+      "maxDuration": 60,
+      "memory": 1769
+    },
+    "app/api/catalog/import/route.ts": {
+      "maxDuration": 60,
+      "memory": 1769
+    }
+  }
+}

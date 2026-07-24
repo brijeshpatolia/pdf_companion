@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import Notes from "./Notes";
 
 interface Message {
   role: "user" | "assistant";
@@ -44,8 +45,9 @@ export default function Companion({
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState<{ code: string; message: string } | null>(null);
-  const [tab, setTab] = useState<"chat" | "saved">("chat");
+  const [tab, setTab] = useState<"chat" | "saved" | "notes">("chat");
   const [saved, setSaved] = useState<SavedItem[]>([]);
+  const [notesCount, setNotesCount] = useState(0);
   const [savingText, setSavingText] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -238,6 +240,9 @@ export default function Companion({
         <button className={`tab${tab === "saved" ? " active" : ""}`} onClick={() => setTab("saved")}>
           Saved{saved.length > 0 ? ` (${saved.length})` : ""}
         </button>
+        <button className={`tab${tab === "notes" ? " active" : ""}`} onClick={() => setTab("notes")}>
+          Notes{notesCount > 0 ? ` (${notesCount})` : ""}
+        </button>
       </div>
 
       {tab === "chat" ? (
@@ -351,6 +356,13 @@ export default function Companion({
             )}
           </form>
         </>
+      ) : tab === "notes" ? (
+        <Notes
+          bookId={bookId}
+          currentPage={currentPage}
+          onJumpToPage={onJumpToPage}
+          onCountChange={setNotesCount}
+        />
       ) : (
         <div
           style={{

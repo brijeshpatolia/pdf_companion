@@ -8,6 +8,11 @@ import { supabaseIngestBooks } from "../../../src/adapters/supabase/supabaseInge
 import { supabaseIngestStorage } from "../../../src/adapters/supabase/supabaseIngestStorage.js";
 import { createLocalEmbedder } from "../../../src/adapters/embedder/localEmbedder.js";
 
+// Ingestion runs PDF/EPUB text extraction plus the in-process embedding model,
+// so it needs the Node runtime and the longest duration the plan allows.
+export const runtime = "nodejs";
+export const maxDuration = 60;
+
 export async function POST(req: NextRequest) {
   let body: { bookId?: string };
   try {
