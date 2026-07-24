@@ -158,9 +158,13 @@ export default function Reader({ bookId, title, pageCount, format = "pdf", fileU
         }}
       >
         <Link href="/">← Library</Link>
-        <strong style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <strong style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {title}
         </strong>
+        <Link href={`/reader/${bookId}/flashcards`} className="btn-ghost btn-sm" style={{ whiteSpace: "nowrap" }}>
+          🃏 Flashcards
+        </Link>
+        <span style={{ flex: 1 }} />
         {flash && (
           <span className={`badge ${flash.ok ? "badge-ok" : "badge-danger"} fade-in`} role="status">
             {flash.text}
