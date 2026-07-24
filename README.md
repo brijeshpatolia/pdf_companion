@@ -29,7 +29,7 @@ Next.js (App Router) · PDF.js / react-pdf · fflate (EPUB parsing) · Supabase 
 
 ## Getting started
 
-See **[docs/dev.md](./docs/dev.md)** for local setup (Supabase via Docker, env vars, tests).
+See **[docs/dev.md](./docs/dev.md)** for local setup (Supabase via Docker, env vars, tests), and **[docs/deploy.md](./docs/deploy.md)** to host it on Vercel + hosted Supabase.
 
 ```bash
 npm install
