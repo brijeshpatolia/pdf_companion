@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseUser } from "@/adapters/supabase/userClient.js";
 import { supabaseLibrarySearch } from "@/adapters/supabase/supabaseLibrarySearch.js";
 import { writeUsageRecord } from "@/adapters/supabase/supabaseUsage.js";
+import { checkBudget, budgetResponse } from "@/adapters/supabase/budgetGuard.js";
 import { createOpenRouterGateway } from "@/adapters/openrouter/gateway.js";
 import { createAnthropicGateway } from "@/adapters/anthropic/gateway.js";
 import { embedSingle } from "@/adapters/embedder/localEmbedder.js";
@@ -35,6 +36,9 @@ export async function POST(req: Request) {
   } = await client.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
+  const overBudget = await checkBudget(client);
+  if (overBudget) return budgetResponse(overBudget);
+
   let passages;
   try {
     passages = await supabaseLibrarySearch(client, embedSingle).searchAll(question, MAX_PASSAGES);
@@ -61,9 +65,12 @@ export async function POST(req: Request) {
         }
 
         // Cross-book spend is attributed to the top-matched book so it still
-        // shows in the usage dashboard (best-effort; never blocks the response).
-        if (usage && topBook) {
-          await writeUsageRecord(client, topBook.bookId, { ...usage, model }).catch(() => {});
+        // shows in the usage dashboard. Recorded even when nothing matched —
+        // the call was paid for either way, and the budget has to see it.
+        if (usage) {
+          await writeUsageRecord(client, topBook?.bookId ?? null, { ...usage, model }).catch(
+            () => {},
+          );
         }
 
         send({ type: "done" });

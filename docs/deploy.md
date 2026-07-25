@@ -70,6 +70,17 @@ Set **one** of these (Anthropic takes precedence if both are present):
 - `ANTHROPIC_API_KEY` — from <https://console.anthropic.com>
 - `OPENROUTER_API_KEY` — from <https://openrouter.ai>
 
+**That key is yours, and every reader spends against it.** So each reader has a
+rolling budget: **$1 per 24 hours** and **$10 per 30 days** by default. Past
+either ceiling, chat, cross-book Ask, and flashcard generation return a clear
+"you've used your budget" message instead of quietly running up your bill; the
+usage dashboard shows the remaining headroom before anyone gets there.
+
+Override with `USAGE_DAILY_LIMIT_USD` and `USAGE_MONTHLY_LIMIT_USD`. Setting one
+to `0` removes that ceiling — reasonable for a solo deployment, unwise for one
+you've shared. A malformed value falls back to the default rather than to
+unlimited, so a typo can't silently uncap you.
+
 ## 5. Import the repo into Vercel
 
 1. Push `main` to GitHub (already there).

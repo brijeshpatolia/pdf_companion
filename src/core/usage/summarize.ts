@@ -4,7 +4,8 @@
  */
 
 export interface UsageRow {
-  bookId: string;
+  /** Null for spend not attributable to one book, or whose book was deleted. */
+  bookId: string | null;
   bookTitle: string | null;
   tokensIn: number;
   tokensOut: number;
@@ -14,7 +15,7 @@ export interface UsageRow {
 }
 
 export interface BookUsage {
-  bookId: string;
+  bookId: string | null;
   title: string;
   costUsd: number;
   tokensIn: number;
@@ -48,8 +49,11 @@ function num(v: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+/** Groups spend with no surviving book under one honest label. */
+const UNATTRIBUTED = "Across your library";
+
 export function summarizeUsage(rows: UsageRow[]): UsageSummary {
-  const byBookMap = new Map<string, BookUsage>();
+  const byBookMap = new Map<string | null, BookUsage>();
   const byModelMap = new Map<string, ModelUsage>();
   const byDayMap = new Map<string, number>();
 
@@ -68,7 +72,7 @@ export function summarizeUsage(rows: UsageRow[]): UsageSummary {
 
     const book = byBookMap.get(row.bookId) ?? {
       bookId: row.bookId,
-      title: row.bookTitle?.trim() || "Untitled",
+      title: row.bookTitle?.trim() || (row.bookId === null ? UNATTRIBUTED : "Untitled"),
       costUsd: 0,
       tokensIn: 0,
       tokensOut: 0,

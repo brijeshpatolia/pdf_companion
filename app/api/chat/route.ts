@@ -13,6 +13,7 @@ import { embedSingle } from "../../../src/adapters/embedder/localEmbedder.js";
 import { supabaseSummary } from "../../../src/adapters/supabase/supabaseSummary.js";
 import { createSummaryGateway } from "../../../src/adapters/summary/summaryGateway.js";
 import { writeUsageRecord } from "../../../src/adapters/supabase/supabaseUsage.js";
+import { checkBudget, budgetResponse } from "../../../src/adapters/supabase/budgetGuard.js";
 import type { GatewayPort } from "../../../src/core/chat/types.js";
 
 const OPENROUTER_MODEL = "anthropic/claude-sonnet-4-6";
@@ -60,6 +61,9 @@ export async function POST(req: NextRequest) {
     data: { user },
   } = await client.auth.getUser();
   if (!user) return new Response("unauthorized", { status: 401 });
+
+  const overBudget = await checkBudget(client);
+  if (overBudget) return budgetResponse(overBudget);
 
   const { gateway, model } = resolveGateway();
 

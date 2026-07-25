@@ -1,9 +1,14 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { UsageRecord } from "../../core/chat/types.js";
 
+/**
+ * Records what a call cost. `bookId` is attribution only — it may be null for a
+ * cross-book question that matched nothing, and it's cleared rather than
+ * cascaded if the book is later deleted, so the spend ledger stays complete.
+ */
 export async function writeUsageRecord(
   client: SupabaseClient,
-  bookId: string,
+  bookId: string | null,
   usage: UsageRecord,
 ): Promise<void> {
   const { error } = await client.from("usage_records").insert({

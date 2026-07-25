@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 interface BookUsage {
-  bookId: string;
+  bookId: string | null;
   title: string;
   costUsd: number;
   tokensIn: number;
@@ -20,6 +20,13 @@ interface DayUsage {
   day: string;
   costUsd: number;
 }
+interface Budget {
+  dayUsd: number;
+  monthUsd: number;
+  /** Zero means the window is uncapped. */
+  dailyLimitUsd: number;
+  monthlyLimitUsd: number;
+}
 interface UsageSummary {
   totalCostUsd: number;
   totalTokensIn: number;
@@ -28,6 +35,7 @@ interface UsageSummary {
   byBook: BookUsage[];
   byModel: ModelUsage[];
   byDay: DayUsage[];
+  budget?: Budget;
 }
 
 const usd = (n: number) => `$${n.toFixed(n < 1 ? 4 : 2)}`;
@@ -44,6 +52,48 @@ function Tile({ label, value, sub }: { label: string; value: string; sub?: strin
         {value}
       </div>
       {sub && <div style={{ color: "var(--faint)", fontSize: "0.8rem", marginTop: "0.15rem" }}>{sub}</div>}
+    </div>
+  );
+}
+
+/**
+ * Spend against a ceiling: a bounded meter, not a chart. The state is always
+ * spelled out in words next to the bar — colour alone never carries it.
+ */
+function BudgetMeter({ label, spent, limit, resets }: { label: string; spent: number; limit: number; resets: string }) {
+  // Budgets are dollar-scale, unlike the fraction-of-a-cent per-question costs.
+  const dollars = (n: number) => `$${n.toFixed(2)}`;
+  const ratio = limit > 0 ? spent / limit : 0;
+  const state =
+    ratio >= 1
+      ? { color: "var(--danger-strong)", word: "Budget reached" }
+      : ratio >= 0.75
+        ? { color: "var(--warn)", word: "Running low" }
+        : { color: "var(--ok)", word: `${dollars(Math.max(0, limit - spent))} left` };
+
+  return (
+    <div style={{ flex: "1 1 220px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "0.5rem" }}>
+        <span style={{ color: "var(--muted)", fontSize: "0.8rem" }}>{label}</span>
+        <span style={{ fontSize: "0.8rem", fontVariantNumeric: "tabular-nums" }}>
+          {dollars(spent)} <span style={{ color: "var(--faint)" }}>of {dollars(limit)}</span>
+        </span>
+      </div>
+      <div
+        role="meter"
+        aria-valuenow={Number(spent.toFixed(4))}
+        aria-valuemin={0}
+        aria-valuemax={limit}
+        aria-label={`${label}: ${dollars(spent)} of ${dollars(limit)} used`}
+        style={{ height: 6, background: "var(--border)", borderRadius: 3, marginTop: "0.4rem", overflow: "hidden" }}
+      >
+        <div style={{ height: "100%", width: `${Math.min(100, ratio * 100)}%`, background: state.color, borderRadius: 3 }} />
+      </div>
+      <div style={{ color: "var(--faint)", fontSize: "0.72rem", marginTop: "0.3rem" }}>
+        {/* The reassurance only matters once you're near the ceiling. */}
+        {state.word}
+        {ratio >= 0.75 && ` · frees up as usage ages past ${resets}`}
+      </div>
     </div>
   );
 }
@@ -110,6 +160,22 @@ export default function UsagePage() {
             <Tile label="Avg / question" value={usd(data.totalCostUsd / data.chatCount)} />
           </div>
 
+          {data.budget && (data.budget.dailyLimitUsd > 0 || data.budget.monthlyLimitUsd > 0) && (
+            <section style={{ marginTop: "2rem" }}>
+              <h2 style={{ fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted)", margin: "0 0 0.75rem" }}>
+                Budget
+              </h2>
+              <div className="card" style={{ padding: "1rem 1.1rem", display: "flex", gap: "1.5rem", flexWrap: "wrap" }}>
+                {data.budget.dailyLimitUsd > 0 && (
+                  <BudgetMeter label="Last 24 hours" spent={data.budget.dayUsd} limit={data.budget.dailyLimitUsd} resets="24 hours" />
+                )}
+                {data.budget.monthlyLimitUsd > 0 && (
+                  <BudgetMeter label="Last 30 days" spent={data.budget.monthUsd} limit={data.budget.monthlyLimitUsd} resets="30 days" />
+                )}
+              </div>
+            </section>
+          )}
+
           {data.byDay.length > 1 && (
             <section style={{ marginTop: "2rem" }}>
               <h2 style={{ fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted)", margin: "0 0 0.75rem" }}>
@@ -142,7 +208,7 @@ export default function UsagePage() {
             </h2>
             <div className="card" style={{ padding: "0.5rem 0.25rem" }}>
               {data.byBook.map((b) => (
-                <div key={b.bookId} style={{ padding: "0.55rem 0.85rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                <div key={b.bookId ?? "unattributed"} style={{ padding: "0.55rem 0.85rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{b.title}</div>
                     <div style={{ height: 5, background: "var(--border)", borderRadius: 3, marginTop: "0.35rem" }}>

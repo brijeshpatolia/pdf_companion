@@ -106,7 +106,10 @@ export default function Companion({
       });
 
       if (!res.ok || !res.body) {
-        throw new Error(`Request failed: ${res.status}`);
+        // Refusals we can explain (out of budget) come back as JSON with a
+        // message worth showing verbatim.
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error ?? `Request failed: ${res.status}`);
       }
 
       const reader = res.body.getReader();

@@ -24,6 +24,7 @@ A reading companion for hard books. Instead of pausing to paste a page into Chat
 - **🧠 Local embeddings** — all-MiniLM-L6-v2 runs in-process (no embedding API cost); retrieval via Supabase pgvector.
 - **🔁 Resumable ingestion** — text extraction, chunking, embedding, and status lifecycle (`uploaded → processing → ready / failed`). Pages are embedded in batches against a time budget, so book length never matters: a run that runs out of time hands off to the next one and picks up from the pages already stored.
 - **📊 Usage & cost dashboard** — every answer records tokens and cost; the dashboard shows total spend, per-book and per-model breakdowns, and a daily-spend chart (all RLS-scoped to you).
+- **💵 Spending limits** — AI calls bill to the operator's API key, so every reader has a rolling 24-hour and 30-day ceiling. Going over returns a clear message instead of a silent bill, and the dashboard shows the remaining budget before you get there. Configure with `USAGE_DAILY_LIMIT_USD` / `USAGE_MONTHLY_LIMIT_USD`.
 
 ## Stack
 
