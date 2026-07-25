@@ -267,6 +267,65 @@ input, button {
   .reader-header .jump-form { display: none; }
 }
 
+/* ---------- flashcards ---------- */
+
+.flashcard {
+  perspective: 1200px;
+  width: 100%;
+  max-width: 520px;
+  height: 280px;
+  margin: 0 auto;
+  cursor: pointer;
+}
+.flashcard-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 400ms cubic-bezier(0.4, 0.2, 0.2, 1);
+  transform-style: preserve-3d;
+}
+.flashcard.is-flipped .flashcard-inner {
+  transform: rotateY(180deg);
+}
+.flashcard-face {
+  position: absolute;
+  inset: 0;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 1.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  overflow: auto;
+}
+.flashcard-face .face-label {
+  position: absolute;
+  top: 0.7rem;
+  left: 0.9rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.flashcard-front { font-size: 1.15rem; font-weight: 600; line-height: 1.5; }
+.flashcard-back {
+  transform: rotateY(180deg);
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text);
+  background: var(--surface);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flashcard-inner { transition: none; }
+}
+
 /* ---------- companion tabs ---------- */
 
 .tab {
