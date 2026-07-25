@@ -157,6 +157,7 @@ export default function Home() {
 
       <p style={{ marginTop: "1rem", marginBottom: 0, display: "flex", gap: "1.25rem", flexWrap: "wrap" }}>
         <Link href="/catalog">📚 Browse free public-domain books →</Link>
+        <Link href="/ask">🔎 Ask your library →</Link>
         <Link href="/usage">📊 Usage &amp; cost →</Link>
       </p>
 

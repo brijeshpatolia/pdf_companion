@@ -28,10 +28,13 @@ export async function generateMetadata({
 
 export default async function ReaderPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ bookId: string }>;
+  searchParams: Promise<{ page?: string }>;
 }) {
   const { bookId } = await params;
+  const { page: pageParam } = await searchParams;
   const client = await supabaseUser();
   const {
     data: { user },
@@ -69,6 +72,14 @@ export default async function ReaderPage({
 
   const progress = await getProgress(book.id, supabaseProgress(client));
 
+  // A `?page=N` deep link (e.g. from a cross-book Q&A citation) opens straight
+  // to that page; otherwise resume where the reader left off.
+  const requestedPage = Number(pageParam);
+  const initialPage =
+    Number.isInteger(requestedPage) && requestedPage >= 1 && requestedPage <= book.page_count
+      ? requestedPage
+      : progress.currentPage;
+
   return (
     <Reader
       bookId={book.id}
@@ -76,7 +87,7 @@ export default async function ReaderPage({
       pageCount={book.page_count}
       format={format}
       fileUrl={fileUrl}
-      initialPage={progress.currentPage}
+      initialPage={initialPage}
       furthestReadPage={progress.furthestReadPage}
     />
   );
