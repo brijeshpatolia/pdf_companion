@@ -74,15 +74,18 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: (e as Error).message, code }, { status });
   }
 
+  // Record spend as soon as tokens are consumed — independent of whether the
+  // output parses into cards or the insert succeeds, so real cost is never lost.
+  if (usage) {
+    await writeUsageRecord(client, bookId, { ...usage, model }).catch(() => {});
+  }
+
   const cards = parseFlashcards(text);
   if (cards.length === 0) {
     return NextResponse.json({ error: "The model didn't return any usable flashcards. Try again." }, { status: 502 });
   }
 
   const inserted = await supabaseFlashcards(client).insertMany(bookId, cards);
-  if (usage) {
-    await writeUsageRecord(client, bookId, { ...usage, model }).catch(() => {});
-  }
 
   return NextResponse.json({ cards: inserted, count: inserted.length }, { status: 201 });
 }

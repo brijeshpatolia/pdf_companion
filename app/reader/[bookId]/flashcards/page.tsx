@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
@@ -23,6 +23,7 @@ export default function FlashcardsPage() {
   const [adding, setAdding] = useState(false);
   const [front, setFront] = useState("");
   const [back, setBack] = useState("");
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -33,8 +34,12 @@ export default function FlashcardsPage() {
           setCards(data);
           setIndex((i) => Math.min(i, Math.max(0, data.length - 1)));
         }
+      } else {
+        setMessage({ text: "Couldn't load flashcards.", kind: "error" });
       }
-    } catch {} finally {
+    } catch {
+      setMessage({ text: "Couldn't load flashcards.", kind: "error" });
+    } finally {
       setLoaded(true);
     }
   }, [bookId]);
@@ -61,6 +66,7 @@ export default function FlashcardsPage() {
       if (e.key === "ArrowLeft") go(-1);
       else if (e.key === "ArrowRight") go(1);
       else if (e.key === " " || e.key === "Enter") {
+        if (t === cardRef.current) return; // the card's own handler flips it
         e.preventDefault();
         setFlipped((f) => !f);
       }
@@ -102,17 +108,24 @@ export default function FlashcardsPage() {
         setFront("");
         setBack("");
         await refresh();
+      } else {
+        setMessage({ text: "Couldn't add card.", kind: "error" });
       }
-    } catch {} finally {
+    } catch {
+      setMessage({ text: "Couldn't add card.", kind: "error" });
+    } finally {
       setAdding(false);
     }
   }
 
   async function remove(id: string) {
     try {
-      await fetch(`/api/flashcards?id=${id}`, { method: "DELETE" });
-      await refresh();
-    } catch {}
+      const res = await fetch(`/api/flashcards?id=${id}`, { method: "DELETE" });
+      if (res.ok) await refresh();
+      else setMessage({ text: "Couldn't delete card.", kind: "error" });
+    } catch {
+      setMessage({ text: "Couldn't delete card.", kind: "error" });
+    }
   }
 
   const current = cards[index];
@@ -151,8 +164,16 @@ export default function FlashcardsPage() {
       {current && (
         <div style={{ marginTop: "1.5rem" }}>
           <div
+            ref={cardRef}
             className={`flashcard${flipped ? " is-flipped" : ""}`}
             onClick={() => setFlipped((f) => !f)}
+            onKeyDown={(e) => {
+              if (e.key === " " || e.key === "Enter") {
+                e.preventDefault();
+                setFlipped((f) => !f);
+              }
+            }}
+            tabIndex={0}
             role="button"
             aria-label="Flip flashcard"
             title="Click or press space to flip"

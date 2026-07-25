@@ -20,12 +20,19 @@ export async function GET(req: Request) {
   const { client, user } = await requireUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const cards = await supabaseFlashcards(client).listByBook(bookId);
-  return NextResponse.json(cards);
+  try {
+    const cards = await supabaseFlashcards(client).listByBook(bookId);
+    return NextResponse.json(cards);
+  } catch (e) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+  }
 }
 
 /** Manually add one card. */
 export async function POST(req: Request) {
+  const { client, user } = await requireUser();
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
   const body = await req.json().catch(() => null);
   const { bookId, front, back } = (body ?? {}) as { bookId?: string; front?: string; back?: string };
   if (!bookId) return NextResponse.json({ error: "missing bookId" }, { status: 400 });
@@ -33,11 +40,12 @@ export async function POST(req: Request) {
   const card = normalizeCard({ front, back });
   if (!card) return NextResponse.json({ error: "front and back are required" }, { status: 400 });
 
-  const { client, user } = await requireUser();
-  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-
-  const [saved] = await supabaseFlashcards(client).insertMany(bookId, [card]);
-  return NextResponse.json(saved, { status: 201 });
+  try {
+    const [saved] = await supabaseFlashcards(client).insertMany(bookId, [card]);
+    return NextResponse.json(saved, { status: 201 });
+  } catch (e) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+  }
 }
 
 export async function DELETE(req: Request) {
@@ -47,6 +55,10 @@ export async function DELETE(req: Request) {
   const { client, user } = await requireUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  await supabaseFlashcards(client).remove(id);
-  return NextResponse.json({ ok: true });
+  try {
+    await supabaseFlashcards(client).remove(id);
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+  }
 }
