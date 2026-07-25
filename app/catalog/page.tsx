@@ -94,6 +94,8 @@ export default function CatalogPage() {
   const [hasMore, setHasMore] = useState(false);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  /** Set when results came from a different source than the one selected. */
+  const [searchNote, setSearchNote] = useState<string | null>(null);
 
   const [state, setState] = useState<Record<string, AddState>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -121,6 +123,7 @@ export default function CatalogPage() {
       setResults([]);
       setHasMore(false);
       setSearchError(null);
+      setSearchNote(null);
       return;
     }
     const mine = ++reqId.current;
@@ -133,6 +136,8 @@ export default function CatalogPage() {
       if (!res.ok) throw new Error(data.error ?? `search failed (${res.status})`);
       setResults((prev) => (p === 1 ? data.results : [...prev, ...data.results]));
       setHasMore(Boolean(data.hasMore));
+      // Don't let the toggle claim a source that didn't actually answer.
+      setSearchNote(data.fellBack ? (data.note ?? null) : null);
     } catch (err) {
       if (mine === reqId.current) setSearchError((err as Error).message);
     } finally {
@@ -315,6 +320,16 @@ export default function CatalogPage() {
       {searchError && (
         <p role="alert" className="fade-in" style={{ color: "var(--danger)", marginTop: "1rem" }}>
           {searchError}
+        </p>
+      )}
+
+      {searchNote && (
+        <p
+          role="status"
+          className="fade-in"
+          style={{ color: "var(--muted)", marginTop: "1rem", fontSize: "0.85rem" }}
+        >
+          {searchNote}
         </p>
       )}
 
