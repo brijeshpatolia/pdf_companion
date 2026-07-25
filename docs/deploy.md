@@ -123,23 +123,32 @@ Ingestion — the step that turns an uploaded/added book into searchable chunks 
 runs the **embedding model (`all-MiniLM-L6-v2`) in-process** inside the
 `/api/ingest` serverless function. The embedder uses the **quantized (q8, ~23 MB)**
 model precisely so it fits inside serverless memory limits (e.g. Vercel Hobby's
-1 GB), so small and medium books ingest fine on the free tier. Two limits still
-apply for very large books:
+1 GB), so books ingest fine on the free tier.
+
+**Book length is not a limit.** A serverless function is capped at
+`maxDuration = 60`, which a few hundred pages will happily blow through, so
+ingestion is **batched and resumable**. Pages are embedded 25 at a time, and the
+run checks its 40-second budget *before* starting each batch. When the budget is
+gone it leaves the book `processing`, reports how far it got, and `/api/ingest`
+re-invokes itself for another pass with a fresh budget. Each stored chunk is the
+record that its page is done, so the next pass skips what's already embedded —
+nothing is lost and nothing is redone. An 879-page book simply takes several
+passes.
+
+Two things are worth knowing:
 
 - **Memory / cold starts.** The model is loaded per cold start and its cache is
   ephemeral, so it re-downloads each cold start. `vercel.json` in this repo
   requests more memory for the heavy functions, **but memory above 1 GB requires
   the Vercel Pro plan.**
-- **Time.** The function is capped at `maxDuration = 60` (Hobby/Pro allow up to
-  60/300 s). A very large book (hundreds of pages) embedded sequentially can
-  exceed that.
+- **A stalled book is recoverable.** If a pass is lost (a cold start that never
+  finishes, a deploy mid-ingestion), the library shows a **Resume** button next
+  to any book still processing. It continues from the pages already embedded —
+  there's never a reason to delete and re-upload.
 
-If you hit OOM or timeouts on big books, in order of effort:
-
-1. **Upgrade to Vercel Pro** and keep the `vercel.json` memory/duration bumps.
-2. **Move embeddings off the request path** (the real fix at scale): run them in
-   a Supabase Edge Function or a queue/worker, or swap the local embedder for a
-   hosted embedding API. This keeps the web functions light.
+At real scale the right move is still to **take embeddings off the request
+path**: run them in a Supabase Edge Function or a queue/worker, or swap the local
+embedder for a hosted embedding API, so the web functions stay light.
 
 (The precision is set in `src/adapters/embedder/localEmbedder.ts` — raise it back
 to `dtype: "fp32"` if you want maximum embedding quality and have the memory.)

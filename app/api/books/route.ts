@@ -12,6 +12,9 @@ export const maxDuration = 60;
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
+/** Cap on per-book progress counts in one library listing, which polls every 2s. */
+const MAX_PROGRESS_LOOKUPS = 5;
+
 const PDF_TYPE = "application/pdf";
 const EPUB_TYPE = "application/epub+zip";
 
@@ -87,7 +90,27 @@ export async function GET() {
     .select("id,title,page_count,status")
     .order("title");
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data);
+
+  // Ingestion runs in passes, so a long book sits in `processing` for a while.
+  // Count its stored chunks — that's how many pages are already searchable —
+  // and only for books still in flight, so the common case costs nothing.
+  const inFlight = (data ?? [])
+    .filter((b) => b.status === "processing" || b.status === "uploaded")
+    .slice(0, MAX_PROGRESS_LOOKUPS);
+  const progress = new Map<string, number>();
+  await Promise.all(
+    inFlight.map(async (b) => {
+      const { count } = await client
+        .from("chunks")
+        .select("*", { count: "exact", head: true })
+        .eq("book_id", b.id);
+      if (count != null) progress.set(b.id, count);
+    }),
+  );
+
+  return NextResponse.json(
+    (data ?? []).map((b) => ({ ...b, pages_done: progress.get(b.id) ?? null })),
+  );
 }
 
 /** Delete a book, its storage file, and all cascaded data. */
