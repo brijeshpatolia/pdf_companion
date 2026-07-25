@@ -2,6 +2,16 @@
 const nextConfig = {
   // pdfjs-dist (used server-side for metadata) must not be bundled by Next.
   serverExternalPackages: ["pdfjs-dist", "@huggingface/transformers"],
+  // Because pdfjs-dist stays external, its files are copied into the serverless
+  // bundle by output-file tracing — but pdf.mjs loads its worker through a
+  // runtime path the tracer can't see, so the worker is left behind and PDF
+  // parsing dies with "Setting up fake worker failed" in production. Include it
+  // explicitly for every route that parses a PDF.
+  outputFileTracingIncludes: {
+    "/api/ingest": ["./node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs"],
+    "/api/books": ["./node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs"],
+    "/api/catalog/import": ["./node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs"],
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: "55mb",
