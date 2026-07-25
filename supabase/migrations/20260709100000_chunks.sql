@@ -1,3 +1,7 @@
+-- pgvector powers similarity search. It ships with Supabase but is disabled on
+-- a fresh project, so enable it before the first `vector(...)` column is used.
+create extension if not exists vector;
+
 create table if not exists public.chunks (
   id uuid primary key default gen_random_uuid(),
   book_id uuid not null references public.books(id) on delete cascade,

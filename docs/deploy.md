@@ -23,9 +23,11 @@ everything you want deployed.
 
 ## 2. Apply the database migrations
 
-The schema (tables, RLS policies, the `pdfs` storage bucket, the
-`match_chunks` function) lives in `supabase/migrations/`. Apply it to the
-hosted project:
+The schema — tables, RLS policies, the **pgvector** extension, the private
+`pdfs` storage bucket, and the `match_chunks` / `match_chunks_all` retrieval
+functions — lives in `supabase/migrations/`. Applying it enables pgvector and
+creates the bucket for you, so there's nothing to click in the dashboard. Apply
+it to the hosted project:
 
 ```bash
 # from the repo root, with the Supabase CLI (it's a dev dependency)
@@ -37,8 +39,9 @@ npx supabase db push
 (Alternatively, paste each migration in order into the Supabase **SQL Editor**.)
 
 Verify in the dashboard: **Table Editor** shows `books`, `chunks`, `messages`,
-`saved_items`, `notes`, `reading_progress`, `usage_records`, and
-`rolling_summaries`; **Storage** shows a private `pdfs` bucket.
+`saved_items`, `notes`, `flashcards`, `shares`, `reading_progress`,
+`usage_records`, and `rolling_summaries`; **Storage** shows a private `pdfs`
+bucket; **Database → Extensions** shows `vector` enabled.
 
 ## 3. Grab your keys and configure auth
 
@@ -102,9 +105,15 @@ Redeploy isn't needed for that change.
    `Processing → Ready`.
 4. Open it, ask the companion a question, highlight a passage, write a note.
 5. Check **Usage & cost** — your question should show up.
+6. Open **🃏 Flashcards** → *Generate from what you kept* → flip through the deck.
+7. In the companion's **Saved** tab, **🔗 Share book**, copy the link, and open
+   it in a private window — you should see your kept items with no sign-in.
+8. From the library, **🔎 Ask your library** and ask a question that spans your
+   books; the cited sources should deep-link to the exact page.
 
-If all of that works, every subsystem (auth + RLS, storage, ingestion,
-retrieval, chat, capture, dashboard) is live.
+If all of that works, every subsystem — auth + RLS, storage, ingestion,
+retrieval, chat, capture, dashboard, flashcards, sharing, and cross-book Q&A —
+is live.
 
 ---
 
