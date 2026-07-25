@@ -3,7 +3,7 @@
   "functions": {
     "app/api/ingest/route.ts": {
       "maxDuration": 60,
-      "memory": 3009
+      "memory": 2048
     },
     "app/api/books/route.ts": {
       "maxDuration": 60,
