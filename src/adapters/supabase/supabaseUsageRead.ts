@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { UsageRow } from "../../core/usage/summarize.js";
 
 interface UsageRecordRow {
-  book_id: string;
+  book_id: string | null;
   tokens_in: number;
   tokens_out: number;
   cost_usd: number;

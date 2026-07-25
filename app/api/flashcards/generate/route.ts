@@ -4,6 +4,7 @@ import { supabaseSavedItems } from "@/adapters/supabase/supabaseSavedItems.js";
 import { supabaseNotes } from "@/adapters/supabase/supabaseNotes.js";
 import { supabaseFlashcards } from "@/adapters/supabase/supabaseFlashcards.js";
 import { writeUsageRecord } from "@/adapters/supabase/supabaseUsage.js";
+import { checkBudget, budgetResponse } from "@/adapters/supabase/budgetGuard.js";
 import { createOpenRouterGateway } from "@/adapters/openrouter/gateway.js";
 import { createAnthropicGateway } from "@/adapters/anthropic/gateway.js";
 import { buildFlashcardMessages, parseFlashcards, hasKeptContent } from "@/core/flashcards/generate.js";
@@ -33,6 +34,9 @@ export async function POST(req: Request) {
     data: { user },
   } = await client.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  const overBudget = await checkBudget(client);
+  if (overBudget) return budgetResponse(overBudget);
 
   const { data: book } = await client.from("books").select("title").eq("id", bookId).single();
   if (!book) return NextResponse.json({ error: "book not found" }, { status: 404 });
