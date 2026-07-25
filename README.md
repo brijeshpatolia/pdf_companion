@@ -9,7 +9,7 @@ A reading companion for hard books. Instead of pausing to paste a page into Chat
 ## What works today
 
 - **🔐 Accounts** — passwordless magic-link sign-in (Supabase Auth). Every book, highlight, chat, and page of progress is scoped to its owner by Row-Level Security.
-- **📚 Library** — drag-and-drop **PDF and EPUB** upload (50 MB guardrail), live ingestion status, retry failed ingestions, delete with full storage + data cleanup.
+- **📚 Library** — drag-and-drop **PDF and EPUB** upload (50 MB guardrail), live ingestion progress (`120/879 pages`), resume a stalled book or retry a failed one, delete with full storage + data cleanup.
 - **📗 EPUB support** — DRM-free EPUBs are parsed and split into synthetic pages, so the whole page-aware pipeline (chat, retrieval, progress, highlights) works on them too; the reader renders them as clean prose.
 - **📚 Free books catalog** — a curated shelf of public-domain "hard books" grouped by subject (Philosophy · Science & Technology · Politics & Economics — Plato, Einstein, Babbage, Darwin, Adam Smith…) plus **live search over Project Gutenberg** (via Gutendex) and the **Internet Archive**; add any title with a click and it flows through the normal EPUB ingestion. The Internet Archive source is filtered to genuinely public-domain, non-restricted texts — it excludes the Controlled-Digital-Lending library and community uploads.
 - **📖 Split-view reader** — PDF.js rendering beside the companion, keyboard navigation (`←`/`→`), jump-to-page, and a reading-progress bar. Your furthest sequentially-read page is tracked and restored.
@@ -22,7 +22,7 @@ A reading companion for hard books. Instead of pausing to paste a page into Chat
 - **🔗 Sharing** — turn a book into a read-only public link that shows your highlights, saved answers, notes, and flashcards (never the book's text). Create it in one click, copy the link, or stop sharing anytime; visitors need no account.
 - **🔎 Ask your library** — ask a question and get a streamed answer grounded in passages retrieved from across *all* your books (pgvector, RLS-scoped), with cited sources that deep-link to the exact page in the reader.
 - **🧠 Local embeddings** — all-MiniLM-L6-v2 runs in-process (no embedding API cost); retrieval via Supabase pgvector.
-- **🔁 Ingestion pipeline** — text extraction, chunking, embedding, and status lifecycle (`uploaded → processing → ready / failed`) with retry.
+- **🔁 Resumable ingestion** — text extraction, chunking, embedding, and status lifecycle (`uploaded → processing → ready / failed`). Pages are embedded in batches against a time budget, so book length never matters: a run that runs out of time hands off to the next one and picks up from the pages already stored.
 - **📊 Usage & cost dashboard** — every answer records tokens and cost; the dashboard shows total spend, per-book and per-model breakdowns, and a daily-spend chart (all RLS-scoped to you).
 
 ## Stack

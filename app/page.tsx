@@ -9,6 +9,8 @@ interface BookSummary {
   title: string;
   page_count: number;
   status: string;
+  /** Pages embedded so far; only sent while a book is still being processed. */
+  pages_done?: number | null;
 }
 
 const STATUS_BADGES: Record<string, { className: string; label: string; spinning?: boolean }> = {
@@ -19,6 +21,9 @@ const STATUS_BADGES: Record<string, { className: string; label: string; spinning
 };
 
 const MAX_SIZE = 50 * 1024 * 1024; // 50 MB
+
+/** A book that is queued for or partway through ingestion. */
+const inFlight = (b: BookSummary) => b.status === "processing" || b.status === "uploaded";
 
 export default function Home() {
   const [books, setBooks] = useState<BookSummary[]>([]);
@@ -45,8 +50,7 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const hasProcessing = books.some((b) => b.status === "processing" || b.status === "uploaded");
-    if (!hasProcessing) return;
+    if (!books.some(inFlight)) return;
     const id = setInterval(refresh, 2000);
     return () => clearInterval(id);
   }, [books]);
@@ -227,20 +231,35 @@ export default function Home() {
                     {b.title}
                   </span>
                 )}
-                <span style={{ color: "var(--muted)" }}> · {b.page_count} pages</span>
+                <span style={{ color: "var(--muted)" }}>
+                  {" · "}
+                  {inFlight(b) && b.pages_done != null
+                    ? `${b.pages_done}/${b.page_count} pages`
+                    : `${b.page_count} pages`}
+                </span>
                 <span className={`badge ${badge.className}`} style={{ marginLeft: "0.5rem" }}>
                   {badge.spinning && <span className="spinner" style={{ width: 9, height: 9 }} />}
                   {badge.label}
                 </span>
               </span>
               <div style={{ display: "flex", gap: "0.4rem", flexShrink: 0 }}>
-                {b.status === "failed" && (
+                {/*
+                  Ingestion is resumable, so this is safe to press at any time:
+                  on a failed book it starts over, and on one that stalled
+                  mid-way it picks up from the pages already embedded.
+                */}
+                {(b.status === "failed" || inFlight(b)) && (
                   <button
                     className="btn-warn btn-sm"
                     onClick={() => onRetry(b.id)}
                     disabled={retrying === b.id}
+                    title={
+                      b.status === "failed"
+                        ? "Process this book again"
+                        : "Pick up where processing left off"
+                    }
                   >
-                    {retrying === b.id ? "Retrying…" : "Retry"}
+                    {retrying === b.id ? "Working…" : b.status === "failed" ? "Retry" : "Resume"}
                   </button>
                 )}
                 {confirmDelete === b.id ? (
