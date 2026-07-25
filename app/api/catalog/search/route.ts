@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseUser } from "@/adapters/supabase/userClient.js";
 import { gutendexSearchUrl, mapGutendexBooks } from "@/core/catalog/gutendex.js";
 import { archiveSearchUrl, mapArchiveSearch } from "@/core/catalog/archive.js";
+import { CATALOG_FETCH_HEADERS } from "@/core/catalog/fetchHeaders.js";
 
 export const runtime = "nodejs";
 
@@ -27,7 +28,9 @@ export async function GET(req: Request) {
   const url = source === "archive" ? archiveSearchUrl(q, page) : gutendexSearchUrl(q, page);
 
   try {
-    const res = await fetch(url, { redirect: "follow" });
+    // Gutendex rejects the runtime's default agent from datacenter IPs with a
+    // 403; identifying ourselves is both good manners and the fix.
+    const res = await fetch(url, { redirect: "follow", headers: CATALOG_FETCH_HEADERS });
     if (!res.ok) throw new Error(`upstream responded ${res.status}`);
     const json = await res.json();
     const page = source === "archive" ? mapArchiveSearch(json) : mapGutendexBooks(json);

@@ -1,4 +1,5 @@
 import type { GatewayPort } from "../../core/chat/types.js";
+import { computeCostUSD } from "../../core/usage/pricing.js";
 
 export function createOpenRouterGateway(apiKey: string | undefined): GatewayPort {
   return {
@@ -71,11 +72,13 @@ export function createOpenRouterGateway(apiKey: string | undefined): GatewayPort
 
             const usage = parsed.usage;
             if (usage) {
+              const tokensIn = usage.prompt_tokens ?? 0;
+              const tokensOut = usage.completion_tokens ?? 0;
               yield {
                 type: "usage" as const,
-                tokensIn: usage.prompt_tokens ?? 0,
-                tokensOut: usage.completion_tokens ?? 0,
-                costUSD: 0,
+                tokensIn,
+                tokensOut,
+                costUSD: computeCostUSD(model, tokensIn, tokensOut),
               };
             }
           }

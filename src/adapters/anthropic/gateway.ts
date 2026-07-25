@@ -1,4 +1,5 @@
 import type { GatewayPort } from "../../core/chat/types.js";
+import { computeCostUSD } from "../../core/usage/pricing.js";
 
 export function createAnthropicGateway(apiKey: string | undefined): GatewayPort {
   return {
@@ -93,7 +94,7 @@ export function createAnthropicGateway(apiKey: string | undefined): GatewayPort 
         type: "usage" as const,
         tokensIn,
         tokensOut,
-        costUSD: 0,
+        costUSD: computeCostUSD(model, tokensIn, tokensOut),
       };
     },
   };
