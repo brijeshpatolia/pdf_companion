@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Notes from "./Notes";
+import SharePanel from "./SharePanel";
 
 interface Message {
   role: "user" | "assistant";
@@ -406,6 +407,8 @@ export default function Companion({
               {exporting ? "Exporting…" : "⬇ Export book"}
             </button>
           </div>
+
+          <SharePanel bookId={bookId} />
 
           {saved.length === 0 && (
             <div style={{ color: "var(--muted)", textAlign: "center", marginTop: "1rem", fontSize: "0.9rem" }}>

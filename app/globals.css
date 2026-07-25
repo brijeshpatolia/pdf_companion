@@ -586,3 +586,108 @@ input, button {
 *::-webkit-scrollbar { width: 8px; height: 8px; }
 *::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
 *::-webkit-scrollbar-track { background: transparent; }
+
+/* ── Share panel (Companion → Saved tab) ─────────────────────────────── */
+.share-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+}
+.share-panel-hint {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+.share-panel-row {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+.share-panel .btn-ghost { align-self: flex-start; }
+
+/* ── Public share page (/share/[token]) ──────────────────────────────── */
+.share-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 4rem;
+}
+.share-page-head {
+  text-align: center;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1.5rem;
+}
+.share-eyebrow {
+  margin: 0 0 0.4rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  color: var(--faint);
+}
+.share-title { font-size: 2rem; margin: 0; line-height: 1.15; }
+.share-sub {
+  margin: 0.6rem auto 0;
+  max-width: 34rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.share-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+  margin-top: 0.9rem;
+}
+.share-section { margin-bottom: 2rem; }
+.share-section > h2 {
+  font-size: 1.05rem;
+  margin: 0 0 0.75rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+.share-quote {
+  margin: 0 0 0.75rem;
+  padding: 0.6rem 0 0.6rem 1rem;
+  border-left: 3px solid var(--accent);
+  color: var(--text);
+  font-style: italic;
+  line-height: 1.55;
+}
+.share-quote cite {
+  display: block;
+  margin-top: 0.35rem;
+  font-style: normal;
+  font-size: 0.78rem;
+  color: var(--faint);
+}
+.share-answer, .share-note { margin-bottom: 0.75rem; padding: 0.9rem 1rem; }
+.share-answer-q { margin: 0; font-weight: 600; }
+.share-answer-meta { margin: 0.15rem 0 0; font-size: 0.75rem; color: var(--faint); }
+.share-answer-a { margin: 0.5rem 0 0; line-height: 1.55; white-space: pre-wrap; }
+.share-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+.share-card { padding: 0.9rem 1rem; }
+.share-card-front { margin: 0; font-weight: 600; }
+.share-card-back {
+  margin: 0.5rem 0 0;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--border-strong);
+  color: var(--muted);
+  line-height: 1.5;
+}
+.share-empty { text-align: center; padding: 2.5rem 1rem; color: var(--muted); }
+.share-foot {
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+.share-foot-note { margin: 0.75rem auto 0; max-width: 26rem; font-size: 0.82rem; color: var(--faint); }

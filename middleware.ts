@@ -5,8 +5,10 @@ import { createServerClient } from "@supabase/ssr";
  * Paths reachable without a session. `/api/ingest` is here on purpose:
  * it's a trusted background job keyed by an unguessable book UUID and
  * called server-to-server (no cookies), so it can't carry a session.
+ * `/share` is the public read-only view of a book's kept material, gated by
+ * its own unguessable token rather than a session.
  */
-const PUBLIC_PATHS = ["/login", "/auth", "/api/ingest"];
+const PUBLIC_PATHS = ["/login", "/auth", "/api/ingest", "/share"];
 
 function isPublic(path: string): boolean {
   return PUBLIC_PATHS.some((p) => path === p || path.startsWith(p + "/"));
