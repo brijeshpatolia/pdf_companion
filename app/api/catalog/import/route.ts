@@ -8,6 +8,7 @@ import {
   isValidArchiveId,
   pickArchiveEpub,
 } from "@/core/catalog/archive.js";
+import { CATALOG_FETCH_HEADERS } from "@/core/catalog/fetchHeaders.js";
 import { createBook } from "@/core/library/createBook.js";
 import { readEpubMetadata } from "@/core/epub/extractEpubPages.js";
 import { supabaseBooks } from "@/adapters/supabase/supabaseBooks.js";
@@ -52,7 +53,7 @@ async function resolveSource(body: Record<string, unknown>): Promise<Resolved> {
 
   if (isValidArchiveId(body.archiveId)) {
     const id = body.archiveId;
-    const res = await fetch(archiveMetadataUrl(id), { redirect: "follow" });
+    const res = await fetch(archiveMetadataUrl(id), { redirect: "follow", headers: CATALOG_FETCH_HEADERS });
     if (!res.ok) throw new ImportError(`Couldn't reach the Internet Archive (${res.status})`, 502);
     const meta = await res.json();
     if (!isImportableArchiveItem(meta)) {
@@ -105,7 +106,7 @@ export async function POST(req: Request) {
   let fileBytes: Uint8Array;
   try {
     fileBytes = await downloadEpubBytes(resolved.downloadUrl, {
-      fetchImpl: (url) => fetch(url, { redirect: "follow" }),
+      fetchImpl: (url) => fetch(url, { redirect: "follow", headers: CATALOG_FETCH_HEADERS }),
       maxBytes: MAX_FILE_SIZE,
     });
   } catch (e) {
