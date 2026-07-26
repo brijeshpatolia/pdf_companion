@@ -3,6 +3,8 @@ import {
   parsePresenceMeta,
   participantsFrom,
   parseLiveHighlight,
+  parsePosition,
+  withLivePages,
   addHighlight,
   MAX_HIGHLIGHT_CHARS,
   MAX_NAME_CHARS,
@@ -80,6 +82,45 @@ describe("participantsFrom", () => {
 
   it("marks nobody as self when this client isn't in the state yet", () => {
     expect(participantsFrom(state, "unknown").every((p) => !p.isSelf)).toBe(true);
+  });
+});
+
+describe("parsePosition", () => {
+  it("accepts a well-formed position", () => {
+    expect(parsePosition({ userId: "u1", page: 42 })).toEqual({ userId: "u1", page: 42 });
+  });
+
+  it.each([[{ userId: "u1", page: 0 }], [{ userId: "", page: 3 }], [{ page: 3 }], [null], ["x"]])(
+    "rejects an unusable position (%p)",
+    (raw) => {
+      expect(parsePosition(raw)).toBeNull();
+    },
+  );
+});
+
+describe("withLivePages", () => {
+  const base = [
+    { key: "ka", userId: "u1", name: "Me", page: 3, isSelf: true },
+    { key: "kb", userId: "u2", name: "Ana", page: 8, isSelf: false },
+  ];
+
+  it("overrides the joined-at page with the latest broadcast", () => {
+    const merged = withLivePages(base, { u2: 51 });
+    expect(merged[1]!.page).toBe(51);
+  });
+
+  it("keeps the joined-at page for anyone who hasn't turned yet", () => {
+    // A newcomer must see where people are before the next turn happens.
+    expect(withLivePages(base, {})[1]!.page).toBe(8);
+  });
+
+  it("preserves identity when nothing changed, so React can skip the render", () => {
+    const merged = withLivePages(base, { u2: 8 });
+    expect(merged[1]).toBe(base[1]);
+  });
+
+  it("ignores positions for people who have left", () => {
+    expect(withLivePages(base, { ghost: 99 })).toHaveLength(2);
   });
 });
 

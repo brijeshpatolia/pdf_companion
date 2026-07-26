@@ -5,6 +5,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Notes from "./Notes";
 import SharePanel from "./SharePanel";
+import Icon from "../../components/Icon";
 
 interface Message {
   role: "user" | "assistant";
@@ -315,7 +316,7 @@ export default function Companion({
                             disabled={savingText === m.content}
                             title={isAnswerSaved(m.content) ? "Saved" : "Save this answer"}
                           >
-                            {isAnswerSaved(m.content) ? "★ Saved" : savingText === m.content ? "Saving…" : "☆ Save"}
+                            {isAnswerSaved(m.content) ? <><Icon name="check" /> Saved</> : savingText === m.content ? "Saving…" : <><Icon name="plus" /> Save</>}
                           </button>
                         </div>
                       )}
@@ -407,7 +408,7 @@ export default function Companion({
               disabled={exporting}
               title="Download highlights, saved answers, and notes as Markdown"
             >
-              {exporting ? "Exporting…" : "⬇ Export book"}
+              {exporting ? "Exporting…" : <><Icon name="download" /> Export book</>}
             </button>
           </div>
 
@@ -415,7 +416,7 @@ export default function Companion({
 
           {saved.length === 0 && (
             <div style={{ color: "var(--muted)", textAlign: "center", marginTop: "1rem", fontSize: "0.9rem" }}>
-              <p style={{ margin: 0, fontSize: "1.3rem" }}>✦</p>
+              <p style={{ margin: 0, fontSize: "1.4rem", color: "var(--faint)" }}><Icon name="highlight" /></p>
               <p style={{ margin: "0.5rem 0 0" }}>
                 Nothing saved yet — highlight a passage in the book, or save an answer worth keeping.
               </p>
@@ -433,7 +434,7 @@ export default function Companion({
                 }}
               >
                 <span className={`badge ${item.kind === "highlight" ? "badge-warn" : "badge-info"}`}>
-                  {item.kind === "highlight" ? "✦ Highlight" : "💬 Answer"}
+                  {item.kind === "highlight" ? <><Icon name="highlight" /> Highlight</> : <><Icon name="chat" /> Answer</>}
                 </span>
                 <button
                   className="page-chip"
@@ -449,7 +450,7 @@ export default function Companion({
                   aria-label="Remove saved item"
                   title="Remove"
                 >
-                  ✕
+                  <Icon name="close" />
                 </button>
               </div>
 

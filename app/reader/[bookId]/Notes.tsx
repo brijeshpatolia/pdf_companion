@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Icon from "../../components/Icon";
 
 interface Note {
   id: string;
@@ -106,7 +107,7 @@ export default function Notes({ bookId, currentPage, onJumpToPage, onCountChange
       <div style={{ flex: 1, padding: "1rem", display: "flex", flexDirection: "column", gap: "0.6rem" }}>
         {notes.length === 0 && (
           <div style={{ color: "var(--muted)", textAlign: "center", marginTop: "1.5rem", fontSize: "0.9rem" }}>
-            <p style={{ margin: 0, fontSize: "1.3rem" }}>📝</p>
+            <p style={{ margin: 0, fontSize: "1.3rem" }}><Icon name="note" /></p>
             <p style={{ margin: "0.5rem 0 0" }}>No notes yet — jot down a thought about what you&apos;re reading.</p>
           </div>
         )}
@@ -134,10 +135,10 @@ export default function Notes({ bookId, currentPage, onJumpToPage, onCountChange
                     title="Edit"
                     aria-label="Edit note"
                   >
-                    ✎
+                    <Icon name="note" />
                   </button>
                   <button className="save-btn" onClick={() => remove(n.id)} title="Delete" aria-label="Delete note">
-                    ✕
+                    <Icon name="close" />
                   </button>
                 </>
               )}

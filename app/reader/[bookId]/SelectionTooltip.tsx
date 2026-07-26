@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import type { Intent } from "@/core/chat/intents.js";
+import Icon from "../../components/Icon";
 
 interface SelectionTooltipProps {
   containerRef: React.RefObject<HTMLElement | null>;
@@ -110,7 +111,7 @@ export default function SelectionTooltip({
             }}
             style={{ whiteSpace: "nowrap", color: "var(--warn)" }}
           >
-            ✦ Highlight
+            <Icon name="highlight" /> Highlight
           </button>
           <span style={{ width: 1, background: "var(--border)", margin: "0.15rem 0.1rem" }} />
         </>

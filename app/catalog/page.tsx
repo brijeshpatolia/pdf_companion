@@ -3,6 +3,7 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import Icon from "../components/Icon";
 
 interface CuratedBook {
   id: string;
@@ -74,7 +75,7 @@ function Cover({ url }: { url?: string }) {
           onError={() => setFailed(true)}
         />
       ) : (
-        <span style={{ fontSize: "1.3rem", opacity: 0.5 }}>📖</span>
+        <span style={{ fontSize: "1.3rem", opacity: 0.5 }}><Icon name="book" /></span>
       )}
     </div>
   );
@@ -237,7 +238,7 @@ function Catalog() {
           )}
           {st === "added" ? (
             <button className="btn-sm" disabled style={{ color: "var(--ok)", borderColor: "transparent", marginTop: "auto" }}>
-              ✓ Added
+              <Icon name="check" /> Added
             </button>
           ) : (
             <button
@@ -283,7 +284,7 @@ function Catalog() {
           </p>
         </div>
         <Link href="/" className="btn-ghost btn-sm" style={{ whiteSpace: "nowrap" }}>
-          ← Library
+          <Icon name="arrow-left" /> Library
         </Link>
       </div>
 
@@ -327,7 +328,7 @@ function Catalog() {
           <span className="badge badge-ok">Added</span>
           <span style={{ color: "var(--muted)", fontSize: "0.9rem" }}>Your book is being processed.</span>
           <button className="btn-primary btn-sm" style={{ marginLeft: "auto" }} onClick={() => router.push("/")}>
-            Go to library →
+            Go to library <Icon name="arrow-right" />
           </button>
         </div>
       )}

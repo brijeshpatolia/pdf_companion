@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { SharedBook } from "@/core/sharing/buildSharedBook.js";
+import Icon from "../../components/Icon";
 
 function fmtDate(iso: string): string {
   const d = new Date(iso);
@@ -19,22 +20,22 @@ export default function SharedBookView({ shared }: { shared: SharedBook }) {
   return (
     <main className="share-page">
       <header className="share-page-head">
-        <p className="share-eyebrow">📖 Shared from PDF Companion</p>
+        <p className="share-eyebrow"><Icon name="book" /> Shared from PDF Companion</p>
         <h1 className="wordmark share-title">{bookTitle}</h1>
         <p className="share-sub">
           A reader’s highlights, saved answers, notes, and flashcards for this book · shared {fmtDate(sharedAt)}
         </p>
         <div className="share-counts">
-          {counts.highlights > 0 && <span className="badge badge-info">✦ {count(counts.highlights, "highlight")}</span>}
-          {counts.answers > 0 && <span className="badge badge-info">💬 {count(counts.answers, "answer")}</span>}
-          {counts.notes > 0 && <span className="badge badge-info">📝 {count(counts.notes, "note")}</span>}
-          {counts.flashcards > 0 && <span className="badge badge-info">🃏 {count(counts.flashcards, "flashcard")}</span>}
+          {counts.highlights > 0 && <span className="badge badge-info"><Icon name="highlight" /> {count(counts.highlights, "highlight")}</span>}
+          {counts.answers > 0 && <span className="badge badge-info"><Icon name="chat" /> {count(counts.answers, "answer")}</span>}
+          {counts.notes > 0 && <span className="badge badge-info"><Icon name="note" /> {count(counts.notes, "note")}</span>}
+          {counts.flashcards > 0 && <span className="badge badge-info"><Icon name="cards" /> {count(counts.flashcards, "flashcard")}</span>}
         </div>
       </header>
 
       {isEmpty ? (
         <div className="card share-empty">
-          <p style={{ margin: 0, fontSize: "1.4rem" }}>🌱</p>
+          <p style={{ margin: 0, fontSize: "1.4rem" }}><Icon name="seedling" /></p>
           <p style={{ margin: "0.5rem 0 0" }}>Nothing has been kept for this book yet.</p>
         </div>
       ) : (
@@ -97,7 +98,7 @@ export default function SharedBookView({ shared }: { shared: SharedBook }) {
 
       <footer className="share-foot">
         <Link href="/" className="btn-primary btn-sm">
-          Read with PDF Companion →
+          Read with PDF Companion <Icon name="arrow-right" />
         </Link>
         <p className="share-foot-note">
           An AI that reads with you — always on your page, holding the whole book in mind.

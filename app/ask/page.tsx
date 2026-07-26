@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from "react";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import Icon from "../components/Icon";
 
 interface Source {
   bookId: string;
@@ -88,10 +89,10 @@ export default function AskLibraryPage() {
     <main className="ask-page">
       <div className="ask-head">
         <Link href="/" className="btn-ghost btn-sm" style={{ whiteSpace: "nowrap" }}>
-          ← Library
+          <Icon name="arrow-left" /> Library
         </Link>
         <h1 className="wordmark" style={{ fontSize: "1.6rem", margin: 0 }}>
-          🔎 Ask your library
+          <Icon name="search" /> Ask your library
         </h1>
       </div>
       <p className="ask-intro">

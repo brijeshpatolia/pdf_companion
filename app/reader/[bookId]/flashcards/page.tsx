@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import Icon from "../../../components/Icon";
 
 interface Flashcard {
   id: string;
@@ -134,16 +135,16 @@ export default function FlashcardsPage() {
     <main style={{ maxWidth: 640, margin: "0 auto", padding: "2rem 1.25rem" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
         <h1 className="wordmark" style={{ fontSize: "1.6rem", margin: 0 }}>
-          🃏 Flashcards
+          <Icon name="cards" /> Flashcards
         </h1>
         <Link href={`/reader/${bookId}`} className="btn-ghost btn-sm" style={{ whiteSpace: "nowrap" }}>
-          ← Back to book
+          <Icon name="arrow-left" /> Back to book
         </Link>
       </div>
 
       <div style={{ display: "flex", gap: "0.6rem", marginTop: "1rem", flexWrap: "wrap" }}>
         <button className="btn-primary btn-sm" onClick={generate} disabled={generating}>
-          {generating ? "Generating…" : "✨ Generate from what you kept"}
+          {generating ? "Generating…" : <><Icon name="sparkle" /> Generate from what you kept</>}
         </button>
       </div>
 
@@ -156,7 +157,7 @@ export default function FlashcardsPage() {
       {/* review */}
       {loaded && cards.length === 0 && (
         <div className="card" style={{ marginTop: "1.5rem", padding: "2rem 1rem", textAlign: "center", color: "var(--muted)", borderStyle: "dashed" }}>
-          <p style={{ margin: 0, fontSize: "1.4rem" }}>🃏</p>
+          <p style={{ margin: 0, fontSize: "1.4rem" }}><Icon name="cards" /></p>
           <p style={{ margin: "0.5rem 0 0" }}>No flashcards yet. Generate a set from your highlights, answers, and notes — or add one below.</p>
         </div>
       )}
@@ -191,16 +192,16 @@ export default function FlashcardsPage() {
           </div>
 
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "1rem", marginTop: "1rem" }}>
-            <button className="btn-sm" onClick={() => go(-1)} aria-label="Previous card">‹ Prev</button>
+            <button className="btn-sm" onClick={() => go(-1)} aria-label="Previous card"><Icon name="chevron-left" /> Prev</button>
             <span style={{ color: "var(--muted)", fontVariantNumeric: "tabular-nums", minWidth: 70, textAlign: "center" }}>
               {index + 1} / {cards.length}
             </span>
-            <button className="btn-sm" onClick={() => go(1)} aria-label="Next card">Next ›</button>
+            <button className="btn-sm" onClick={() => go(1)} aria-label="Next card">Next <Icon name="chevron-right" /></button>
           </div>
 
           <div style={{ textAlign: "center", marginTop: "0.6rem" }}>
             <button className="save-btn" onClick={() => remove(current.id)} title="Delete this card">
-              ✕ Delete this card
+              <Icon name="trash" /> Delete this card
             </button>
           </div>
         </div>

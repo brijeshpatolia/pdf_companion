@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabaseBrowser } from "@/adapters/supabase/browserClient.js";
+import Icon from "../components/Icon";
 
 function LoginForm() {
   const params = useSearchParams();
@@ -33,7 +34,19 @@ function LoginForm() {
   }
 
   return (
-    <main style={{ maxWidth: 380, margin: "0 auto", padding: "5rem 1.25rem" }}>
+    <main
+      style={{
+        // Centred in the viewport rather than pinned to the top — a sign-in
+        // page with one field shouldn't leave two thirds of the screen empty.
+        minHeight: "100dvh",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        maxWidth: 380,
+        margin: "0 auto",
+        padding: "2rem 1.25rem",
+      }}
+    >
       <h1 className="wordmark" style={{ fontSize: "1.9rem", marginBottom: "0.25rem" }}>
         PDF Companion
       </h1>
@@ -43,7 +56,7 @@ function LoginForm() {
 
       {status === "sent" ? (
         <div className="card fade-in" style={{ padding: "1.25rem", marginTop: "1.5rem" }}>
-          <p style={{ margin: 0, fontSize: "1.4rem" }}>✉️</p>
+          <p style={{ margin: 0, fontSize: "1.4rem" }}><Icon name="mail" />️</p>
           <p style={{ margin: "0.5rem 0 0" }}>
             Check <strong>{email}</strong> for a sign-in link. You can close this tab.
           </p>
