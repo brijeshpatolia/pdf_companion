@@ -34,23 +34,47 @@ export async function GET(
     .maybeSingle();
   if (!book) return new Response("not found", { status: 404 });
 
-  const [{ data: saved }, { count: noteCount }, progress] = await Promise.all([
-    client.from("saved_items").select("kind, text, page").eq("book_id", bookId),
-    client.from("notes").select("id", { count: "exact", head: true }).eq("book_id", bookId),
+  const [{ data: saved }, { data: notes }, progress] = await Promise.all([
+    client.from("saved_items").select("id, kind, text, page").eq("book_id", bookId),
+    client.from("notes").select("id, text, page").eq("book_id", bookId),
     getProgress(bookId, supabaseProgress(client)),
   ]);
 
-  const highlights = ((saved ?? []) as { kind: string; text: string; page: number }[]).filter(
-    (s) => s.kind === "highlight",
-  );
+  const highlights = (
+    (saved ?? []) as { id: string; kind: string; text: string; page: number }[]
+  ).filter((s) => s.kind === "highlight");
+  const noteRows = (notes ?? []) as { id: string; text: string; page: number | null }[];
 
-  // A specific highlight can be requested (the reader picks one in the UI);
-  // otherwise the longest is the most quotable thing we have.
-  const wantedPage = Number(new URL(req.url).searchParams.get("page"));
+  // The reader picks one in the UI. `item` names it exactly, which matters
+  // once there are several on the same page; `page` is the softer hint used
+  // when the panel opens on whatever they're reading.
+  const query = new URL(req.url).searchParams;
+  const wantedId = query.get("item");
+  const wantedPage = Number(query.get("page"));
+
+  const asQuote = (
+    row: { text: string; page: number | null },
+    source: "highlight" | "note",
+  ) => ({ text: row.text, page: row.page ?? 0, source });
+
+  const picked =
+    (wantedId
+      ? (highlights.find((h) => h.id === wantedId) &&
+          asQuote(highlights.find((h) => h.id === wantedId)!, "highlight")) ||
+        (noteRows.find((n) => n.id === wantedId) &&
+          asQuote(noteRows.find((n) => n.id === wantedId)!, "note"))
+      : null) ?? null;
+
+  // Nothing named, so choose: the highlight where they're reading, else the
+  // longest one — the most quotable thing available.
   const chosen =
-    highlights.find((h) => h.page === wantedPage) ??
-    highlights.slice().sort((a, b) => b.text.length - a.text.length)[0] ??
-    null;
+    picked ??
+    (highlights.find((h) => h.page === wantedPage)
+      ? asQuote(highlights.find((h) => h.page === wantedPage)!, "highlight")
+      : null) ??
+    (highlights.length
+      ? asQuote(highlights.slice().sort((a, b) => b.text.length - a.text.length)[0]!, "highlight")
+      : null);
 
   const card = buildReadingCard(
     {
@@ -58,9 +82,9 @@ export async function GET(
       currentPage: progress.furthestReadPage,
       pageCount: book.page_count as number,
       highlightCount: highlights.length,
-      noteCount: noteCount ?? 0,
+      noteCount: noteRows.length,
     },
-    chosen ? { text: chosen.text, page: chosen.page } : null,
+    chosen,
   );
 
   const fonts = await cardFonts();

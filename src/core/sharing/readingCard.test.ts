@@ -80,7 +80,11 @@ describe("buildReadingCard", () => {
 
   it("carries the quote and picks a size for it", () => {
     const card = buildReadingCard(stats, { text: "You have power over your mind.", page: 42 });
-    expect(card.quote).toEqual({ text: "You have power over your mind.", page: 42 });
+    expect(card.quote).toEqual({
+      text: "You have power over your mind.",
+      page: 42,
+      source: "highlight",
+    });
     expect(card.quoteSize).toBe(64);
   });
 
@@ -138,5 +142,30 @@ describe("card variant", () => {
   it("never says 'just started' when a quote carries the card", () => {
     const card = buildReadingCard({ ...stats, currentPage: 1 }, { text: "Know thyself.", page: 1 });
     expect(card.eyebrow).toBe("NOW READING");
+  });
+});
+
+describe("attribution", () => {
+  const quote = { text: "The unexamined life is not worth living.", page: 12 };
+
+  it("puts an author's highlight in quotation marks", () => {
+    const card = buildReadingCard(stats, { ...quote, source: "highlight" });
+    expect(card.quote!.source).toBe("highlight");
+    expect(card.quoteCaption).toBe("page 12");
+  });
+
+  it("defaults an unlabelled quote to a highlight", () => {
+    expect(buildReadingCard(stats, quote).quote!.source).toBe("highlight");
+  });
+
+  it("marks your own note as yours, so the book doesn't get credit for it", () => {
+    // A note set in quotes under the book's title reads as the author's words.
+    const card = buildReadingCard(stats, { ...quote, source: "note" });
+    expect(card.quote!.source).toBe("note");
+    expect(card.quoteCaption).toBe("my note · page 12");
+  });
+
+  it("has no caption when there's nothing to attribute", () => {
+    expect(buildReadingCard(stats, null).quoteCaption).toBe("");
   });
 });

@@ -76,10 +76,10 @@ export function ShareCardArt({ card }: { card: ReadingCard }) {
               marginBottom: 24,
             }}
           >
-            “{card.quote.text}”
+            {card.quote.source === "note" ? card.quote.text : `“${card.quote.text}”`}
           </div>
           <div style={{ display: "flex", fontSize: 26, color: "#6b7686" }}>
-            page {card.quote.page}
+            {card.quoteCaption}
           </div>
         </div>
       ) : null}
