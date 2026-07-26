@@ -756,70 +756,131 @@ input, button {
 .share-panel .btn-ghost { align-self: flex-start; }
 
 /* ── Public share page (/share/[token]) ──────────────────────────────── */
+/*
+ * The share page inverts to cream.
+ *
+ * It is the only light surface in the app, and deliberately so: it's the one
+ * a stranger sees. Everywhere else the dark chrome exists to make the page
+ * the subject — here the whole page *is* the page, so it takes the paper.
+ */
 .share-page {
+  background: var(--paper);
+  color: var(--paper-ink);
+  min-height: 100dvh;
   max-width: 720px;
   margin: 0 auto;
-  padding: 2.5rem 1.25rem 4rem;
+  padding: 64px 40px 72px;
+  font-family: var(--font-sans-stack);
 }
+
 .share-page-head {
   text-align: center;
-  padding-bottom: 1.25rem;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--paper-line);
+  padding-bottom: 30px;
+  margin-bottom: 38px;
 }
+
 .share-eyebrow {
-  margin: 0 0 0.4rem;
-  font-size: 0.8rem;
-  letter-spacing: 0.04em;
-  color: var(--faint);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--paper-meta-2);
+  margin: 0 0 14px;
 }
-.share-title { font-size: 2rem; margin: 0; line-height: 1.15; }
+
+.share-title {
+  font-family: var(--font-display-stack);
+  font-size: 46px;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+  margin: 0;
+  /* The wordmark's gradient is for dark chrome; on paper it's just ink. */
+  background: none;
+  -webkit-text-fill-color: currentColor;
+  color: var(--paper-ink);
+}
+
 .share-sub {
-  margin: 0.6rem auto 0;
-  max-width: 34rem;
-  color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--paper-body);
+  margin: 12px 0 0;
 }
+
 .share-counts {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: 8px;
   justify-content: center;
-  margin-top: 0.9rem;
+  flex-wrap: wrap;
+  margin-top: 20px;
 }
-.share-section { margin-bottom: 2rem; }
+.share-counts .badge {
+  background: var(--paper-chip);
+  color: var(--paper-body);
+}
+
+.share-section { margin-bottom: 38px; }
 .share-section > h2 {
-  font-size: 1.05rem;
-  margin: 0 0 0.75rem;
-  padding-bottom: 0.35rem;
-  border-bottom: 1px solid var(--border);
-  color: var(--text);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--paper-meta-2);
+  font-family: var(--font-sans-stack);
+  font-weight: 400;
+  margin: 0 0 18px;
 }
+
+/*
+ * A highlight is the object here, so it gets no card and no quote marks —
+ * just the accent rule a marked passage would have in a book.
+ */
 .share-quote {
-  margin: 0 0 0.75rem;
-  padding: 0.6rem 0 0.6rem 1rem;
-  border-left: 3px solid var(--accent);
-  color: var(--text);
-  font-style: italic;
-  line-height: 1.55;
+  border-left: 2px solid var(--accent);
+  padding-left: 22px;
+  margin: 0 0 24px;
+  font-family: var(--font-display-stack);
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: -0.015em;
+  color: var(--paper-ink);
 }
 .share-quote cite {
   display: block;
-  margin-top: 0.35rem;
+  margin-top: 8px;
+  font-family: var(--font-sans-stack);
+  font-size: 12px;
+  font-weight: 400;
   font-style: normal;
-  font-size: 0.78rem;
-  color: var(--faint);
+  color: var(--paper-meta-2);
 }
-.share-answer, .share-note { margin-bottom: 0.75rem; padding: 0.9rem 1rem; }
-.share-answer-q { margin: 0; font-weight: 600; }
-.share-answer-meta { margin: 0.15rem 0 0; font-size: 0.75rem; color: var(--faint); }
-.share-answer-a { margin: 0.5rem 0 0; line-height: 1.55; white-space: pre-wrap; }
+
+.share-page .card,
+.share-answer, .share-note, .share-card {
+  background: var(--paper-card);
+  border: 1px solid var(--paper-card-line);
+  border-radius: 14px;
+  padding: 22px 24px;
+  margin-bottom: 12px;
+  color: var(--paper-ink);
+}
+.share-answer-q { margin: 0; font-weight: 600; font-size: 15px; }
+.share-answer-meta { margin: 4px 0 0; font-size: 12px; color: var(--paper-meta-2); }
+.share-answer-a {
+  margin: 12px 0 0;
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: var(--paper-body-2);
+  white-space: pre-wrap;
+}
+
 .share-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
 }
-.share-card { padding: 0.9rem 1rem; }
+.share-card { margin: 0; }
 .share-card-front { margin: 0; font-weight: 600; }
 .share-card-back {
   margin: 0.5rem 0 0;
