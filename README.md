@@ -19,6 +19,7 @@ A reading companion for hard books. Instead of pausing to paste a page into Chat
 - **📝 Notes** — write your own free-form, editable notes anchored to the page you're on, in the companion's **Notes** tab (create, edit, delete, jump-to-page).
 - **⬇ Export** — download everything you've kept for a book (highlights, saved answers, and notes) as a single Markdown file.
 - **🃏 Flashcards** — generate study flashcards from what you kept (highlights, answers, notes) with the AI, add your own, and review them with a flip-card deck.
+- **👥 Live co-reading** — open a room on a book and share the link. Everyone sees who else is reading, what page they're on (click to jump to them), and each other's highlights the moment they're made. Presence and highlights travel over a Supabase Realtime channel and are never stored, so nobody's annotations land in someone else's account — and each participant reads their own copy, so no book file is ever redistributed.
 - **🔗 Sharing** — turn a book into a read-only public link that shows your highlights, saved answers, notes, and flashcards (never the book's text). Create it in one click, copy the link, or stop sharing anytime; visitors need no account.
 - **🔎 Ask your library** — ask a question and get a streamed answer grounded in passages retrieved from across *all* your books (pgvector, RLS-scoped), with cited sources that deep-link to the exact page in the reader.
 - **🧠 Local embeddings** — all-MiniLM-L6-v2 runs in-process (no embedding API cost); retrieval via Supabase pgvector.
@@ -55,7 +56,7 @@ The complete product spec lives in **[SPEC.md](./SPEC.md)** — problem, feature
 
 - **Phase 0 — MVP:** ✅ split-view reader + page-aware chat + select-to-ask + highlights + save-AI-answer *(done)*
 - **Phase 1:** ✅ accounts · ✅ usage dashboard · ✅ notes · ✅ export *(done)* · managed AI pool, Excalidraw *(next)*
-- **Phase 2:** ✅ flashcards · ✅ sharing · ✅ cross-book Q&A *(done)* · live co-reading *(next)*
+- **Phase 2:** ✅ flashcards · ✅ sharing · ✅ cross-book Q&A · ✅ live co-reading *(done)*
 
 ---
 

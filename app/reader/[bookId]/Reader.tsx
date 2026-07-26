@@ -8,6 +8,8 @@ import "react-pdf/dist/Page/AnnotationLayer.css";
 import Companion from "./Companion";
 import SelectionTooltip from "./SelectionTooltip";
 import EpubPage from "./EpubPage";
+import RoomBar from "./RoomBar";
+import { useReadingRoom } from "./useReadingRoom";
 import { buildIntentQuestion } from "@/core/chat/intents.js";
 import type { Intent } from "@/core/chat/intents.js";
 
@@ -21,9 +23,13 @@ interface ReaderProps {
   fileUrl: string;
   initialPage?: number;
   furthestReadPage?: number;
+  userId: string;
+  readerName: string;
+  /** Set when this reader arrived through someone else's room link. */
+  joinedRoomToken?: string | null;
 }
 
-export default function Reader({ bookId, title, pageCount, format = "pdf", fileUrl, initialPage = 1, furthestReadPage: initialFurthest = 1 }: ReaderProps) {
+export default function Reader({ bookId, title, pageCount, format = "pdf", fileUrl, initialPage = 1, furthestReadPage: initialFurthest = 1, userId, readerName, joinedRoomToken = null }: ReaderProps) {
   const [numPages, setNumPages] = useState(pageCount);
   const [page, setPage] = useState(initialPage);
   const [furthest, setFurthest] = useState(initialFurthest);
@@ -33,9 +39,12 @@ export default function Reader({ bookId, title, pageCount, format = "pdf", fileU
   const [pageWidth, setPageWidth] = useState(640);
   const [savedVersion, setSavedVersion] = useState(0);
   const [flash, setFlash] = useState<{ text: string; ok: boolean } | null>(null);
+  const [roomToken, setRoomToken] = useState<string | null>(joinedRoomToken);
   const pdfSectionRef = useRef<HTMLElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const flashRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const room = useReadingRoom({ token: roomToken, userId, name: readerName, page });
 
   const onLoad = useCallback(({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
@@ -108,12 +117,15 @@ export default function Reader({ bookId, title, pageCount, format = "pdf", fileU
         });
         if (!res.ok) throw new Error();
         setSavedVersion((v) => v + 1);
+        // Anyone reading along sees it appear. Broadcast only — it stays in
+        // this reader's account, and is never written to anyone else's.
+        room.shareHighlight(selection, page);
         showFlash("Highlight saved ✓", true);
       } catch {
         showFlash("Couldn't save highlight", false);
       }
     },
-    [bookId, page, showFlash],
+    [bookId, page, showFlash, room],
   );
 
   useEffect(() => {
@@ -209,6 +221,23 @@ export default function Reader({ bookId, title, pageCount, format = "pdf", fileU
           </form>
         </div>
       </header>
+
+      {/* co-reading: who else is in this book right now */}
+      <div style={{ padding: "0.5rem 1rem", borderBottom: "1px solid var(--border)" }}>
+        <RoomBar
+          bookId={bookId}
+          token={roomToken}
+          onTokenChange={setRoomToken}
+          connected={room.connected}
+          participants={room.participants}
+          liveHighlights={room.liveHighlights}
+          onJumpToPage={(n) => {
+            go(n);
+            setMobileView("book");
+          }}
+          isGuest={joinedRoomToken !== null}
+        />
+      </div>
 
       {/* reading progress */}
       <div className="progress-track" aria-hidden="true">

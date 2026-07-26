@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 interface CuratedBook {
   id: string;
@@ -80,15 +80,30 @@ function Cover({ url }: { url?: string }) {
   );
 }
 
+/**
+ * Reading the `?q=` prefill opts this page out of static prerendering unless
+ * it sits behind a Suspense boundary, so the default export supplies one.
+ */
 export default function CatalogPage() {
+  return (
+    <Suspense fallback={null}>
+      <Catalog />
+    </Suspense>
+  );
+}
+
+function Catalog() {
   const router = useRouter();
   const [curated, setCurated] = useState<CuratedBook[]>([]);
   const [curatedSource, setCuratedSource] = useState("");
   const [loaded, setLoaded] = useState(false);
 
   const [bookSource, setBookSource] = useState<BookSource>("gutenberg");
-  const [query, setQuery] = useState("");
-  const [debounced, setDebounced] = useState("");
+  // A `?q=` prefill lets other pages send someone here looking for a specific
+  // book — a room invite for a book they don't own yet, for instance.
+  const initialQuery = useSearchParams().get("q") ?? "";
+  const [query, setQuery] = useState(initialQuery);
+  const [debounced, setDebounced] = useState(initialQuery);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
