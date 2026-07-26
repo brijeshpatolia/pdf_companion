@@ -20,7 +20,7 @@ export default function SharedBookView({ shared }: { shared: SharedBook }) {
   return (
     <main className="share-page">
       <header className="share-page-head">
-        <p className="share-eyebrow"><Icon name="book" /> Shared from PDF Companion</p>
+        <p className="share-eyebrow"><Icon name="book" /> Shared from Studiolo</p>
         <h1 className="wordmark share-title">{bookTitle}</h1>
         <p className="share-sub">
           A reader’s highlights, saved answers, notes, and flashcards for this book · shared {fmtDate(sharedAt)}
@@ -98,7 +98,7 @@ export default function SharedBookView({ shared }: { shared: SharedBook }) {
 
       <footer className="share-foot">
         <Link href="/" className="btn-primary btn-sm">
-          Read with PDF Companion <Icon name="arrow-right" />
+          Read with Studiolo <Icon name="arrow-right" />
         </Link>
         <p className="share-foot-note">
           An AI that reads with you — always on your page, holding the whole book in mind.

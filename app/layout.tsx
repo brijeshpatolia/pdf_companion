@@ -15,14 +15,15 @@ const reading = Source_Serif_4({ subsets: ["latin"], variable: "--font-reading",
 
 export const metadata: Metadata = {
   title: {
-    default: "PDF Companion",
-    template: "%s · PDF Companion",
+    default: "Studiolo",
+    template: "%s · Studiolo",
   },
-  description: "An AI that reads with you — always on your page, holding the whole book in mind.",
-  applicationName: "PDF Companion",
+  description:
+    "A reading companion for hard books — always on your page, holding the whole book in mind.",
+  applicationName: "Studiolo",
   appleWebApp: {
     capable: true,
-    title: "Companion",
+    title: "Studiolo",
     // The chrome is dark, so the status bar should be too.
     statusBarStyle: "black-translucent",
   },

@@ -37,13 +37,13 @@ function LoginForm() {
   return (
     <main className="gate">
       <div className="gate-card">
-        <Link href="/welcome" className="rail-brand gate-mark" aria-label="What PDF Companion is">
-          Pc
+        <Link href="/welcome" className="rail-brand gate-mark" aria-label="What Studiolo is">
+          S
         </Link>
-        <h1 className="gate-title">PDF Companion</h1>
+        <h1 className="gate-title">Studiolo</h1>
         <p className="gate-sub">
-          An AI that reads with you. Sign in and your library, highlights and answers are waiting
-          the next time you open a book.
+          A reading companion for hard books. Sign in and your library, highlights and answers are
+          waiting the next time you open a book.
         </p>
 
         {status === "sent" ? (

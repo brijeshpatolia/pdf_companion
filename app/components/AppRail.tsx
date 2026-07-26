@@ -58,8 +58,8 @@ export default function AppRail({ initial = "R" }: { initial?: string }) {
 
   return (
     <nav className="app-rail" aria-label="Sections">
-      <Link href="/" className="rail-brand" aria-label="PDF Companion — library">
-        Pc
+      <Link href="/" className="rail-brand" aria-label="Studiolo — library">
+        S
       </Link>
 
       <div className="rail-items">

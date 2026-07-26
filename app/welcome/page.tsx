@@ -3,7 +3,7 @@ import Link from "next/link";
 export const metadata = {
   title: "The book, and someone to think with",
   description:
-    "A companion that is always on the page you're on, holds the whole book in mind, and keeps what mattered.",
+    "Studiolo is a reading companion for hard books. Not a summary — a companion on the page you're on, holding the whole book in mind.",
 };
 
 /**
@@ -20,9 +20,9 @@ export default function WelcomePage() {
       <header className="landing-bar">
         <span className="landing-brand">
           <span className="rail-brand" aria-hidden="true">
-            Pc
+            S
           </span>
-          PDF Companion
+          Studiolo
         </span>
         <span style={{ flex: 1 }} />
         <Link href="/catalog" className="landing-nav">
@@ -35,7 +35,7 @@ export default function WelcomePage() {
 
       <section className="landing-hero">
         <div>
-          <span className="landing-kicker">PDF &amp; EPUB · reads with you</span>
+          <span className="landing-kicker">For hard books · PDF &amp; EPUB</span>
           <h1 className="landing-h1">
             The book, and
             <br />
@@ -44,9 +44,9 @@ export default function WelcomePage() {
             <em>think with</em>
           </h1>
           <p className="landing-lede">
-            A companion that is always on the page you&apos;re on, holds the whole book in mind, and
-            keeps what mattered — highlights, answers and notes that become something you can
-            review, or hand to someone else.
+            Not a summary — the opposite. A companion that stays on the page you&apos;re on, holds
+            the whole book in mind, and keeps what mattered, so the book you&apos;ve been meaning to
+            finish becomes one you can.
           </p>
           <div className="landing-cta">
             <Link href="/login" className="btn-primary">
@@ -129,7 +129,7 @@ export default function WelcomePage() {
           <h2>Keeps what mattered</h2>
           <p>
             Highlights, saved answers and notes become flashcards, or a page you can share with
-            someone.
+            someone. Nothing here is built to help you skip the book.
           </p>
         </div>
       </section>

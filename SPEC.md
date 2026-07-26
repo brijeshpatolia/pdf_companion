@@ -1,8 +1,8 @@
-# PDF Companion — Product Spec
+# Studiolo — Product Spec
 
 > **An AI that reads with you.** Always on your page. Holding the whole book in mind.
 
-**Working name:** PDF Companion · **Status:** Draft v0.1 · **Date:** 06 Jul 2026 · *Living document*
+**Name:** Studiolo · **Status:** Draft v0.1 · **Date:** 06 Jul 2026 · *Living document*
 
 A reading companion for hard books. Instead of breaking your flow to paste a page into ChatGPT — or Googling a term with none of the book's context — the AI sits beside the page you're on, **remembers everything you've read**, and answers grounded in the book itself. Ask, highlight, sketch, and keep the explanations worth keeping.
 
@@ -229,6 +229,41 @@ A reading companion for hard books. Instead of breaking your flow to paste a pag
 
 ---
 
+## 09b · Name & positioning
+
+**Studiolo.** The small private room a Renaissance reader kept for study and
+contemplation. Federico da Montefeltro's at Urbino is the famous one, its walls
+inlaid with trompe-l'œil shelves of books and instruments. The name and the
+design say the same thing: one lit page, and quiet around it.
+
+The shortlist it beat was mostly unavailable, and the collisions that mattered
+were all *inside* reading: *Gloss* is an AI reading tool (readwithgloss.com),
+*Recto* a reading tracker (recto.app), *Scholia* an AI document-chat product,
+*Flyleaf* a read-later app, *Deckle* book-writing software, *Scriptorium*
+several things at once, and *Codex* is OpenAI's. *Palimpsest* and
+*Florilegium* were both clear and both close seconds — Florilegium ("a
+gathering of flowers", a medieval compilation of choice excerpts) is the more
+exact description of what the Saved tab is, and is the name to fall back to.
+
+The known risk with Studiolo is the ear: it can be heard as "Studio".
+
+**The position: against the summary.** Blinkist, "TL;DR this PDF" and "read
+100 books a year" all optimise for getting *through* a book. Studiolo
+optimises for getting *it*.
+
+| | |
+|---|---|
+| **Who** | People who buy hard books and stall on them |
+| **Category** | A reading companion — not a "PDF tool" (it reads EPUB too, and the file format is the least interesting thing about it), not an "AI reader" |
+| **Promise** | You can finish the difficult book, because you aren't alone in it |
+| **Line** | *The book, and someone to think with* |
+| **Never** | Summarise so you can skip it · gamify with streaks · promise you'll read faster |
+
+The design already argues this: the cream page is the only lit object on
+screen and everything else recedes around it. The subject is the book.
+
+---
+
 ## 10 · Risks & open questions
 
 | Risk | Mitigation |
@@ -239,7 +274,6 @@ A reading companion for hard books. Instead of breaking your flow to paste a pag
 | **Context-window cost creep** | Rolling summary + retrieval caps; a hard ceiling on assembled context per request |
 
 **Open questions**
-- **Product name.** "PDF Companion" is a placeholder — candidates: *Gloss*, *Marginalia*, *Sidenote*, *Codex*, *Recto*.
 - **Confirm personal-first MVP** (vs. building accounts from day one).
 - **MVP provider** — start with OpenRouter-only, or a single direct provider?
 - **Ingestion** — client-side PDF.js text extraction, or a server-side parser for messy/scanned PDFs (OCR)?

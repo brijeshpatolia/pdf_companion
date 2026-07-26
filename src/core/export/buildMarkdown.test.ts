@@ -14,7 +14,7 @@ describe("buildExportMarkdown", () => {
   it("includes a title and export date", () => {
     const md = buildExportMarkdown(base);
     expect(md).toContain("# The Republic");
-    expect(md).toContain("Exported from PDF Companion on 2026-07-24");
+    expect(md).toContain("Exported from Studiolo on 2026-07-24");
   });
 
   it("renders highlights as blockquotes with page refs", () => {
