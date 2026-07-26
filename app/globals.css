@@ -922,3 +922,25 @@ input, button {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: none; }
 }
+
+/* ---------- highlights on the page ---------- */
+
+/*
+ * In a PDF the text layer sits invisibly over the rendered page, so a normal
+ * background would be hidden behind the image. These marks paint over it
+ * instead — translucent, so the words underneath stay readable.
+ */
+.pdf-highlight {
+  background: rgba(251, 191, 36, 0.32);
+  color: transparent;              /* the glyphs come from the page beneath */
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.18);
+  padding: 0.05em 0;
+}
+
+/* EPUB pages are real text, so the mark behaves like a normal highlighter. */
+.epub-page mark.pdf-highlight {
+  background: rgba(251, 191, 36, 0.22);
+  color: inherit;
+  box-shadow: none;
+}
