@@ -55,7 +55,15 @@ export default function SelectionTooltip({
 
   const dismiss = useCallback(() => setTooltip(null), []);
 
-  const handleMouseUp = useCallback(() => {
+  const handleMouseUp = useCallback((e?: Event) => {
+    // The popover lives inside the container, so releasing the mouse on one of
+    // its buttons bubbles to this same listener. Without this guard the
+    // selection is already cleared by then, so we'd read "no text", unmount the
+    // popover on mouseup, and the click would never be dispatched — every
+    // action in the popover silently did nothing.
+    const from = e?.target;
+    if (from instanceof Element && from.closest("[data-selection-tooltip]")) return;
+
     const sel = window.getSelection();
     const text = sel?.toString().trim();
     if (!text || text.length < 2) {
@@ -106,8 +114,9 @@ export default function SelectionTooltip({
     const container = containerRef.current;
     if (!container) return;
 
-    // Touch selection finalizes just after touchend; defer the read.
-    const handleTouchEnd = () => setTimeout(handleMouseUp, 50);
+    // Touch selection finalizes just after touchend; defer the read, carrying
+    // the event so the guard above still sees where the touch landed.
+    const handleTouchEnd = (e: Event) => setTimeout(() => handleMouseUp(e), 50);
 
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
