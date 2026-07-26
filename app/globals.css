@@ -1,48 +1,120 @@
 :root {
-  --bg: #0b0e14;
-  --bg-raised: #0f131b;
-  --panel: #141922;
-  --surface: #1c2330;
-  --border: #232a36;
-  --border-strong: #313b4d;
-  --text: #e6e9ef;
-  --muted: #9aa4b2;
-  --faint: #6b7686;
-  --accent: #4c8dff;
-  --accent-strong: #2f6fe4;
-  --accent-soft: rgba(76, 141, 255, 0.14);
+  /*
+   * Warm ink and cream paper.
+   *
+   * Every grey carries a yellow-red bias — the warmth is the direction, not a
+   * tint over it, so pure greys and the old blue-greys must not creep back in.
+   * The chrome is dark so that the cream page is the only lit object on
+   * screen: the paper is the subject and everything else recedes.
+   *
+   * Marigold is reserved. It marks the AI, its citations, reading progress,
+   * and exactly one primary action per screen — never decoration.
+   */
 
-  --ok: #4ade80;
-  --ok-soft: rgba(74, 222, 128, 0.12);
-  --warn: #fbbf24;
-  --warn-soft: rgba(251, 191, 36, 0.12);
-  --danger: #fca5a5;
-  --danger-strong: #ef4444;
-  --danger-soft: rgba(239, 68, 68, 0.12);
-  --info: #93c5fd;
-  --info-soft: rgba(147, 197, 253, 0.12);
+  /* ink ramp — chrome, darkest first */
+  --ink-900: #0c0b0a;   /* page background, outermost shell */
+  --ink-850: #100f0e;   /* reader stage, behind the paper */
+  --ink-800: #131211;   /* nav rail, presence strip */
+  --ink-750: #141312;   /* cards, list rows, stat tiles */
+  --ink-700: #161514;   /* companion pane, input surfaces */
+  --ink-650: #1a1817;   /* inactive tab pill, card stack layer 2 */
+  --ink-600: #1d1b19;   /* pill controls */
+  --ink-550: #1e1c1a;   /* composer field */
+  --ink-500: #2c2825;   /* user bubble, active toggle */
 
+  /* hairlines */
+  --line-900: #221f1c;
+  --line-800: #262320;
+  --line-700: #2a2724;
+  --line-600: #2e2a26;
+  --line-500: #332f2a;
+  --line-400: #3a352f;
+
+  /* text ramp */
+  --text-100: #efeae2;
+  --text-300: #dcd5cb;
+  --text-400: #c9c0b4;
+  --text-500: #a9a199;
+  --text-600: #918a81;
+  --text-700: #7e766c;
+  --text-800: #6e675e;
+  --text-900: #5e574f;
+
+  /* marigold */
+  --accent: #e9a13b;
+  --accent-hover: #f3bc6b;
+  --accent-ink: #171310;
+  --accent-wash: rgba(233, 161, 59, 0.13);
+  --accent-line: rgba(233, 161, 59, 0.35);
+
+  /* cream paper — the reading surface and the public share page */
+  --paper: #faf6ec;
+  --paper-ink: #211e19;
+  --paper-ink-strong: #1d1a16;
+  --paper-meta: #a79e8c;
+  --paper-meta-2: #9c9482;
+  --paper-line: #e2d9c6;
+  --paper-card: #fffdf7;
+  --paper-card-line: #e7decb;
+  --paper-chip: #f0e7d4;
+  --paper-body: #6b6459;
+  --paper-body-2: #3a352c;
+
+  --success: #86b36a;
+  --info: #8fa9c9;
+  --danger: #e0745e;
+
+  /* two highlight species, so yours and a peer's never read as the same mark */
+  --highlight-user: rgba(233, 161, 59, 0.4);
+  --highlight-peer: rgba(120, 150, 200, 0.32);
+
+  /*
+   * Legacy aliases. The app was built against these names; mapping them onto
+   * the ramp reskins every existing surface at once instead of requiring all
+   * nine to be rewritten before anything looks right.
+   */
+  --bg: var(--ink-900);
+  --bg-raised: var(--ink-850);
+  --panel: var(--ink-750);
+  --surface: var(--ink-700);
+  --border: var(--line-800);
+  --border-strong: var(--line-600);
+  --text: var(--text-100);
+  --muted: var(--text-600);
+  --faint: var(--text-800);
+  --accent-strong: #cf8623;
+  --accent-soft: var(--accent-wash);
+  --ok: var(--success);
+  --ok-soft: rgba(134, 179, 106, 0.13);
+  --warn: var(--accent);
+  --warn-soft: var(--accent-wash);
+  --danger-strong: #c9563f;
+  --danger-soft: rgba(224, 116, 94, 0.13);
+  --info-soft: rgba(143, 169, 201, 0.13);
+
+  /* Pills throughout — every button, chip and badge. */
+  --radius-pill: 999px;
   --radius-sm: 7px;
-  --radius: 11px;
+  --radius: 14px;
   --radius-lg: 16px;
-  --radius-xl: 22px;
+  --radius-xl: 20px;
 
-  /* Layered rather than single-blur: a tight contact shadow plus a wide
-     ambient one reads as a real object sitting above the page. */
+  /* Warm-black and directional, never a neutral blur. */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 16px -4px rgba(0, 0, 0, 0.35);
-  --shadow-lg: 0 1px 3px rgba(0, 0, 0, 0.45), 0 12px 32px -8px rgba(0, 0, 0, 0.5);
-  --shadow-pop: 0 2px 6px rgba(0, 0, 0, 0.5), 0 20px 48px -12px rgba(0, 0, 0, 0.6);
-  --glow-accent: 0 0 0 1px var(--accent-soft), 0 6px 24px -6px rgba(76, 141, 255, 0.45);
+  --shadow: 0 14px 34px -8px rgba(0, 0, 0, 0.7);
+  --shadow-lg: 0 24px 60px -22px rgba(0, 0, 0, 0.7);
+  --shadow-pop: 0 40px 90px -30px rgba(0, 0, 0, 0.8);
+  --shadow-paper: 0 24px 60px -22px rgba(0, 0, 0, 0.7);
+  --glow-accent: 0 12px 30px -10px rgba(233, 161, 59, 0.5);
 
-  /* One motion vocabulary, so nothing animates at a speed of its own invention. */
-  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease: cubic-bezier(0.2, 0.7, 0.3, 1);
   --dur-fast: 120ms;
   --dur: 200ms;
   --dur-slow: 380ms;
 
   --font-display-stack: var(--font-display), Georgia, "Times New Roman", serif;
   --font-sans-stack: var(--font-sans), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-reading-stack: var(--font-reading), Georgia, "Times New Roman", serif;
 }
 
 * { box-sizing: border-box; }
@@ -62,22 +134,26 @@ html, body {
 h1, h2, h3, .display {
   font-family: var(--font-display-stack);
   font-weight: 600;
-  letter-spacing: -0.021em;
-  line-height: 1.15;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
 }
 
-::selection { background: var(--accent-soft); }
+::selection { background: rgba(233, 161, 59, 0.28); }
 
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
 button {
   font: inherit;
-  color: var(--text);
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 0.42rem 0.8rem;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-400);
+  background: transparent;
+  border: 1px solid var(--line-500);
+  /* Every button, chip and badge is a pill in this design. */
+  border-radius: var(--radius-pill);
+  padding: 8px 16px;
+  white-space: nowrap;
   cursor: pointer;
   /* Buttons carry icons now, so they lay their content out rather than
      relying on whatever whitespace the JSX happened to contain. */
@@ -90,7 +166,7 @@ button {
               opacity var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease),
               box-shadow var(--dur-fast) var(--ease);
 }
-button:hover:not(:disabled) { border-color: var(--border-strong); background: var(--surface); }
+button:hover:not(:disabled) { border-color: var(--line-600); color: var(--text-100); }
 button:active:not(:disabled) { transform: translateY(1px); }
 button:disabled { opacity: 0.45; cursor: default; }
 
@@ -106,26 +182,38 @@ input, button {
 
 /* ---------- buttons ---------- */
 
+/* Marigold is reserved — one primary action per screen, never decoration. */
 .btn-primary {
-  background: linear-gradient(180deg, var(--accent) 0%, var(--accent-strong) 100%);
+  background: var(--accent);
   border-color: transparent;
-  color: #fff;
-  font-weight: 550;
-  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  color: var(--accent-ink);
+  font-weight: 600;
 }
 .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(180deg, #6ba1ff 0%, var(--accent) 100%);
+  background: var(--accent-hover);
   border-color: transparent;
-  box-shadow: var(--glow-accent), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  color: var(--accent-ink);
 }
 
 .btn-ghost {
   background: transparent;
+  border-color: var(--line-500);
 }
+
+/* No chrome at all: Keep / Copy / Note / Knew it. */
+.btn-text {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-800);
+  padding: 2px 6px;
+  font-size: 11.5px;
+  font-weight: 400;
+}
+.btn-text:hover:not(:disabled) { color: var(--text-400); border-color: transparent; }
 
 .btn-danger {
   background: transparent;
-  border-color: rgba(239, 68, 68, 0.45);
+  border-color: rgba(224, 116, 94, 0.4);
   color: var(--danger);
 }
 .btn-danger:hover:not(:disabled) {
@@ -136,16 +224,16 @@ input, button {
 .btn-danger-solid {
   background: var(--danger-strong);
   border-color: transparent;
-  color: #fff;
+  color: #faf6ec;
 }
 .btn-danger-solid:hover:not(:disabled) {
-  background: #dc2626;
+  background: #b04d36;
   border-color: transparent;
 }
 
 .btn-warn {
   background: transparent;
-  border-color: rgba(251, 191, 36, 0.4);
+  border-color: rgba(221, 130, 68, 0.4);
   color: var(--warn);
 }
 .btn-warn:hover:not(:disabled) {
@@ -154,8 +242,8 @@ input, button {
 }
 
 .btn-sm {
-  padding: 0.25rem 0.6rem;
-  font-size: 0.8rem;
+  padding: 6px 14px;
+  font-size: 12.5px;
 }
 
 /* ---------- inputs ---------- */
@@ -177,12 +265,30 @@ input, button {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  padding: 0.1rem 0.55rem;
-  border-radius: 999px;
-  font-size: 0.72rem;
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 11.5px;
   font-weight: 500;
-  letter-spacing: 0.02em;
   white-space: nowrap;
+}
+/* Citation chip — marigold on its own wash. */
+.chip-cite {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: var(--radius-pill);
+  background: var(--accent-wash);
+  color: var(--accent);
+  font-size: 11.5px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+/* Section label: 10–11px uppercase, wide tracking, faintest ramp. */
+.eyebrow {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-800);
 }
 .badge-ok { color: var(--ok); background: var(--ok-soft); }
 .badge-warn { color: var(--warn); background: var(--warn-soft); }
@@ -192,17 +298,14 @@ input, button {
 /* ---------- cards ---------- */
 
 .card {
-  background: linear-gradient(180deg, var(--panel) 0%, var(--bg-raised) 100%);
-  border: 1px solid var(--border);
+  background: var(--ink-750);
+  border: 1px solid var(--line-800);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
   transition: border-color var(--dur) var(--ease), transform var(--dur) var(--ease),
               box-shadow var(--dur) var(--ease);
 }
 .card-interactive:hover {
-  border-color: var(--border-strong);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  border-color: var(--line-600);
 }
 
 /* ---------- chat bubbles ---------- */
@@ -219,7 +322,7 @@ input, button {
 .bubble-user {
   align-self: flex-end;
   background: var(--accent-strong);
-  color: #fff;
+  color: #241c10;
   border-bottom-right-radius: var(--radius-sm);
 }
 .bubble-assistant {
@@ -416,7 +519,7 @@ input, button {
   font-weight: 500;
 }
 .page-chip:hover:not(:disabled) {
-  background: rgba(76, 141, 255, 0.25);
+  background: rgba(233, 161, 59, 0.25);
   border-color: transparent;
 }
 
@@ -460,7 +563,7 @@ input, button {
 .md li { margin: 0.2em 0; }
 .md li > p { margin: 0; }
 
-.md strong { color: #fff; }
+.md strong { color: #faf6ec; }
 
 .md code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -793,7 +896,7 @@ input, button {
   text-decoration: none;
   white-space: nowrap;
 }
-.ask-source-page:hover { background: var(--accent); color: #fff; }
+.ask-source-page:hover { background: var(--accent); color: #241c10; }
 
 /* ---------- icon-bearing controls ---------- */
 
@@ -921,4 +1024,166 @@ input, button {
 @keyframes rise-in {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: none; }
+}
+
+/* ---------- highlights on the page ---------- */
+
+/*
+ * In a PDF the text layer sits invisibly over the rendered page, so a normal
+ * background would be hidden behind the image. These marks paint over it
+ * instead — translucent, so the words underneath stay readable.
+ */
+.pdf-highlight {
+  background: rgba(251, 191, 36, 0.32);
+  /*
+   * Load-bearing, not decoration. pdf.js hides the text layer with
+   * `color: transparent` on its spans, but `<mark>` carries a UA default of
+   * `color: MarkText`, which overrides that inheritance and paints a second
+   * set of black glyphs slightly off from the ones on the page beneath.
+   */
+  color: transparent;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.18);
+  padding: 0.05em 0;
+}
+
+/* EPUB pages are real text, so the mark behaves like a normal highlighter. */
+.epub-page mark.pdf-highlight {
+  background: rgba(251, 191, 36, 0.22);
+  color: inherit;
+  box-shadow: none;
+}
+
+/* ---------- the paper page ---------- */
+
+/*
+ * The cream page is the only lit object on screen. Everything else in the
+ * chrome recedes so this reads as the subject — which is why it carries a
+ * real shadow and sharp-ish corners: books do not have rounded pages.
+ */
+.paper {
+  background: var(--paper);
+  color: var(--paper-ink);
+  border-radius: 4px;
+  box-shadow: var(--shadow-paper);
+}
+.paper-running-head {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-sans-stack);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--paper-meta);
+}
+.paper-body {
+  font-family: var(--font-reading-stack);
+  font-size: 17px;
+  line-height: 1.8;
+  color: var(--paper-ink);
+}
+.paper-body p { margin: 0 0 1.05em; }
+
+/* Numbers that change in place must not reflow the line around them. */
+.tabular { font-variant-numeric: tabular-nums; }
+
+/* ---------- nav rail ---------- */
+
+.app-rail {
+  width: 76px;
+  flex: 0 0 76px;
+  background: var(--ink-800);
+  border-right: 1px solid var(--line-700);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 18px 0 16px;
+  gap: 22px;
+}
+
+.rail-brand {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display-stack);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.02em;
+  flex-shrink: 0;
+}
+.rail-brand:hover { text-decoration: none; background: var(--accent-hover); }
+
+.rail-items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  align-items: center;
+}
+
+.rail-item {
+  width: 60px;
+  padding: 9px 0 7px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-700);
+  font-size: 9.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+}
+.rail-item:hover { text-decoration: none; color: var(--text-400); }
+.rail-item[data-active="true"] {
+  background: var(--accent-wash);
+  color: var(--accent);
+}
+
+.rail-avatar {
+  margin-top: auto;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--ink-500);
+  color: var(--text-400);
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* A rail is navigation, and navigation shouldn't eat a phone screen. */
+@media (max-width: 760px) {
+  .app-rail {
+    width: 100%;
+    flex: 0 0 auto;
+    flex-direction: row;
+    justify-content: space-around;
+    border-right: none;
+    border-top: 1px solid var(--line-700);
+    padding: 6px 8px;
+    gap: 0;
+    order: 2;
+  }
+  .rail-brand, .rail-avatar { display: none; }
+  .rail-items { flex-direction: row; gap: 2px; }
+}
+
+/* The shell that holds a rail beside a scrolling column. */
+.rail-layout {
+  display: flex;
+  min-height: 100dvh;
+  align-items: stretch;
+}
+.rail-layout > main { flex: 1; min-width: 0; }
+
+@media (max-width: 760px) {
+  .rail-layout { flex-direction: column; }
 }

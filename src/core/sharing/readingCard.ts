@@ -24,6 +24,12 @@ export interface CardStats {
 export interface CardQuote {
   text: string;
   page: number;
+  /**
+   * Whose words these are. A highlight is the author's and gets quotation
+   * marks; a note is the reader's own and must not, or a card headed with the
+   * book's title turns your sentence into the author's.
+   */
+  source?: "highlight" | "note";
 }
 
 export interface ReadingCard {
@@ -32,7 +38,9 @@ export interface ReadingCard {
   /** 0–100, clamped — a card never shows 103% read. */
   percent: number;
   progressLabel: string;
-  quote: { text: string; page: number } | null;
+  quote: { text: string; page: number; source: "highlight" | "note" } | null;
+  /** Caption under the quote — distinguishes the author's words from yours. */
+  quoteCaption: string;
   /** Font size in px, chosen so the quote fills the card without overflowing. */
   quoteSize: number;
   stats: { value: string; label: string }[];
@@ -103,7 +111,12 @@ export function buildReadingCard(stats: CardStats, quote?: CardQuote | null): Re
     author: stats.author?.trim() || null,
     percent,
     progressLabel: pageCount > 0 ? `page ${current} of ${pageCount}` : `page ${current}`,
-    quote: text ? { text, page: quote!.page } : null,
+    quote: text ? { text, page: quote!.page, source: quote!.source ?? "highlight" } : null,
+    quoteCaption: !text
+      ? ""
+      : (quote!.source ?? "highlight") === "note"
+        ? `my note · page ${quote!.page}`
+        : `page ${quote!.page}`,
     quoteSize: quoteFontSize(text.length),
     stats: cards,
     variant: text ? "quote" : "title",

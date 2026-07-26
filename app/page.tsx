@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import AuthButton from "./AuthButton";
 import Icon from "./components/Icon";
+import AppRail from "./components/AppRail";
 
 interface BookSummary {
   id: string;
@@ -147,6 +148,8 @@ export default function Home() {
   }
 
   return (
+    <div className="rail-layout">
+      <AppRail />
     <main style={{ maxWidth: 720, margin: "0 auto", padding: "2.5rem 1.25rem" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem" }}>
         <div>
@@ -300,6 +303,7 @@ export default function Home() {
           </li>
         )}
       </ul>
-    </main>
+      </main>
+    </div>
   );
 }

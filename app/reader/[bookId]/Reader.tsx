@@ -11,6 +11,7 @@ import EpubPage from "./EpubPage";
 import RoomBar from "./RoomBar";
 import ShareCardPanel from "./ShareCardPanel";
 import { useReadingRoom } from "./useReadingRoom";
+import { markHighlights } from "@/core/reading/markHighlights.js";
 import { buildIntentQuestion } from "@/core/chat/intents.js";
 import type { Intent } from "@/core/chat/intents.js";
 import Icon from "../../components/Icon";
@@ -43,6 +44,8 @@ export default function Reader({ bookId, title, pageCount, format = "pdf", fileU
   const [flash, setFlash] = useState<{ text: string; ok: boolean } | null>(null);
   const [roomToken, setRoomToken] = useState<string | null>(joinedRoomToken);
   const [sharingCard, setSharingCard] = useState(false);
+  /** Highlight text for the current page, painted onto the page itself. */
+  const [pageHighlights, setPageHighlights] = useState<string[]>([]);
   const pdfSectionRef = useRef<HTMLElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const flashRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -55,6 +58,31 @@ export default function Reader({ bookId, title, pageCount, format = "pdf", fileU
     // Following means their page turns become yours.
     onFollow: (n) => setPage(n),
   });
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/saved?bookId=${bookId}`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((items) => {
+        if (cancelled || !Array.isArray(items)) return;
+        setPageHighlights(
+          items
+            .filter((i: { kind: string; page: number }) => i.kind === "highlight" && i.page === page)
+            .map((i: { text: string }) => i.text),
+        );
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [bookId, page, savedVersion]);
+
+  // react-pdf hands each text fragment through this and assigns the result as
+  // innerHTML, so the marker escapes everything it returns.
+  const textRenderer = useCallback(
+    ({ str }: { str: string }) => markHighlights(str, pageHighlights),
+    [pageHighlights],
+  );
 
   const onLoad = useCallback(({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
@@ -294,7 +322,7 @@ export default function Reader({ bookId, title, pageCount, format = "pdf", fileU
           className={`pane-book${mobileView === "chat" ? " hidden-narrow" : ""}`}
         >
           {format === "epub" ? (
-            <EpubPage bookId={bookId} page={page} />
+            <EpubPage bookId={bookId} page={page} highlights={pageHighlights} />
           ) : fileUrl ? (
             <Document
               file={fileUrl}
@@ -305,7 +333,13 @@ export default function Reader({ bookId, title, pageCount, format = "pdf", fileU
                 </p>
               }
             >
-              <Page pageNumber={page} renderTextLayer renderAnnotationLayer={false} width={pageWidth} />
+              <Page
+                pageNumber={page}
+                renderTextLayer
+                renderAnnotationLayer={false}
+                width={pageWidth}
+                customTextRenderer={textRenderer}
+              />
             </Document>
           ) : (
             <p style={{ color: "var(--danger)" }}>Could not load the file.</p>

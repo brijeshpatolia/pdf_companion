@@ -1,17 +1,21 @@
 "use client";
 
+import { markHighlights } from "@/core/reading/markHighlights.js";
+
 import { useEffect, useState } from "react";
 
 interface EpubPageProps {
   bookId: string;
   page: number;
+  /** Saved highlight text for this page, painted onto the prose. */
+  highlights?: string[];
 }
 
 /**
  * Renders one synthetic EPUB page as text, fetched from /api/page-text.
  * The selection tooltip works over this text just like the PDF text layer.
  */
-export default function EpubPage({ bookId, page }: EpubPageProps) {
+export default function EpubPage({ bookId, page, highlights = [] }: EpubPageProps) {
   const [text, setText] = useState<string | null>(null);
   const [error, setError] = useState(false);
 
@@ -47,7 +51,9 @@ export default function EpubPage({ bookId, page }: EpubPageProps) {
   return (
     <article className="epub-page fade-in">
       {text.split(/\n{2,}/).map((para, i) => (
-        <p key={i}>{para}</p>
+        // Marked HTML rather than a text node: the marker escapes everything
+        // it emits, and the book's own text is never trusted as markup.
+        <p key={i} dangerouslySetInnerHTML={{ __html: markHighlights(para, highlights) }} />
       ))}
     </article>
   );
