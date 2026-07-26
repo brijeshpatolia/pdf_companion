@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { supabaseUser } from "@/adapters/supabase/userClient.js";
 
 export const metadata = {
   title: "The book, and someone to think with",
@@ -7,14 +8,33 @@ export const metadata = {
 };
 
 /**
- * The landing page — the only surface a stranger meets before signing in.
+ * The landing page — the first surface a stranger meets, and the only place
+ * that says what this is.
  *
  * It has no nav rail and no chrome to speak of, because there is nothing yet
  * to navigate. The whole argument is made by one pair of objects in the hero:
  * a page, and the thing reading it alongside you. That pair *is* the product;
  * everything below it is elaboration.
+ *
+ * It reads the session because signed-in readers come back here too — from the
+ * library's footer, or by pressing back. Sending them to a sign-in form they
+ * don't need would be a loop, so every route out points at the library
+ * instead.
  */
-export default function WelcomePage() {
+export default async function WelcomePage() {
+  let signedIn = false;
+  try {
+    const client = await supabaseUser();
+    const {
+      data: { user },
+    } = await client.auth.getUser();
+    signedIn = Boolean(user);
+  } catch {
+    // Auth not configured (CI, local without env) — treat as a stranger.
+  }
+
+  const enter = signedIn ? "/" : "/login";
+
   return (
     <main className="landing">
       <header className="landing-bar">
@@ -28,7 +48,7 @@ export default function WelcomePage() {
         <Link href="/catalog" className="landing-nav">
           Free library
         </Link>
-        <Link href="/login" className="btn-primary btn-sm">
+        <Link href={enter} className="btn-primary btn-sm">
           Open your library
         </Link>
       </header>
@@ -49,8 +69,8 @@ export default function WelcomePage() {
             finish becomes one you can.
           </p>
           <div className="landing-cta">
-            <Link href="/login" className="btn-primary">
-              Upload a book
+            <Link href={enter} className="btn-primary">
+              {signedIn ? "Open your library" : "Upload a book"}
             </Link>
             <Link href="/catalog" className="btn-ghost">
               Browse free classics

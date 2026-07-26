@@ -1202,10 +1202,22 @@ input, button {
 .ask-answer strong { color: var(--accent); font-weight: 600; }
 
 .ask-sources { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+
+/*
+ * The row is a spine, a title, and one chip per cited page — and a book cited
+ * eleven times has eleven chips. The title used to be the only flexible thing
+ * in the row, so it shrank to nothing and, having no `overflow`, drew its text
+ * straight over the chips.
+ *
+ * The chips now wrap as a block and the title keeps a floor, so a heavily
+ * cited book stacks instead of colliding with itself.
+ */
 .ask-source {
   display: flex;
-  align-items: center;
-  gap: 14px;
+  align-items: baseline;
+  row-gap: 8px;
+  column-gap: 14px;
+  flex-wrap: wrap;
   padding: 12px 16px;
   border: 1px solid var(--line-800);
   border-radius: var(--radius);
@@ -1214,13 +1226,20 @@ input, button {
 /* The same spine that stands for this book on the shelf. */
 .ask-source-spine {
   width: 5px;
-  align-self: stretch;
-  min-height: 30px;
+  height: 17px;
+  align-self: center;
   border-radius: 3px;
   flex-shrink: 0;
 }
-.ask-source-title { font-weight: 600; font-size: 14px; flex: 1; min-width: 0; }
-.ask-source-pages { display: inline-flex; flex-wrap: wrap; gap: 5px; }
+.ask-source-title {
+  font-weight: 600;
+  font-size: 14px;
+  /* Never below a readable width; the chips take the next line instead. */
+  flex: 1 1 12rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.ask-source-pages { display: flex; flex-wrap: wrap; gap: 5px; flex: 1 1 auto; }
 .ask-source-page {
   font-size: 11.5px;
   font-weight: 600;
@@ -1234,9 +1253,34 @@ input, button {
 }
 .ask-source-page:hover { background: var(--accent); color: var(--accent-ink); text-decoration: none; }
 
+/* Stays on the right even when the head wraps onto two lines. */
+.ask-page .page-head .btn-text { margin-left: auto; }
+
+/* One exchange after another, newest first, under the field you type in. */
+.ask-exchange { margin-top: 30px; }
+.ask-exchange + .ask-exchange { border-top: 1px solid var(--line-900); padding-top: 26px; }
+.ask-question {
+  font-family: var(--font-reading-stack);
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--text-300);
+  margin: 0 0 14px;
+}
+.ask-waiting {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 14px;
+  color: var(--text-700);
+  margin: 0;
+}
+
 @media (max-width: 760px) {
   .ask-page { padding: 24px 18px 44px; }
   .ask-field textarea { font-size: 17px; }
+  /* At this width the title and the chips never share a line comfortably, so
+     the chips take the next one — the spine stays beside the title it marks. */
+  .ask-source-pages { flex-basis: 100%; }
 }
 
 /* ── Usage & cost (/usage) ───────────────────────────────────────────── */
@@ -1923,6 +1967,11 @@ a.shelf-title:hover { color: var(--accent); text-decoration: none; }
   margin: 0 8px;
   vertical-align: middle;
 }
+
+/* Sits under the shelf, after everything that matters. */
+.shelf-foot { margin: 26px 0 0; font-size: 12.5px; }
+.shelf-foot a { color: var(--text-800); }
+.shelf-foot a:hover { color: var(--text-500); text-decoration: none; }
 
 @media (max-width: 760px) {
   .shelf { padding: 24px 18px 32px; }

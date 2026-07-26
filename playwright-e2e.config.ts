@@ -32,7 +32,14 @@ export default defineConfig({
   },
   projects: [
     {
+      // Compiles every route before the suite fans out, so no test pays the
+      // dev server's first-build cost and fails on a timeout for it.
+      name: "warm",
+      testMatch: /warm\.setup\.ts/,
+    },
+    {
       name: "phone",
+      dependencies: ["warm"],
       // A common Android viewport, and the one the layout bugs were reported
       // from. Testing at a real device size rather than a round number keeps
       // the assertions honest about what actually fits.

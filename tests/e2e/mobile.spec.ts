@@ -102,6 +102,19 @@ async function stubApi(page: Page) {
   );
 }
 
+/**
+ * Waits for the page to be *settled*, not merely idle.
+ *
+ * `networkidle` can fire before a client-side fetch has filled the screen, and
+ * measuring a skeleton tells you nothing about the layout the reader sees. So
+ * where a screen is built from fetched data, wait for that data to arrive.
+ */
+async function settle(page: Page, path: string) {
+  await page.waitForLoadState("networkidle");
+  if (path === "/") await page.locator(".shelf-row").first().waitFor();
+  await page.waitForTimeout(150);
+}
+
 /** How far the document runs past the right edge of the screen. */
 const overflowX = (page: Page) =>
   page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
@@ -131,7 +144,7 @@ for (const path of [...BARE_ROUTES, ...SHELL_ROUTES, "/reader/aa11/flashcards"])
   test(`${path} fits the screen`, async ({ page }) => {
     await stubApi(page);
     await page.goto(path);
-    await page.waitForLoadState("networkidle");
+    await settle(page, path);
 
     expect(await spillingElements(page), `${path} has elements past the right edge`).toEqual([]);
     expect(await overflowX(page), `${path} scrolls sideways`).toBe(0);
@@ -142,7 +155,7 @@ for (const path of SHELL_ROUTES) {
   test(`${path} keeps the nav bar on screen`, async ({ page }) => {
     await stubApi(page);
     await page.goto(path);
-    await page.waitForLoadState("networkidle");
+    await settle(page, path);
 
     // Not `toBeVisible` — an element one viewport below the fold is "visible"
     // in the DOM sense. This is the check that was missing.
@@ -161,7 +174,7 @@ for (const path of SHELL_ROUTES) {
 test("the library shows a book's whole name", async ({ page }) => {
   await stubApi(page);
   await page.goto("/");
-  await page.waitForLoadState("networkidle");
+  await settle(page, "/");
 
   // "The Republic" once rendered as "The R…" — the row's fixed columns left
   // the title as the only thing that could give.
@@ -172,7 +185,7 @@ test("the library shows a book's whole name", async ({ page }) => {
 test("controls are big enough to hit", async ({ page }) => {
   await stubApi(page);
   await page.goto("/");
-  await page.waitForLoadState("networkidle");
+  await settle(page, "/");
 
   // Delete, Resume and Retry were 26px tall — comfortable under a mouse, a
   // miss under a thumb. 40 is the floor here; the guidelines say 44, and the
@@ -188,4 +201,71 @@ test("controls are big enough to hit", async ({ page }) => {
     }
   }
   expect(small, "controls under 40px tall").toEqual([]);
+});
+
+/**
+ * Ask-your-library's source rows.
+ *
+ * A book cited on eleven pages gets eleven chips. The row's title used to be
+ * the only flexible thing in it, so it shrank to nothing and — having no
+ * overflow rule — drew its own text straight across the chips.
+ */
+test("a heavily cited source doesn't draw over itself", async ({ page }) => {
+  await page.route("**/api/ask", (r) =>
+    r.request().method() === "GET"
+      ? r.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            messages: [
+              { id: "1", role: "user", content: "What are the books I have?" },
+              {
+                id: "2",
+                role: "assistant",
+                content: "One: **The Republic**.",
+                sources: [
+                  {
+                    bookId: "aa11",
+                    bookTitle: "The Republic",
+                    pages: [7, 12, 227, 247, 419, 420, 421, 625, 739, 757, 786],
+                  },
+                ],
+              },
+            ],
+          }),
+        })
+      : r.continue(),
+  );
+  await page.goto("/ask");
+  await page.waitForLoadState("networkidle");
+
+  // The stored thread survives a reload — it used to vanish with the tab.
+  await expect(page.getByText("What are the books I have?")).toBeVisible();
+
+  const title = page.locator(".ask-source-title").first();
+  const chips = page.locator(".ask-source-pages").first();
+  const t = (await title.boundingBox())!;
+  const c = (await chips.boundingBox())!;
+
+  expect(t.width, "the title needs a readable width, not what's left over").toBeGreaterThan(60);
+
+  // boundingBox gives x/y/width/height — there is no `right` or `bottom`, and
+  // reaching for them yields undefined, which compares false and makes this
+  // check pass on any layout at all.
+  const overlaps =
+    t.x < c.x + c.width && t.x + t.width > c.x && t.y < c.y + c.height && t.y + t.height > c.y;
+  expect(overlaps, "title and page chips must not share the same space").toBe(false);
+});
+
+test("the library offers a way back to what this is", async ({ page }) => {
+  await stubApi(page);
+  await page.goto("/");
+  await settle(page, "/");
+
+  // Once signed in there was no route to /welcome at all — it could only be
+  // reached by typing the URL.
+  await expect(page.getByRole("link", { name: /What Studiolo is/i })).toHaveAttribute(
+    "href",
+    "/welcome",
+  );
 });

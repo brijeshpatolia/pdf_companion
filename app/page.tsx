@@ -301,6 +301,13 @@ export default function Home() {
             <Link href="/catalog?q=Frankenstein">Frankenstein</Link>
           </p>
         )}
+
+        {/* The one page that says what this is. Once you're signed in there is
+            otherwise no route back to it. Quiet on purpose — it isn't a
+            destination you need twice. */}
+        <p className="shelf-foot">
+          <Link href="/welcome">What Studiolo is</Link>
+        </p>
       </main>
     </div>
   );
