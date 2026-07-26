@@ -60,9 +60,20 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
+  /*
+   * A signed-in reader has no use for the sign-in form — but sending them to
+   * the library made the back button useless: after signing in, history is
+   * [welcome, login, library], so back landed on /login and bounced straight
+   * forward again. Pressing back appeared to do nothing.
+   *
+   * Sending them to /welcome instead means back out of the library reaches the
+   * one page that says what this is — which was otherwise unreachable once you
+   * were past it. /welcome reads the session and points its buttons at the
+   * library, so this can't become a loop.
+   */
   if (user && path === "/login") {
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/";
+    redirectUrl.pathname = "/welcome";
     redirectUrl.search = "";
     return NextResponse.redirect(redirectUrl);
   }

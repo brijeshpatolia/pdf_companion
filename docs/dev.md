@@ -114,6 +114,16 @@ That's why the assertions here are about the **viewport** — `toBeInViewport`,
 the document. Every one of them was confirmed to fail against the broken code
 before being kept; a regression test that passes on the bug is decoration.
 
+### Applying a new migration
+
+`supabase/migrations/` is applied automatically by `npx supabase start` locally.
+A hosted project needs it pushed (`npx supabase db push`, or the SQL editor).
+
+Until `20260726120000_library_messages.sql` is applied, Ask-your-library still
+answers — it just can't remember. The reads fail closed to an empty thread and
+the writes are best-effort, so a missing table costs you the history and
+nothing else.
+
 ### Installing it (PWA)
 
 The app is installable: `app/manifest.ts` describes it, `scripts/make-icons.mjs`
