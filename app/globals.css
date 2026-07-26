@@ -2112,13 +2112,39 @@ a.shelf-right:hover { color: var(--text-400); text-decoration: none; }
   align-items: flex-start;
 }
 
-.reader-paper {
+/*
+ * The stage the page turns on.
+ *
+ * It is the flex item now, in the paper's place, so that the paper and the
+ * clone that turns beside it are laid out against the same box and land on
+ * each other exactly.
+ */
+.page-stage {
   width: 100%;
   max-width: 700px;
   /* Shrinking is what made the paper end mid-paragraph on a long page. */
   flex-shrink: 0;
+  position: relative;
+  perspective: 2400px;
+  /*
+   * The vanishing point sits off to the right, where your eye would be over a
+   * right-hand page. It also keeps the turn inside the page's own width:
+   * perspective magnifies whatever swings toward the viewer, and with the
+   * vanishing point centred the leaf's outer edge projected some thirty pixels
+   * past the resting page early in the turn — enough, on a phone, to widen the
+   * document and make it scroll sideways for half a second.
+   */
+  perspective-origin: 72% 50%;
+}
+
+.reader-paper {
+  width: 100%;
+  max-width: 700px;
   margin: 38px auto;
   padding: 30px 34px 40px;
+  /* Above the clone when the clone is the page being returned to. */
+  position: relative;
+  z-index: 1;
 }
 /* An EPUB has no paper of its own, so the wrapper is the page and needs the
    generous measure a book would have. */
@@ -2136,6 +2162,106 @@ a.shelf-right:hover { color: var(--text-400); text-decoration: none; }
 /* react-pdf's canvas carries its own white; keep it flush inside the paper. */
 .reader-paper .react-pdf__Page { background: transparent !important; }
 .reader-paper canvas { display: block; margin: 0 auto; border-radius: 2px; }
+
+/* ---------- turning the page ---------- */
+
+/*
+ * Where the copy of the outgoing page is put. It covers the stage exactly, so
+ * the copy — which carries the paper's own classes — computes the same box as
+ * the page it was taken from and sits directly over it.
+ *
+ * `inert` in effect: nothing in here is real, and none of it should be
+ * clickable, selectable, or read out.
+ */
+.page-leaf {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  user-select: none;
+  perspective: 2400px;
+  perspective-origin: 72% 50%;
+}
+/* Turning back, the copy is the page you were on and belongs underneath. */
+.page-leaf.is-behind { z-index: 0; }
+
+.leaf {
+  transform-origin: left center;
+  backface-visibility: hidden;
+  /* Deeper than the resting page's: a lifted sheet throws a longer shadow. */
+  box-shadow: -26px 10px 54px rgba(0, 0, 0, 0.45);
+  will-change: transform, opacity;
+}
+
+/*
+ * A sheet in motion darkens as it swings out of the light, hardest along the
+ * spine where the crease is. This is most of what makes it read as paper
+ * rather than a rectangle with a rotation on it — without it the page stays
+ * evenly lit at sixty degrees, which nothing physical does.
+ */
+.leaf-forward::after,
+.reader-paper.is-arriving::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    rgba(28, 22, 14, 0.42) 0%,
+    rgba(28, 22, 14, 0.14) 26%,
+    rgba(28, 22, 14, 0) 62%
+  );
+}
+
+/* Slow to start — a page has weight — then away, then eased down flat. */
+.leaf-forward { animation: leaf-away 560ms cubic-bezier(0.34, 0.02, 0.24, 1) forwards; }
+.leaf-forward::after { animation: leaf-darken 560ms ease-in forwards; }
+
+/* The page being returned to; it lies still while the live page lands on it. */
+.leaf-back { opacity: 1; }
+
+.reader-paper.is-arriving {
+  /* The same hinge as the leaf: both sheets are bound at the same spine. */
+  transform-origin: left center;
+  backface-visibility: hidden;
+  box-shadow: -26px 10px 54px rgba(0, 0, 0, 0.45);
+  will-change: transform, opacity;
+  animation: leaf-back 500ms cubic-bezier(0.24, 0.06, 0.2, 1);
+}
+.reader-paper.is-arriving::after { animation: leaf-lighten 500ms ease-out forwards; }
+
+/* Too far to mime with one sheet, so it doesn't pretend to. */
+.leaf-jump { animation: leaf-dissolve 240ms ease-out forwards; }
+
+@keyframes leaf-away {
+  0% { transform: rotateY(0deg); opacity: 1; }
+  72% { opacity: 1; }
+  100% { transform: rotateY(-104deg); opacity: 0; }
+}
+@keyframes leaf-back {
+  0% { transform: rotateY(-104deg); opacity: 0; }
+  28% { opacity: 1; }
+  100% { transform: rotateY(0deg); opacity: 1; }
+}
+@keyframes leaf-darken {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+/* The same crease, running the other way as the page comes back into the light. */
+@keyframes leaf-lighten {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes leaf-dissolve {
+  0% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: translateY(-7px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* No leaf is cloned at all in this case; this is belt and braces. */
+  .page-leaf { display: none; }
+}
 
 /*
  * The reader on a phone.
