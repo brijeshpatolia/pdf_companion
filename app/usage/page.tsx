@@ -119,20 +119,15 @@ export default function UsagePage() {
   return (
     <div className="rail-layout">
       <AppRail />
-    <main style={{ maxWidth: 820, margin: "0 auto", padding: "2.5rem 1.25rem" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem" }}>
-        <div>
-          <h1 className="wordmark" style={{ marginBottom: "0.25rem", fontSize: "1.8rem" }}>
-            Usage & cost
-          </h1>
-          <p style={{ color: "var(--muted)", marginTop: 0 }}>
-            What your reading companion has cost in AI usage so far.
+    <main className="page-pad">
+      <header className="page-head">
+        <div style={{ minWidth: 0 }}>
+          <h1 style={{ fontSize: 32, margin: 0 }}>Usage &amp; cost</h1>
+          <p style={{ margin: "6px 0 0", fontSize: 14, color: "var(--text-600)" }}>
+            What reading with a companion has actually cost.
           </p>
         </div>
-        <Link href="/" className="btn-ghost btn-sm" style={{ whiteSpace: "nowrap" }}>
-          <Icon name="arrow-left" /> Library
-        </Link>
-      </div>
+      </header>
 
       {!loaded && (
         <div style={{ display: "flex", gap: "0.8rem", marginTop: "1.5rem", flexWrap: "wrap" }}>
