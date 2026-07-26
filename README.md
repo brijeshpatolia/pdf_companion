@@ -8,6 +8,7 @@ A reading companion for hard books. Instead of pausing to paste a page into Chat
 
 ## What works today
 
+- **🎨 One visual language** — a warm-ink design system in `app/globals.css` (plain CSS custom properties, no Tailwind): dark chrome so the cream page is the only lit object on screen, marigold reserved for the AI, citations, progress and one primary action per screen, and an inline SVG icon set in place of emoji. A public landing page at `/welcome` is where signed-out visitors arrive.
 - **🔐 Accounts** — passwordless magic-link sign-in (Supabase Auth). Every book, highlight, chat, and page of progress is scoped to its owner by Row-Level Security.
 - **📚 Library** — drag-and-drop **PDF and EPUB** upload (50 MB guardrail), live ingestion progress (`120/879 pages`), resume a stalled book or retry a failed one, delete with full storage + data cleanup.
 - **📗 EPUB support** — DRM-free EPUBs are parsed and split into synthetic pages, so the whole page-aware pipeline (chat, retrieval, progress, highlights) works on them too; the reader renders them as clean prose.

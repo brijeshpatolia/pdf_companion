@@ -44,35 +44,31 @@ export default async function JoinRoomPage({ params }: { params: Promise<{ token
   if (own) redirect(`/reader/${own.id}?room=${token}`);
 
   return (
-    <main style={{ maxWidth: 560, margin: "0 auto", padding: "3rem 1.25rem" }}>
-      <h1 className="wordmark" style={{ fontSize: "1.6rem", marginBottom: "0.5rem" }}>
-        Join the reading
-      </h1>
-      <p style={{ color: "var(--muted)", marginTop: 0 }}>
-        You&apos;ve been invited to read <strong style={{ color: "var(--text)" }}>{room.bookTitle}</strong> with
-        someone.
-      </p>
-
-      <div className="card" style={{ padding: "1.25rem", marginTop: "1.5rem" }}>
-        <p style={{ marginTop: 0 }}>
-          You don&apos;t have this book yet. Everyone in a room reads their own copy — the app shares
-          notes and highlights, never the book file itself.
+    <main className="gate">
+      <div className="gate-card">
+        <span className="gate-sent-mark" aria-hidden="true">
+          <Icon name="users" size={20} />
+        </span>
+        <h1 className="gate-title">Bring your own copy</h1>
+        <p className="gate-sub">
+          You&apos;ve been invited to read <strong style={{ color: "var(--text-100)" }}>{room.bookTitle}</strong>{" "}
+          with someone — but it isn&apos;t on your shelf yet.
         </p>
-        <p style={{ color: "var(--muted)", fontSize: "0.88rem" }}>
-          If it&apos;s in the public-domain catalog, adding it takes one click. Come back to this link
-          once it&apos;s ready.
+        <p className="gate-sub">
+          Everyone in a room reads their own copy. What travels between you is the page you&apos;re on
+          and what you mark, never the book file.
         </p>
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "1rem" }}>
-          <Link
-            href={`/catalog?q=${encodeURIComponent(room.bookTitle)}`}
-            className="btn-ghost btn-sm"
-          >
+        <div className="gate-actions">
+          <Link href={`/catalog?q=${encodeURIComponent(room.bookTitle)}`} className="btn-primary btn-sm">
             Find it in the catalog
           </Link>
           <Link href="/" className="btn-ghost btn-sm">
             <Icon name="arrow-left" /> Library
           </Link>
         </div>
+        <p className="gate-fine" style={{ textAlign: "left" }}>
+          Come back to this link once it&apos;s ready.
+        </p>
       </div>
     </main>
   );
@@ -80,14 +76,18 @@ export default async function JoinRoomPage({ params }: { params: Promise<{ token
 
 function Problem({ message }: { message: string }) {
   return (
-    <main style={{ maxWidth: 560, margin: "0 auto", padding: "3rem 1.25rem" }}>
-      <h1 className="wordmark" style={{ fontSize: "1.4rem", marginBottom: "0.5rem" }}>
-        Reading room
-      </h1>
-      <p style={{ color: "var(--muted)" }}>{message}</p>
-      <Link href="/" className="btn-ghost btn-sm">
-        <Icon name="arrow-left" /> Library
-      </Link>
+    <main className="gate">
+      <div className="gate-card">
+        <h1 className="gate-title" style={{ marginTop: 0 }}>
+          Reading room
+        </h1>
+        <p className="gate-sub">{message}</p>
+        <div className="gate-actions">
+          <Link href="/" className="btn-ghost btn-sm">
+            <Icon name="arrow-left" /> Library
+          </Link>
+        </div>
+      </div>
     </main>
   );
 }

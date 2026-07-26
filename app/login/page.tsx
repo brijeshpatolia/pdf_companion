@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { supabaseBrowser } from "@/adapters/supabase/browserClient.js";
 import Icon from "../components/Icon";
@@ -34,77 +35,69 @@ function LoginForm() {
   }
 
   return (
-    <main
-      style={{
-        // Centred in the viewport rather than pinned to the top — a sign-in
-        // page with one field shouldn't leave two thirds of the screen empty.
-        minHeight: "100dvh",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        maxWidth: 380,
-        margin: "0 auto",
-        padding: "2rem 1.25rem",
-      }}
-    >
-      <h1 className="wordmark" style={{ fontSize: "1.9rem", marginBottom: "0.25rem" }}>
-        PDF Companion
-      </h1>
-      <p style={{ color: "var(--muted)", marginTop: 0 }}>
-        An AI that reads with you. Sign in to keep your library, highlights, and chats.
-      </p>
+    <main className="gate">
+      <div className="gate-card">
+        <Link href="/welcome" className="rail-brand gate-mark" aria-label="What PDF Companion is">
+          Pc
+        </Link>
+        <h1 className="gate-title">PDF Companion</h1>
+        <p className="gate-sub">
+          An AI that reads with you. Sign in and your library, highlights and answers are waiting
+          the next time you open a book.
+        </p>
 
-      {status === "sent" ? (
-        <div className="card fade-in" style={{ padding: "1.25rem", marginTop: "1.5rem" }}>
-          <p style={{ margin: 0, fontSize: "1.4rem" }}><Icon name="mail" />️</p>
-          <p style={{ margin: "0.5rem 0 0" }}>
-            Check <strong>{email}</strong> for a sign-in link. You can close this tab.
-          </p>
-          <button
-            className="btn-ghost btn-sm"
-            style={{ marginTop: "0.75rem" }}
-            onClick={() => setStatus("idle")}
-          >
-            Use a different email
-          </button>
-        </div>
-      ) : (
-        <form onSubmit={onSubmit} style={{ marginTop: "1.5rem", display: "flex", flexDirection: "column", gap: "0.6rem" }}>
-          <input
-            className="input"
-            type="email"
-            required
-            autoFocus
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            aria-label="Email address"
-            style={{ fontSize: "1rem", padding: "0.6rem 0.75rem" }}
-          />
-          <button
-            type="submit"
-            className="btn-primary"
-            disabled={status === "sending" || !email.trim()}
-            style={{ padding: "0.6rem", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}
-          >
-            {status === "sending" ? (
-              <>
-                <span className="spinner" /> Sending link…
-              </>
-            ) : (
-              "Email me a sign-in link"
-            )}
-          </button>
-          {error && (
-            <p role="alert" style={{ color: "var(--danger)", fontSize: "0.85rem", margin: 0 }}>
-              {error}
+        {status === "sent" ? (
+          <div className="gate-sent fade-in" role="status">
+            <span className="gate-sent-mark" aria-hidden="true">
+              <Icon name="mail" size={20} />
+            </span>
+            <p>
+              A sign-in link is on its way to <strong>{email}</strong>. You can close this tab.
             </p>
-          )}
-          <p style={{ color: "var(--faint)", fontSize: "0.78rem", marginTop: "0.25rem" }}>
-            No password needed — we&apos;ll email you a one-time link.
-          </p>
-        </form>
-      )}
+            <button className="btn-ghost btn-sm" onClick={() => setStatus("idle")}>
+              Use a different email
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={onSubmit} className="gate-form">
+            <input
+              className="input"
+              type="email"
+              required
+              autoFocus
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              aria-label="Email address"
+            />
+            {/*
+              Not disabled on an empty field. The button is the only marigold
+              thing here, and rendering it dimmed the moment you arrive makes
+              the page look broken rather than waiting — `required` already
+              stops an empty submit.
+            */}
+            <button type="submit" className="btn-primary" disabled={status === "sending"}>
+              {status === "sending" ? (
+                <>
+                  <span className="spinner" /> Sending link
+                </>
+              ) : (
+                "Email me a sign-in link"
+              )}
+            </button>
+            {error && (
+              <p role="alert" style={{ color: "var(--danger)", fontSize: 13, margin: 0 }}>
+                {error}
+              </p>
+            )}
+            <p className="gate-fine">No password. One link, good once.</p>
+          </form>
+        )}
+      </div>
+
+      <Link href="/welcome" className="gate-back">
+        What is this?
+      </Link>
     </main>
   );
 }

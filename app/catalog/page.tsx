@@ -3,6 +3,7 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { spineColour, spineInk } from "@/core/library/shelfRow.js";
 import Icon from "../components/Icon";
 import AppRail from "../components/AppRail";
 
@@ -43,40 +44,29 @@ interface Card {
   description?: string;
   subject?: string;
   coverUrl?: string;
-  showCover?: boolean;
   body: ImportBody;
 }
 
-/** Fixed-size cover slot: the image fills it, with a book placeholder when
- *  there's no cover or it fails to load. */
-function Cover({ url }: { url?: string }) {
+/**
+ * A book object at a fixed size, so a grid of them lines up.
+ *
+ * When there's no cover — or the remote one 404s, which Archive.org's do
+ * often — it falls back to a coloured board keyed off the book's id, the same
+ * palette the shelf uses for spines. A missing cover then still reads as a
+ * book rather than as a hole.
+ */
+function Cover({ url, seed }: { url?: string; seed: string }) {
   const [failed, setFailed] = useState(false);
-  const showImage = url && !failed;
+  const board = spineColour(seed);
   return (
-    <div
-      style={{
-        width: 52,
-        height: 76,
-        flexShrink: 0,
-        borderRadius: 4,
-        border: "1px solid var(--border)",
-        background: "var(--bg-raised)",
-        overflow: "hidden",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      {showImage ? (
+    <div className="cat-cover" style={{ background: board }}>
+      {url && !failed ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={url}
-          alt=""
-          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-          onError={() => setFailed(true)}
-        />
+        <img src={url} alt="" onError={() => setFailed(true)} />
       ) : (
-        <span style={{ fontSize: "1.3rem", opacity: 0.5 }}><Icon name="book" /></span>
+        <span style={{ color: spineInk(board), opacity: 0.55 }}>
+          <Icon name="book" size={20} />
+        </span>
       )}
     </div>
   );
@@ -194,7 +184,6 @@ function Catalog() {
         title: r.title,
         author: r.author,
         coverUrl: r.coverUrl,
-        showCover: true,
         body: r.archiveId
           ? { archiveId: r.archiveId, title: r.title }
           : { gutenbergId: r.gutenbergId!, title: r.title },
@@ -227,38 +216,35 @@ function Catalog() {
   const renderCard = (c: Card) => {
     const st = state[c.key] ?? "idle";
     return (
-      <div key={c.key} className="card fade-in" style={{ padding: "1rem", display: "flex", gap: "0.8rem" }}>
-        {c.showCover && <Cover url={c.coverUrl} />}
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", minWidth: 0, flex: 1 }}>
-          <strong style={{ lineHeight: 1.3 }}>{c.title}</strong>
-          <span style={{ color: "var(--muted)", fontSize: "0.85rem" }}>{c.author}</span>
-          {c.description && (
-            <p style={{ margin: "0.1rem 0 0", color: "var(--faint)", fontSize: "0.82rem", lineHeight: 1.45, flex: 1 }}>
-              {c.description}
-            </p>
-          )}
+      <div key={c.key} className="cat-card fade-in">
+        <Cover url={c.coverUrl} seed={c.key} />
+        <div className="cat-body">
+          <span className="cat-title">{c.title}</span>
+          <span className="cat-author">{c.author}</span>
+          {c.description && <p className="cat-desc">{c.description}</p>}
           {st === "added" ? (
-            <button className="btn-sm" disabled style={{ color: "var(--ok)", borderColor: "transparent", marginTop: "auto" }}>
+            <button
+              className="btn-sm"
+              disabled
+              style={{ marginTop: "auto", alignSelf: "flex-start", color: "var(--success)", borderColor: "transparent" }}
+            >
               <Icon name="check" /> Added
             </button>
           ) : (
-            <button
-              className="btn-primary btn-sm"
-              onClick={() => add(c.key, c.body)}
-              disabled={st === "adding"}
-              style={{ marginTop: "auto", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.4rem" }}
-            >
+            <button className="btn-sm cat-add" onClick={() => add(c.key, c.body)} disabled={st === "adding"}>
               {st === "adding" ? (
                 <>
-                  <span className="spinner" /> Adding…
+                  <span className="spinner" /> Adding
                 </>
               ) : (
-                "Add to library"
+                <>
+                  <Icon name="plus" /> Add to library
+                </>
               )}
             </button>
           )}
           {st === "error" && (
-            <p role="alert" style={{ margin: 0, color: "var(--danger)", fontSize: "0.78rem" }}>
+            <p role="alert" style={{ margin: 0, color: "var(--danger)", fontSize: 12 }}>
               {errors[c.key]}
             </p>
           )}
@@ -267,47 +253,41 @@ function Catalog() {
     );
   };
 
-  const gridStyle = {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
-    gap: "0.8rem",
-  } as const;
-
   return (
     <div className="rail-layout">
       <AppRail />
     <main className="page-pad">
       <header className="page-head">
         <div style={{ minWidth: 0 }}>
-          <h1 style={{ fontSize: 32, margin: 0 }}>Free books</h1>
-          <p style={{ margin: "6px 0 0", fontSize: 14, color: "var(--text-600)" }}>
-            Search public-domain books, or pick from the {curatedSource || "Project Gutenberg"} shelf below.
+          <h1>Free books</h1>
+          <p>
+            Every public-domain book on Project Gutenberg and the Internet Archive, ready to read
+            with the companion. Search for one, or take something off the {curatedSource || "Gutenberg"} shelf.
           </p>
         </div>
       </header>
 
-      <div style={{ marginTop: "1.25rem", position: "relative" }}>
+      <div className="cat-search">
+        <span className="cat-search-icon" aria-hidden="true">
+          <Icon name="search" size={17} />
+        </span>
         <input
           className="input"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search by title or author — e.g. Dostoevsky, Kant, evolution…"
+          placeholder="Dostoevsky, Kant, evolution…"
           aria-label="Search public-domain books"
-          style={{ width: "100%", fontSize: "1rem", padding: "0.6rem 0.85rem" }}
         />
-        {searching && (
-          <span className="spinner" style={{ position: "absolute", right: 14, top: 14, color: "var(--muted)" }} />
-        )}
+        {searching && <span className="spinner" />}
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginTop: "0.6rem", flexWrap: "wrap" }}>
-        <div role="tablist" aria-label="Book source" style={{ display: "flex", gap: "0.3rem" }}>
+      <div className="cat-controls">
+        <div className="segmented" role="tablist" aria-label="Book source">
           {SOURCES.map((s) => (
             <button
               key={s.id}
               role="tab"
               aria-selected={bookSource === s.id}
-              className={`btn-sm${bookSource === s.id ? " btn-primary" : " btn-ghost"}`}
               onClick={() => setBookSource(s.id)}
             >
               {s.label}
@@ -315,16 +295,16 @@ function Catalog() {
           ))}
         </div>
         {bookSource === "archive" && (
-          <span style={{ color: "var(--faint)", fontSize: "0.78rem" }}>
-            Scanned public-domain books — text quality varies (OCR).
-          </span>
+          <span className="cat-note">Scanned books — text quality varies (OCR).</span>
         )}
       </div>
 
       {anyAdded && (
-        <div className="card fade-in" style={{ padding: "0.7rem 1rem", marginTop: "1rem", display: "flex", gap: "0.6rem", alignItems: "center" }}>
+        <div className="cat-added fade-in">
           <span className="badge badge-ok">Added</span>
-          <span style={{ color: "var(--muted)", fontSize: "0.9rem" }}>Your book is being processed.</span>
+          <span style={{ color: "var(--text-600)", fontSize: 13.5 }}>
+            Your book is being read in. It&apos;s openable before that finishes.
+          </span>
           <button className="btn-primary btn-sm" style={{ marginLeft: "auto" }} onClick={() => router.push("/")}>
             Go to library <Icon name="arrow-right" />
           </button>
@@ -332,48 +312,43 @@ function Catalog() {
       )}
 
       {searchError && (
-        <p role="alert" className="fade-in" style={{ color: "var(--danger)", marginTop: "1rem" }}>
+        <p role="alert" className="fade-in" style={{ color: "var(--danger)", marginTop: 16 }}>
           {searchError}
         </p>
       )}
 
       {searchNote && (
-        <p
-          role="status"
-          className="fade-in"
-          style={{ color: "var(--muted)", marginTop: "1rem", fontSize: "0.85rem" }}
-        >
+        <p role="status" className="fade-in cat-note" style={{ marginTop: 16 }}>
           {searchNote}
         </p>
       )}
 
       {isSearch && !searching && results.length === 0 && !searchError && (
-        <p style={{ color: "var(--muted)", marginTop: "1.5rem" }}>
-          No EPUB books found for “{debounced}”. Try a different search.
-        </p>
+        <div className="empty-state" style={{ marginTop: 24 }}>
+          <Icon name="search" size={26} />
+          <p>Nothing readable found for “{debounced}”. Try an author, or the other source.</p>
+        </div>
       )}
 
       {isSearch ? (
-        <div style={{ ...gridStyle, marginTop: "1.5rem" }}>{cards.map(renderCard)}</div>
+        <div className="cat-grid" style={{ marginTop: 24 }}>{cards.map(renderCard)}</div>
       ) : !loaded ? (
-        <div style={{ ...gridStyle, marginTop: "1.5rem" }}>
+        <div className="cat-grid" style={{ marginTop: 24 }}>
           {[0, 1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="skeleton" style={{ height: 150 }} />
+            <div key={i} className="skeleton" style={{ height: 148 }} />
           ))}
         </div>
       ) : (
         groups.map((g) => (
-          <section key={g.subject} style={{ marginTop: "1.75rem" }}>
-            <h2 style={{ fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted)", margin: "0 0 0.75rem" }}>
-              {g.subject}
-            </h2>
-            <div style={gridStyle}>{g.cards.map(renderCard)}</div>
+          <section key={g.subject}>
+            <h2 className="section-label">{g.subject}</h2>
+            <div className="cat-grid">{g.cards.map(renderCard)}</div>
           </section>
         ))
       )}
 
       {isSearch && hasMore && (
-        <div style={{ textAlign: "center", marginTop: "1.25rem" }}>
+        <div style={{ textAlign: "center", marginTop: 20 }}>
           <button
             onClick={() => {
               const next = page + 1;
