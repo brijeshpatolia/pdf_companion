@@ -132,21 +132,23 @@ export default function FlashcardsPage() {
   const current = cards[index];
 
   return (
-    <main style={{ maxWidth: 640, margin: "0 auto", padding: "2rem 1.25rem" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
-        <h1 className="wordmark" style={{ fontSize: "1.6rem", margin: 0 }}>
-          <Icon name="cards" /> Flashcards
-        </h1>
-        <Link href={`/reader/${bookId}`} className="btn-ghost btn-sm" style={{ whiteSpace: "nowrap" }}>
-          <Icon name="arrow-left" /> Back to book
+    <main className="deck">
+      <header className="deck-bar">
+        <Link href={`/reader/${bookId}`} className="reader-back">
+          <Icon name="chevron-left" /> Back to book
         </Link>
-      </div>
-
-      <div style={{ display: "flex", gap: "0.6rem", marginTop: "1rem", flexWrap: "wrap" }}>
+        <span className="reader-divider" aria-hidden="true" />
+        <span className="reader-title">Flashcards</span>
+        <span style={{ flex: 1 }} />
+        {cards.length > 0 && (
+          <span style={{ fontSize: 12.5, color: "var(--text-700)" }}>
+            {cards.length} card{cards.length === 1 ? "" : "s"} from what you kept
+          </span>
+        )}
         <button className="btn-primary btn-sm" onClick={generate} disabled={generating}>
-          {generating ? "Generating…" : <><Icon name="sparkle" /> Generate from what you kept</>}
+          {generating ? "Generating…" : "Generate more"}
         </button>
-      </div>
+      </header>
 
       {message && (
         <p role="status" className="fade-in" style={{ color: message.kind === "ok" ? "var(--ok)" : "var(--danger)", fontSize: "0.85rem", marginTop: "0.6rem" }}>
@@ -163,7 +165,20 @@ export default function FlashcardsPage() {
       )}
 
       {current && (
-        <div style={{ marginTop: "1.5rem" }}>
+        <div className="deck-stage">
+          {/*
+            Where you are in the deck, as a row of marks rather than a number.
+            Seen cards stay lit but dim; the one you're on is solid.
+          */}
+          <div className="deck-dots" aria-hidden="true">
+            {cards.map((c, i) => (
+              <span
+                key={c.id}
+                data-state={i === index ? "current" : i < index ? "seen" : "unseen"}
+              />
+            ))}
+          </div>
+
           <div
             ref={cardRef}
             className={`flashcard${flipped ? " is-flipped" : ""}`}
@@ -181,27 +196,36 @@ export default function FlashcardsPage() {
           >
             <div className="flashcard-inner">
               <div className="flashcard-face flashcard-front">
-                <span className="face-label">Question</span>
-                {current.front}
+                <span className="face-label">
+                  <span>Question</span>
+                </span>
+                <span className="face-text">{current.front}</span>
+                <span className="face-hint">tap or press space to flip</span>
               </div>
               <div className="flashcard-face flashcard-back">
-                <span className="face-label">Answer</span>
-                {current.back}
+                <span className="face-label">
+                  <span>Answer</span>
+                </span>
+                <span className="face-text">{current.back}</span>
               </div>
             </div>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "1rem", marginTop: "1rem" }}>
-            <button className="btn-sm" onClick={() => go(-1)} aria-label="Previous card"><Icon name="chevron-left" /> Prev</button>
-            <span style={{ color: "var(--muted)", fontVariantNumeric: "tabular-nums", minWidth: 70, textAlign: "center" }}>
+          <div className="deck-controls">
+            <button className="btn-ghost btn-sm" onClick={() => go(-1)} aria-label="Previous card">
+              <Icon name="chevron-left" /> Prev
+            </button>
+            <span className="deck-count tabular">
               {index + 1} / {cards.length}
             </span>
-            <button className="btn-sm" onClick={() => go(1)} aria-label="Next card">Next <Icon name="chevron-right" /></button>
+            <button className="btn-ghost btn-sm" onClick={() => go(1)} aria-label="Next card">
+              Next <Icon name="chevron-right" />
+            </button>
           </div>
 
-          <div style={{ textAlign: "center", marginTop: "0.6rem" }}>
-            <button className="save-btn" onClick={() => remove(current.id)} title="Delete this card">
-              <Icon name="trash" /> Delete this card
+          <div className="deck-actions">
+            <button className="btn-text" onClick={() => remove(current.id)} title="Delete this card">
+              Delete card
             </button>
           </div>
         </div>

@@ -413,57 +413,176 @@ input, button {
 
 /* ---------- flashcards ---------- */
 
+/* ---------- flashcards ---------- */
+
+/*
+ * A faint warm dome behind the deck, so the card reads as floating in a room
+ * rather than pinned to a flat background.
+ */
+.deck {
+  min-height: 100dvh;
+  background: radial-gradient(100% 70% at 50% 0%, #17140f 0%, var(--ink-900) 65%);
+  display: flex;
+  flex-direction: column;
+}
+
+.deck-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 60px;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--line-900);
+  flex-shrink: 0;
+}
+
+.deck-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  padding: 40px 20px;
+}
+
+/* Position in the deck as a row of marks rather than a number. */
+.deck-dots {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 600px;
+}
+.deck-dots > span {
+  width: 22px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--ink-500);
+  transition: background var(--dur) var(--ease);
+}
+.deck-dots > span[data-state="seen"] { background: rgba(233, 161, 59, 0.45); }
+.deck-dots > span[data-state="current"] { background: var(--accent); }
+
+/*
+ * The card is cream because it is a thing you read. Two shells sit behind it,
+ * offset and scaled, so the deck has visible depth — you can see there is more
+ * than one left without counting.
+ */
 .flashcard {
-  perspective: 1200px;
+  position: relative;
   width: 100%;
-  max-width: 520px;
-  height: 280px;
-  margin: 0 auto;
+  max-width: 600px;
+  height: 330px;
+  perspective: 1400px;
   cursor: pointer;
 }
+.flashcard::before,
+.flashcard::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  z-index: 0;
+}
+.flashcard::before {
+  background: var(--ink-700);
+  transform: translateY(18px) scale(0.955);
+}
+.flashcard::after {
+  background: var(--ink-650);
+  transform: translateY(9px) scale(0.978);
+}
+
 .flashcard-inner {
   position: relative;
   width: 100%;
   height: 100%;
-  transition: transform 400ms cubic-bezier(0.4, 0.2, 0.2, 1);
   transform-style: preserve-3d;
+  transition: transform 320ms var(--ease);
+  z-index: 1;
 }
-.flashcard.is-flipped .flashcard-inner {
-  transform: rotateY(180deg);
-}
+.flashcard.is-flipped .flashcard-inner { transform: rotateY(180deg); }
+
 .flashcard-face {
   position: absolute;
   inset: 0;
-  -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  background: var(--paper);
+  color: var(--paper-ink-strong);
+  border-radius: 20px;
+  box-shadow: 0 30px 70px -24px rgba(0, 0, 0, 0.8);
+  padding: 44px 48px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   text-align: center;
-  padding: 1.75rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--panel);
-  box-shadow: var(--shadow);
-  overflow: auto;
 }
+.flashcard-back { transform: rotateY(180deg); }
+
 .flashcard-face .face-label {
-  position: absolute;
-  top: 0.7rem;
-  left: 0.9rem;
-  font-size: 0.68rem;
-  letter-spacing: 0.08em;
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  font-family: var(--font-sans-stack);
+  font-size: 10px;
   text-transform: uppercase;
-  color: var(--faint);
+  letter-spacing: 0.16em;
+  color: var(--paper-meta);
 }
-.flashcard-front { font-size: 1.15rem; font-weight: 600; line-height: 1.5; }
-.flashcard-back {
-  transform: rotateY(180deg);
-  font-size: 1rem;
+
+.face-text {
+  font-family: var(--font-display-stack);
+  font-size: 27px;
+  font-weight: 600;
+  line-height: 1.32;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+.flashcard-back .face-text {
+  font-family: var(--font-sans-stack);
+  font-size: 17px;
+  font-weight: 400;
   line-height: 1.6;
-  color: var(--text);
-  background: var(--surface);
+  color: var(--paper-body-2);
+}
+
+/* Flanked by two short rules, so the instruction sits quietly under the card. */
+.face-hint {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-sans-stack);
+  font-size: 12px;
+  color: #8c8474;
+}
+.face-hint::before, .face-hint::after {
+  content: "";
+  width: 20px;
+  height: 1px;
+  background: #dcd3c1;
+}
+
+.deck-controls {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.deck-count {
+  min-width: 64px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-700);
+}
+.deck-actions { display: flex; gap: 10px; }
+
+@media (max-width: 640px) {
+  .flashcard { height: 300px; }
+  .flashcard-face { padding: 32px 28px; }
+  .face-text { font-size: 22px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
