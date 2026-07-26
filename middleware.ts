@@ -6,9 +6,10 @@ import { createServerClient } from "@supabase/ssr";
  * it's a trusted background job keyed by an unguessable book UUID and
  * called server-to-server (no cookies), so it can't carry a session.
  * `/share` is the public read-only view of a book's kept material, gated by
- * its own unguessable token rather than a session.
+ * its own unguessable token rather than a session. `/welcome` is the landing
+ * page — the point of it is to be seen by people who have no account.
  */
-const PUBLIC_PATHS = ["/login", "/auth", "/api/ingest", "/share"];
+const PUBLIC_PATHS = ["/login", "/auth", "/api/ingest", "/share", "/welcome"];
 
 function isPublic(path: string): boolean {
   return PUBLIC_PATHS.some((p) => path === p || path.startsWith(p + "/"));
@@ -46,8 +47,16 @@ export async function middleware(request: NextRequest) {
 
   if (!user && !isPublic(path)) {
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/login";
-    redirectUrl.search = `?redirect=${encodeURIComponent(path)}`;
+    // A stranger arriving at the root should be told what this is, not handed
+    // a login form. Anywhere deeper is a real destination, so it still goes to
+    // sign-in and comes back afterwards.
+    if (path === "/") {
+      redirectUrl.pathname = "/welcome";
+      redirectUrl.search = "";
+    } else {
+      redirectUrl.pathname = "/login";
+      redirectUrl.search = `?redirect=${encodeURIComponent(path)}`;
+    }
     return NextResponse.redirect(redirectUrl);
   }
 
