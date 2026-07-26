@@ -4,6 +4,7 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import Icon from "../components/Icon";
+import AppRail from "../components/AppRail";
 
 interface CuratedBook {
   id: string;
@@ -273,6 +274,8 @@ function Catalog() {
   } as const;
 
   return (
+    <div className="rail-layout">
+      <AppRail />
     <main style={{ maxWidth: 900, margin: "0 auto", padding: "2.5rem 1.25rem" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem" }}>
         <div>
@@ -388,6 +391,7 @@ function Catalog() {
           </button>
         </div>
       )}
-    </main>
+      </main>
+    </div>
   );
 }

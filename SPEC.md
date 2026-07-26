@@ -191,7 +191,7 @@ A reading companion for hard books. Instead of breaking your flow to paste a pag
 
 | Layer | Recommendation | Why |
 |---|---|---|
-| **Client** | Next.js (React, TypeScript) as a PWA + Tailwind | One codebase, desktop → mobile, installable without app stores |
+| **Client** | Next.js (React, TypeScript) | One codebase, desktop → mobile. Styling is plain CSS with custom properties — Tailwind was planned here and never adopted, and the design tokens live in `app/globals.css`. |
 | **PDF** | PDF.js / react-pdf | Renders pages *and* exposes the text layer — needed to anchor highlights and select-to-ask |
 | **Sketching** | @excalidraw/excalidraw | Drop-in embeddable canvas, exactly the feature described |
 | **Backend** | Next.js API routes / Node | Colocated with the client, simplest possible start |

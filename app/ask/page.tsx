@@ -5,6 +5,7 @@ import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Icon from "../components/Icon";
+import AppRail from "../components/AppRail";
 
 interface Source {
   bookId: string;
@@ -86,6 +87,8 @@ export default function AskLibraryPage() {
   const busy = status === "loading" || status === "streaming";
 
   return (
+    <div className="rail-layout">
+      <AppRail />
     <main className="ask-page">
       <div className="ask-head">
         <Link href="/" className="btn-ghost btn-sm" style={{ whiteSpace: "nowrap" }}>
@@ -169,6 +172,7 @@ export default function AskLibraryPage() {
           No passages matched in your library yet. Add and read a few books, then ask again.
         </p>
       )}
-    </main>
+      </main>
+    </div>
   );
 }

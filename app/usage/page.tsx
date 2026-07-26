@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Icon from "../components/Icon";
+import AppRail from "../components/AppRail";
 
 interface BookUsage {
   bookId: string | null;
@@ -116,6 +117,8 @@ export default function UsagePage() {
   const maxDayCost = data ? Math.max(...data.byDay.map((d) => d.costUsd), 0) : 0;
 
   return (
+    <div className="rail-layout">
+      <AppRail />
     <main style={{ maxWidth: 820, margin: "0 auto", padding: "2.5rem 1.25rem" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem" }}>
         <div>
@@ -242,6 +245,7 @@ export default function UsagePage() {
           </section>
         </>
       )}
-    </main>
+      </main>
+    </div>
   );
 }

@@ -28,8 +28,8 @@ export function ShareCardArt({ card }: { card: ReadingCard }) {
         flexDirection: "column",
         justifyContent: "space-between",
         padding: 80,
-        background: "linear-gradient(160deg, #0b0e14 0%, #131a29 55%, #1b2740 100%)",
-        color: "#e6e9ef",
+        background: "linear-gradient(160deg, #141312 0%, #221f1c 55%, #332f2a 100%)",
+        color: "#efeae2",
         fontFamily: "Lora, serif",
       }}
     >
@@ -50,7 +50,7 @@ export function ShareCardArt({ card }: { card: ReadingCard }) {
             display: "flex",
             fontSize: 24,
             letterSpacing: 6,
-            color: "#4c8dff",
+            color: "#e9a13b",
             marginBottom: 18,
           }}
         >
@@ -60,7 +60,7 @@ export function ShareCardArt({ card }: { card: ReadingCard }) {
           {card.title}
         </div>
         {card.author ? (
-          <div style={{ display: "flex", fontSize: card.variant === "title" ? 38 : 32, color: "#9aa4b2" }}>{card.author}</div>
+          <div style={{ display: "flex", fontSize: card.variant === "title" ? 38 : 32, color: "#9e978d" }}>{card.author}</div>
         ) : null}
       </div>
 
@@ -72,13 +72,13 @@ export function ShareCardArt({ card }: { card: ReadingCard }) {
               fontSize: card.quoteSize,
               lineHeight: 1.32,
               fontStyle: "italic",
-              color: "#ffffff",
+              color: "#faf6ec",
               marginBottom: 24,
             }}
           >
             {card.quote.source === "note" ? card.quote.text : `“${card.quote.text}”`}
           </div>
-          <div style={{ display: "flex", fontSize: 26, color: "#6b7686" }}>
+          <div style={{ display: "flex", fontSize: 26, color: "#6e675e" }}>
             {card.quoteCaption}
           </div>
         </div>
@@ -88,7 +88,7 @@ export function ShareCardArt({ card }: { card: ReadingCard }) {
         {/* Where you are, spelled out. In the quote variant the page already
             sits under the quote, so this would just repeat it. */}
         {card.variant === "title" ? (
-          <div style={{ display: "flex", fontSize: 28, color: "#6b7686", marginBottom: 20 }}>
+          <div style={{ display: "flex", fontSize: 28, color: "#6e675e", marginBottom: 20 }}>
             {card.progressLabel}
           </div>
         ) : null}
@@ -97,7 +97,7 @@ export function ShareCardArt({ card }: { card: ReadingCard }) {
             display: "flex",
             width: "100%",
             height: 8,
-            background: "#232a36",
+            background: "#332f2a",
             borderRadius: 99,
             marginBottom: 28,
           }}
@@ -107,7 +107,7 @@ export function ShareCardArt({ card }: { card: ReadingCard }) {
               display: "flex",
               width: `${Math.max(card.percent, 2)}%`,
               height: 8,
-              background: "#4c8dff",
+              background: "#e9a13b",
               borderRadius: 99,
             }}
           />
@@ -121,13 +121,13 @@ export function ShareCardArt({ card }: { card: ReadingCard }) {
                 style={{ display: "flex", flexDirection: "column", marginRight: 56 }}
               >
                 <div style={{ display: "flex", fontSize: 56 }}>{s.value}</div>
-                <div style={{ display: "flex", fontSize: 22, color: "#9aa4b2", letterSpacing: 2 }}>
+                <div style={{ display: "flex", fontSize: 22, color: "#9e978d", letterSpacing: 2 }}>
                   {s.label.toUpperCase()}
                 </div>
               </div>
             ))}
           </div>
-          <div style={{ display: "flex", fontSize: 22, color: "#4c8dff", letterSpacing: 2 }}>
+          <div style={{ display: "flex", fontSize: 22, color: "#e9a13b", letterSpacing: 2 }}>
             PDF COMPANION
           </div>
         </div>
