@@ -8,6 +8,7 @@ A reading companion for hard books. Instead of pausing to paste a page into Chat
 
 ## What works today
 
+- **📱 Installable, and built for a phone** — add it to a home screen and it opens without a browser bar: manifest, maskable icons, a bottom nav, and a reader that fits the screen. Every screen is tested at phone size in CI, asserting against the *viewport* rather than the document. A small service worker makes it installable and gives an offline tab something true to say; books live on the server, so this isn't an offline reading mode and doesn't pretend to be.
 - **🎨 One visual language** — a warm-ink design system in `app/globals.css` (plain CSS custom properties, no Tailwind): dark chrome so the cream page is the only lit object on screen, marigold reserved for the AI, citations, progress and one primary action per screen, and an inline SVG icon set in place of emoji. A public landing page at `/welcome` is where signed-out visitors arrive.
 - **🔐 Accounts** — passwordless magic-link sign-in (Supabase Auth). Every book, highlight, chat, and page of progress is scoped to its owner by Row-Level Security.
 - **📚 Library** — drag-and-drop **PDF and EPUB** upload (50 MB guardrail), live ingestion progress (`120/879 pages`), resume a stalled book or retry a failed one, delete with full storage + data cleanup.
@@ -31,9 +32,9 @@ A reading companion for hard books. Instead of pausing to paste a page into Chat
 
 ## Stack
 
-Next.js (App Router) · PDF.js / react-pdf · fflate (EPUB parsing) · Supabase (Postgres + pgvector + Auth + Storage) · OpenRouter / Anthropic gateways · @huggingface/transformers (local embedder) · Vitest · Playwright (component tests)
+Next.js (App Router) · PDF.js / react-pdf · fflate (EPUB parsing) · Supabase (Postgres + pgvector + Auth + Storage) · OpenRouter / Anthropic gateways · @huggingface/transformers (local embedder) · Vitest · Playwright (component + phone-size tests)
 
-> **On tests:** the domain logic is pure and tested with Vitest against injected fakes. A handful of behaviours only *exist* in a browser — text selection, DOM event order, whether a click is dispatched at all — so those run in real Chromium via Playwright component tests (`npm run test:browser`). Both live in CI.
+> **On tests:** the domain logic is pure and tested with Vitest against injected fakes. A handful of behaviours only *exist* in a browser — text selection, DOM event order, whether a click is dispatched at all, whether something is actually on screen — so those run in real Chromium: `npm run test:browser` mounts components in isolation, `npm run test:e2e` loads whole pages at phone size. All three suites run in CI.
 
 > **Note on Kindle books:** Amazon Kindle purchases are DRM-locked with no API for third-party access, so they can't be imported. EPUB (the open standard, widely sold DRM-free) is the supported path for bringing your own books.
 
@@ -49,6 +50,8 @@ npm run dev
 
 ```bash
 npm test             # unit tests (no Docker needed)
+npm run test:browser # components, in real Chromium
+npm run test:e2e     # whole pages, at phone size
 npm run typecheck    # tsc --noEmit
 ```
 
@@ -59,7 +62,7 @@ The complete product spec lives in **[SPEC.md](./SPEC.md)** — problem, feature
 ## Roadmap
 
 - **Phase 0 — MVP:** ✅ split-view reader + page-aware chat + select-to-ask + highlights + save-AI-answer *(done)*
-- **Phase 1:** ✅ accounts · ✅ usage dashboard · ✅ notes · ✅ export *(done)* · managed AI pool, Excalidraw *(next)*
+- **Phase 1:** ✅ accounts · ✅ usage dashboard · ✅ notes · ✅ export · ✅ PWA / mobile polish *(done)* · managed AI pool, Excalidraw *(next)*
 - **Phase 2:** ✅ flashcards · ✅ sharing · ✅ cross-book Q&A · ✅ live co-reading *(done)*
 
 ---

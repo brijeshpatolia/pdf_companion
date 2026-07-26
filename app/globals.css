@@ -282,6 +282,18 @@ input, button {
   font-size: 12.5px;
 }
 
+/*
+ * A small button is a *visually* small button, not a small target. On a mouse
+ * 26px is comfortable; under a thumb it's a miss. The label stays the same
+ * size — only the box it sits in grows.
+ */
+@media (max-width: 760px) {
+  :is(button, a, span).btn-sm { min-height: 40px; padding-inline: 16px; }
+  /* Deliberately quiet controls — Delete, mainly — were 20px of hit area. */
+  .btn-text { min-height: 40px; padding-inline: 12px; }
+  .pager-step { width: 34px; height: 34px; }
+}
+
 /* ---------- inputs ---------- */
 
 .input {
