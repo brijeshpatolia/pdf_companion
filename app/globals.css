@@ -171,15 +171,18 @@ button:active:not(:disabled) { transform: translateY(1px); }
 button:disabled { opacity: 0.45; cursor: default; }
 
 /*
- * Links dressed as buttons.
+ * Things dressed as buttons that aren't <button>.
  *
- * The box above is attached to the `button` element, so an <a class="btn-…">
- * picked up the colours and none of the shape — the landing page's CTAs and
- * the room invite's actions were rendering as square blocks next to pills.
- * This gives anchors the same box. It sits above the .btn-* rules on purpose:
- * those set their own border colour and padding and must still win.
+ * The box above is attached to the `button` element, so an <a> or a <span>
+ * carrying a btn-* class picked up the colours and none of the shape. The
+ * landing page's CTAs and the room invite's actions rendered as square blocks
+ * next to pills; the dropzone's "Browse files" — a <span>, because it lives
+ * inside a <label> and can't be a nested control — rendered as bare text.
+ *
+ * This sits above the .btn-* rules on purpose: those set their own border
+ * colour and padding and must still win.
  */
-a:is(.btn-primary, .btn-ghost, .btn-text, .btn-danger, .btn-danger-solid, .btn-warn, .btn-sm, .btn-icon) {
+:is(a, span):is(.btn-primary, .btn-ghost, .btn-text, .btn-danger, .btn-danger-solid, .btn-warn, .btn-sm, .btn-icon) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -196,7 +199,7 @@ a:is(.btn-primary, .btn-ghost, .btn-text, .btn-danger, .btn-danger-solid, .btn-w
               opacity var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease),
               box-shadow var(--dur-fast) var(--ease);
 }
-a:is(.btn-primary, .btn-ghost, .btn-text, .btn-danger, .btn-danger-solid, .btn-warn, .btn-sm, .btn-icon):hover {
+:is(a, span):is(.btn-primary, .btn-ghost, .btn-text, .btn-danger, .btn-danger-solid, .btn-warn, .btn-sm, .btn-icon):hover {
   text-decoration: none;
 }
 a:is(.btn-primary, .btn-ghost, .btn-text, .btn-danger, .btn-danger-solid, .btn-warn, .btn-sm, .btn-icon):active {
@@ -440,8 +443,6 @@ input, button {
   /* 16px stops iOS Safari from zooming the page on focus */
   .pane-companion .input { font-size: 16px !important; }
 
-  .reader-header { padding: 0.5rem 0.75rem; gap: 0.5rem; }
-  .reader-header .jump-form { display: none; }
 }
 
 /* ---------- flashcards ---------- */
@@ -1707,21 +1708,36 @@ input, button {
   flex-shrink: 0;
 }
 
-/* A rail is navigation, and navigation shouldn't eat a phone screen. */
+/*
+ * A rail is navigation, and navigation shouldn't eat a phone screen — so on a
+ * phone it becomes a bar along the bottom.
+ *
+ * Fixed, not in flow. It used to sit after the main column with `order: 2`,
+ * but every page under this shell is at least `100dvh` tall, so the bar was
+ * pushed exactly one viewport down and you could only reach the app's
+ * navigation by scrolling past the end of the page. On a short library it was
+ * simply invisible.
+ */
 @media (max-width: 760px) {
   .app-rail {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 60;
     width: 100%;
-    flex: 0 0 auto;
+    flex: none;
     flex-direction: row;
     justify-content: space-around;
     border-right: none;
     border-top: 1px solid var(--line-700);
-    padding: 6px 8px;
+    /* Clears the home indicator on phones that have one. */
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
     gap: 0;
-    order: 2;
   }
   .rail-brand, .rail-avatar { display: none; }
-  .rail-items { flex-direction: row; gap: 2px; }
+  .rail-items { flex-direction: row; gap: 2px; width: 100%; justify-content: space-around; }
+  .rail-item { width: auto; flex: 1; max-width: 120px; }
 }
 
 /* The shell that holds a rail beside a scrolling column. */
@@ -1734,6 +1750,9 @@ input, button {
 
 @media (max-width: 760px) {
   .rail-layout { flex-direction: column; }
+  /* The bar is fixed, so the column it floats over has to reserve the room —
+     otherwise the last row of every screen sits underneath it. */
+  .rail-layout > main { padding-bottom: calc(74px + env(safe-area-inset-bottom, 0px)); }
 }
 
 /* ---------- library shelf ---------- */
@@ -1895,8 +1914,42 @@ a.shelf-title:hover { color: var(--accent); text-decoration: none; }
 
 @media (max-width: 760px) {
   .shelf { padding: 24px 18px 32px; }
-  .shelf-row { flex-wrap: wrap; }
-  .shelf-right { width: auto; }
+
+  /*
+   * A row is five fixed-width columns wide, which a phone doesn't have. On one
+   * line the title was the only thing that could give, so a book came out as
+   * "The R…" — the row's whole job, reduced to four characters. Let the row
+   * wrap instead, and let the title take two lines.
+   */
+  .shelf-row { flex-wrap: wrap; row-gap: 12px; }
+  /* Wide enough to push the readout and the controls onto their own line, so
+     the title gets the width rather than competing for it. 52px is the spine
+     plus the gap. */
+  .shelf-main { flex: 1 1 calc(100% - 52px); }
+  /* The badge is rigid and the title isn't, so a long title next to a wide
+     badge got squeezed to nothing and the book had no name at all. */
+  .shelf-titleline { flex-wrap: wrap; row-gap: 4px; }
+  .shelf-titleline .badge { flex-shrink: 0; }
+  .shelf-title {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    font-size: 16px;
+  }
+  .shelf-right { width: auto; margin-left: auto; }
+  .shelf-bar { max-width: none; }
+
+  /* The dropzone's three columns become three rows; at this width the label
+     and the button were fighting over about 90px each. */
+  .shelf-drop { flex-direction: column; align-items: stretch; gap: 12px; padding: 20px; }
+  .shelf-drop .btn-ghost { width: 100%; }
+
+  /* The signed-in address is the least useful thing in the header and the
+     widest; the control next to it already says whose session this is. */
+  .auth-email { display: none; }
+  .shelf-head-actions { flex-wrap: wrap; }
 }
 
 /* ---------- reader ---------- */
@@ -1911,6 +1964,10 @@ a.shelf-title:hover { color: var(--accent); text-decoration: none; }
   border-bottom: 1px solid var(--line-800);
   flex-shrink: 0;
 }
+
+/* Pushes the controls to the right on a wide bar; becomes the line break on a
+   narrow one. */
+.reader-spacer { flex: 1; }
 
 .reader-back {
   display: inline-flex;
@@ -2009,6 +2066,45 @@ a.shelf-title:hover { color: var(--accent); text-decoration: none; }
 /* react-pdf's canvas carries its own white; keep it flush inside the paper. */
 .reader-paper .react-pdf__Page { background: transparent !important; }
 .reader-paper canvas { display: block; margin: 0 auto; border-radius: 2px; }
+
+/*
+ * The reader on a phone.
+ *
+ * These have to sit *after* the rules above, not in the earlier mobile block:
+ * a media query adds no specificity, so `.reader-bar { height: 60px }` further
+ * down the file was quietly beating `height: auto` further up, and the bar's
+ * second row was drawn outside its own box and covered by the pane below.
+ */
+@media (max-width: 768px) {
+  /*
+   * The top bar is seven controls on one unwrapping line. Its min-content
+   * width was wider than a phone, and because it sits in a flex column with
+   * the panes, it stretched the *whole document* past the viewport: the page
+   * scrolled sideways, Share fell off the edge, and the cream page was laid
+   * out to a width the screen didn't have.
+   *
+   * Two rows: where you are, then what you can do.
+   */
+  .reader-bar {
+    height: auto;
+    flex-wrap: wrap;
+    row-gap: 9px;
+    column-gap: 8px;
+    padding: 10px 14px;
+  }
+  .reader-spacer { flex-basis: 100%; height: 0; }
+  .reader-divider { display: none; }
+  .reader-title { font-size: 15px; }
+  /* The pager already moves a page at a time, and unlike a number field it
+     never runs out of room. */
+  .reader-bar .jump-form { display: none; }
+
+  /* 62px of padding either side left about 250px of measure — six words a
+     line, on a page that had 393 to work with. */
+  .reader-paper { margin: 14px auto; padding: 24px 20px 30px; }
+  .reader-paper.is-text { padding: 26px 22px 32px; }
+  .reader-paper .epub-page { font-size: 16.5px; }
+}
 
 /* ---------- highlights, two species ---------- */
 

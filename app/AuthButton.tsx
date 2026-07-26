@@ -37,7 +37,7 @@ export default function AuthButton() {
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", fontSize: "0.85rem" }}>
-      <span style={{ color: "var(--muted)", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+      <span className="auth-email" style={{ color: "var(--muted)", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
         {email}
       </span>
       <button className="btn-ghost btn-sm" onClick={signOut} disabled={busy}>

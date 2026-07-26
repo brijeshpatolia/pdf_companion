@@ -153,7 +153,7 @@ export default function Home() {
               {loaded ? shelfSummary(books, lastOpened) : "\u00a0"}
             </p>
           </div>
-          <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
+          <div className="shelf-head-actions" style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
             <Link href="/ask" className="btn-ghost btn-sm">
               Ask across library
             </Link>
@@ -225,8 +225,8 @@ export default function Home() {
               <li key={b.id} className="shelf-row fade-in" data-state={row.state}>
                 <span className="shelf-spine" style={{ background: spine, color: spineInk(spine) }} aria-hidden="true" />
 
-                <span style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                <span className="shelf-main" style={{ flex: 1, minWidth: 0 }}>
+                  <span className="shelf-titleline" style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
                     {row.openable ? (
                       <Link href={`/reader/${b.id}`} className="shelf-title">
                         {b.title}
