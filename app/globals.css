@@ -22,11 +22,27 @@
   --info: #93c5fd;
   --info-soft: rgba(147, 197, 253, 0.12);
 
-  --radius-sm: 6px;
-  --radius: 10px;
-  --radius-lg: 14px;
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
-  --shadow-pop: 0 4px 16px rgba(0, 0, 0, 0.45);
+  --radius-sm: 7px;
+  --radius: 11px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+
+  /* Layered rather than single-blur: a tight contact shadow plus a wide
+     ambient one reads as a real object sitting above the page. */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 16px -4px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 1px 3px rgba(0, 0, 0, 0.45), 0 12px 32px -8px rgba(0, 0, 0, 0.5);
+  --shadow-pop: 0 2px 6px rgba(0, 0, 0, 0.5), 0 20px 48px -12px rgba(0, 0, 0, 0.6);
+  --glow-accent: 0 0 0 1px var(--accent-soft), 0 6px 24px -6px rgba(76, 141, 255, 0.45);
+
+  /* One motion vocabulary, so nothing animates at a speed of its own invention. */
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --dur-fast: 120ms;
+  --dur: 200ms;
+  --dur-slow: 380ms;
+
+  --font-display-stack: var(--font-display), Georgia, "Times New Roman", serif;
+  --font-sans-stack: var(--font-sans), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -37,9 +53,17 @@ html, body {
   height: 100%;
   background: var(--bg);
   color: var(--text);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  font-family: var(--font-sans-stack);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, .display {
+  font-family: var(--font-display-stack);
+  font-weight: 600;
+  letter-spacing: -0.021em;
+  line-height: 1.15;
 }
 
 ::selection { background: var(--accent-soft); }
@@ -53,12 +77,22 @@ button {
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 0.4rem 0.8rem;
+  padding: 0.42rem 0.8rem;
   cursor: pointer;
-  transition: border-color 120ms ease, background 120ms ease, opacity 120ms ease;
+  /* Buttons carry icons now, so they lay their content out rather than
+     relying on whatever whitespace the JSX happened to contain. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  line-height: 1.2;
+  transition: border-color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease),
+              opacity var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease),
+              box-shadow var(--dur-fast) var(--ease);
 }
-button:hover:not(:disabled) { border-color: var(--accent); }
-button:disabled { opacity: 0.5; cursor: default; }
+button:hover:not(:disabled) { border-color: var(--border-strong); background: var(--surface); }
+button:active:not(:disabled) { transform: translateY(1px); }
+button:disabled { opacity: 0.45; cursor: default; }
 
 input, button {
   font-size: inherit;
@@ -73,13 +107,16 @@ input, button {
 /* ---------- buttons ---------- */
 
 .btn-primary {
-  background: var(--accent-strong);
+  background: linear-gradient(180deg, var(--accent) 0%, var(--accent-strong) 100%);
   border-color: transparent;
   color: #fff;
+  font-weight: 550;
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
 .btn-primary:hover:not(:disabled) {
-  background: var(--accent);
+  background: linear-gradient(180deg, #6ba1ff 0%, var(--accent) 100%);
   border-color: transparent;
+  box-shadow: var(--glow-accent), inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
 .btn-ghost {
@@ -155,13 +192,17 @@ input, button {
 /* ---------- cards ---------- */
 
 .card {
-  background: var(--panel);
+  background: linear-gradient(180deg, var(--panel) 0%, var(--bg-raised) 100%);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  transition: border-color 140ms ease, transform 140ms ease;
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--dur) var(--ease), transform var(--dur) var(--ease),
+              box-shadow var(--dur) var(--ease);
 }
 .card-interactive:hover {
   border-color: var(--border-strong);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
 }
 
 /* ---------- chat bubbles ---------- */
@@ -564,8 +605,9 @@ input, button {
 }
 
 .wordmark {
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-family: var(--font-display-stack);
+  font-weight: 600;
+  letter-spacing: -0.03em;
   background: linear-gradient(120deg, var(--text) 30%, var(--accent) 100%);
   -webkit-background-clip: text;
   background-clip: text;
@@ -752,3 +794,131 @@ input, button {
   white-space: nowrap;
 }
 .ask-source-page:hover { background: var(--accent); color: #fff; }
+
+/* ---------- icon-bearing controls ---------- */
+
+/* A control whose entire content is one icon. Square, so it doesn't end up
+   a lopsided rectangle the way icon-in-a-text-button does. */
+.btn-icon {
+  padding: 0;
+  width: 2rem;
+  height: 2rem;
+  font-size: 1rem;
+  border-radius: var(--radius-sm);
+}
+.btn-icon.btn-sm { width: 1.75rem; height: 1.75rem; font-size: 0.9rem; }
+
+/* ---------- avatars & presence ---------- */
+
+/* Initial-in-a-circle, tinted per person. Colour comes from --avatar-h, set
+   inline from a hash of the user id, so the same reader keeps the same hue
+   across sessions without us storing a colour anywhere. */
+.avatar {
+  --avatar-h: 220;
+  display: inline-grid;
+  place-items: center;
+  width: 1.55rem;
+  height: 1.55rem;
+  border-radius: 50%;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: hsl(var(--avatar-h) 85% 82%);
+  background: hsl(var(--avatar-h) 60% 22%);
+  box-shadow: inset 0 0 0 1px hsl(var(--avatar-h) 60% 40% / 0.5);
+  flex-shrink: 0;
+  user-select: none;
+}
+.avatar-sm { width: 1.25rem; height: 1.25rem; font-size: 0.58rem; }
+
+/* A reader in the room: avatar, name, live page. */
+.peer-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.22rem 0.6rem 0.22rem 0.28rem;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 0.78rem;
+  white-space: nowrap;
+  transition: border-color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+}
+.peer-chip:hover:not(:disabled) { border-color: var(--accent); background: var(--accent-soft); }
+.peer-chip[data-following="true"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: var(--glow-accent);
+}
+/* The page number changes without warning as someone reads; a brief pulse
+   makes the change legible instead of it silently swapping under the eye. */
+.peer-page {
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+.peer-chip[data-moved="true"] .peer-page {
+  animation: peer-pulse var(--dur-slow) var(--ease);
+  color: var(--accent);
+}
+@keyframes peer-pulse {
+  0%   { transform: translateY(-3px); opacity: 0; }
+  100% { transform: none; opacity: 1; }
+}
+
+/* live indicator */
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ok);
+  flex-shrink: 0;
+  position: relative;
+}
+.live-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: inherit;
+  animation: live-ping 2s var(--ease) infinite;
+}
+@keyframes live-ping {
+  0%   { transform: scale(1); opacity: 0.7; }
+  70%, 100% { transform: scale(2.6); opacity: 0; }
+}
+.live-dot[data-state="connecting"] { background: var(--warn); }
+.live-dot[data-state="connecting"]::after { animation: none; }
+
+/* ---------- segmented control ---------- */
+
+.segmented {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+.segmented > button {
+  border: none;
+  background: transparent;
+  border-radius: 999px;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.segmented > button:hover:not(:disabled) { background: transparent; color: var(--text); }
+.segmented > button[aria-selected="true"],
+.segmented > button.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ---------- entrance motion ---------- */
+
+.rise-in { animation: rise-in var(--dur-slow) var(--ease) both; }
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}

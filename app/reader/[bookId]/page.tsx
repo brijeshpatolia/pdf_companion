@@ -5,6 +5,7 @@ import { supabaseProgress } from "@/adapters/supabase/supabaseProgress.js";
 import { getProgress } from "@/core/progress/progress.js";
 import { isValidTokenFormat } from "@/core/sharing/token.js";
 import Reader from "./Reader";
+import Icon from "../../components/Icon";
 
 export const runtime = "nodejs";
 
@@ -53,7 +54,7 @@ export default async function ReaderPage({
     return (
       <main style={{ padding: "2rem" }}>
         <p>Book not found.</p>
-        <Link href="/">← Library</Link>
+        <Link href="/"><Icon name="arrow-left" /> Library</Link>
       </main>
     );
   }

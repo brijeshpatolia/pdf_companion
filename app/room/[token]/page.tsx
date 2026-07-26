@@ -5,6 +5,7 @@ import { supabaseServer } from "@/adapters/supabase/serverClient.js";
 import { supabaseRooms } from "@/adapters/supabase/supabaseRooms.js";
 import { isValidTokenFormat } from "@/core/sharing/token.js";
 import { findOwnCopy } from "@/core/rooms/matchBook.js";
+import Icon from "../../components/Icon";
 
 export const runtime = "nodejs";
 
@@ -69,7 +70,7 @@ export default async function JoinRoomPage({ params }: { params: Promise<{ token
             Find it in the catalog
           </Link>
           <Link href="/" className="btn-ghost btn-sm">
-            ← Library
+            <Icon name="arrow-left" /> Library
           </Link>
         </div>
       </div>
@@ -85,7 +86,7 @@ function Problem({ message }: { message: string }) {
       </h1>
       <p style={{ color: "var(--muted)" }}>{message}</p>
       <Link href="/" className="btn-ghost btn-sm">
-        ← Library
+        <Icon name="arrow-left" /> Library
       </Link>
     </main>
   );

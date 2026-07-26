@@ -6,6 +6,8 @@ import { supabaseBrowser } from "../../../src/adapters/supabase/browserClient.js
 import {
   participantsFrom,
   parseLiveHighlight,
+  parsePosition,
+  withLivePages,
   addHighlight,
 } from "../../../src/core/rooms/messages.js";
 import type { Participant, LiveHighlight } from "../../../src/core/rooms/types.js";
@@ -13,11 +15,22 @@ import type { Participant, LiveHighlight } from "../../../src/core/rooms/types.j
 /**
  * Joins a co-reading room over a Supabase Realtime channel.
  *
- * Nothing here is persisted. Presence carries who's in the room and what page
- * they're on; a broadcast carries a highlight the moment someone makes one.
- * When the last participant leaves, the room's state is simply gone — which is
- * the right model for "we read this together on Tuesday" and means no one's
- * annotations ever land in someone else's account.
+ * Two primitives, each doing the job it's actually built for:
+ *
+ * - **Presence** answers *who is here*. It changes on join and leave, and it
+ *   carries the page a reader arrived on so a latecomer isn't staring at
+ *   blanks until someone turns a page.
+ * - **Broadcast** answers *where they are now*, and *what they just
+ *   highlighted*. Position is a stream of events, not a membership fact.
+ *
+ * That split is the fix for a bug worth remembering: position originally rode
+ * on presence via repeated `track()` calls, and against live Realtime only the
+ * *first* update ever reached the other clients — every later page turn was
+ * silently dropped, so the room showed a stale page until someone reloaded.
+ * The same test over broadcast delivered five of five.
+ *
+ * Nothing here is persisted. When the last participant leaves, the room's
+ * state is simply gone.
  */
 
 interface Options {
@@ -27,65 +40,99 @@ interface Options {
   name: string;
   /** The page this reader is on, broadcast to the others. */
   page: number;
+  /** Called when the followed reader turns a page. */
+  onFollow?: (page: number) => void;
 }
 
 export interface ReadingRoomState {
   connected: boolean;
   participants: Participant[];
   liveHighlights: LiveHighlight[];
+  /** userId of the reader being followed, or null. */
+  following: string | null;
+  setFollowing: (userId: string | null) => void;
   /** Announce a highlight to the room. No-op when not connected. */
   shareHighlight: (text: string, page: number) => void;
 }
 
-export function useReadingRoom({ token, userId, name, page }: Options): ReadingRoomState {
+export function useReadingRoom({
+  token,
+  userId,
+  name,
+  page,
+  onFollow,
+}: Options): ReadingRoomState {
   const [connected, setConnected] = useState(false);
-  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [members, setMembers] = useState<Participant[]>([]);
+  const [positions, setPositions] = useState<Record<string, number>>({});
   const [liveHighlights, setLiveHighlights] = useState<LiveHighlight[]>([]);
+  const [following, setFollowing] = useState<string | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
 
-  // Read the latest page inside callbacks without re-subscribing on every turn
-  // of the page — resubscribing would drop everyone's presence.
+  // Read the latest values inside long-lived callbacks without re-subscribing —
+  // resubscribing would drop this reader out of the room and back in.
   const pageRef = useRef(page);
   pageRef.current = page;
   const nameRef = useRef(name);
   nameRef.current = name;
+  const followingRef = useRef(following);
+  followingRef.current = following;
+  const onFollowRef = useRef(onFollow);
+  onFollowRef.current = onFollow;
 
   useEffect(() => {
     if (!token || !userId) {
       setConnected(false);
-      setParticipants([]);
+      setMembers([]);
+      setPositions({});
       return;
     }
 
     const supabase = supabaseBrowser();
+    const selfKey = `${userId}:${Math.random().toString(36).slice(2, 10)}`;
     const channel = supabase.channel(`room:${token}`, {
-      config: { presence: { key: `${userId}:${Math.random().toString(36).slice(2, 10)}` } },
+      config: { presence: { key: selfKey } },
     });
     channelRef.current = channel;
 
+    const announce = () => {
+      void channel.send({
+        type: "broadcast",
+        event: "position",
+        payload: { userId, page: pageRef.current },
+      });
+    };
+
     const syncPresence = () => {
-      const state = channel.presenceState() as Record<string, unknown[]>;
-      // The presence key we asked for is the one we're stored under.
-      const selfKey = Object.keys(state).find((k) => k.startsWith(`${userId}:`)) ?? "";
-      setParticipants(participantsFrom(state, selfKey));
+      setMembers(participantsFrom(channel.presenceState() as Record<string, unknown[]>, selfKey));
     };
 
     channel
       .on("presence", { event: "sync" }, syncPresence)
-      .on("presence", { event: "join" }, syncPresence)
+      .on("presence", { event: "join" }, () => {
+        syncPresence();
+        // Someone just arrived and missed every position broadcast so far.
+        // Re-announce so they see where we are without waiting for a turn.
+        announce();
+      })
       .on("presence", { event: "leave" }, syncPresence)
+      .on("broadcast", { event: "position" }, ({ payload }) => {
+        const pos = parsePosition(payload); // from another browser — untrusted
+        if (!pos || pos.userId === userId) return;
+        setPositions((prev) =>
+          prev[pos.userId] === pos.page ? prev : { ...prev, [pos.userId]: pos.page },
+        );
+        if (followingRef.current === pos.userId) onFollowRef.current?.(pos.page);
+      })
       .on("broadcast", { event: "highlight" }, ({ payload }) => {
-        // Payload comes from another participant's browser — untrusted.
         const highlight = parseLiveHighlight(payload, Date.now());
-        if (!highlight) return;
+        if (!highlight || highlight.userId === userId) return;
         setLiveHighlights((feed) => addHighlight(feed, highlight));
       })
       .subscribe((status) => {
         const live = status === "SUBSCRIBED";
         setConnected(live);
-        if (live) {
-          void channel.track({ userId, name: nameRef.current, page: pageRef.current });
-        }
+        if (live) void channel.track({ userId, name: nameRef.current, page: pageRef.current });
       });
 
     return () => {
@@ -94,11 +141,23 @@ export function useReadingRoom({ token, userId, name, page }: Options): ReadingR
     };
   }, [token, userId]);
 
-  // Tell the room when this reader turns the page.
+  // Every page turn goes out as a broadcast — the one delivery path that
+  // reliably reaches the room.
   useEffect(() => {
     if (!connected || !userId || !channelRef.current) return;
-    void channelRef.current.track({ userId, name: nameRef.current, page });
+    void channelRef.current.send({
+      type: "broadcast",
+      event: "position",
+      payload: { userId, page },
+    });
   }, [connected, userId, page]);
+
+  // Stop following someone who left, or the chip would linger with no one behind it.
+  useEffect(() => {
+    if (following && !members.some((m) => m.userId === following)) setFollowing(null);
+  }, [following, members]);
+
+  const participants = useMemo(() => withLivePages(members, positions), [members, positions]);
 
   const shareHighlight = useCallback(
     (text: string, highlightPage: number) => {
@@ -120,7 +179,7 @@ export function useReadingRoom({ token, userId, name, page }: Options): ReadingR
   );
 
   return useMemo(
-    () => ({ connected, participants, liveHighlights, shareHighlight }),
-    [connected, participants, liveHighlights, shareHighlight],
+    () => ({ connected, participants, liveHighlights, following, setFollowing, shareHighlight }),
+    [connected, participants, liveHighlights, following, shareHighlight],
   );
 }

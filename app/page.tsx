@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import AuthButton from "./AuthButton";
+import Icon from "./components/Icon";
 
 interface BookSummary {
   id: string;
@@ -160,9 +161,9 @@ export default function Home() {
       </div>
 
       <p style={{ marginTop: "1rem", marginBottom: 0, display: "flex", gap: "1.25rem", flexWrap: "wrap" }}>
-        <Link href="/catalog">📚 Browse free public-domain books →</Link>
-        <Link href="/ask">🔎 Ask your library →</Link>
-        <Link href="/usage">📊 Usage &amp; cost →</Link>
+        <Link href="/catalog"><Icon name="library" /> Browse free public-domain books <Icon name="arrow-right" /></Link>
+        <Link href="/ask"><Icon name="search" /> Ask your library <Icon name="arrow-right" /></Link>
+        <Link href="/usage"><Icon name="chart" /> Usage &amp; cost <Icon name="arrow-right" /></Link>
       </p>
 
       <label
@@ -294,7 +295,7 @@ export default function Home() {
               borderStyle: "dashed",
             }}
           >
-            <p style={{ margin: 0, fontSize: "1.5rem" }}>📖</p>
+            <p style={{ margin: 0, fontSize: "1.5rem" }}><Icon name="book" /></p>
             <p style={{ margin: "0.5rem 0 0" }}>No books yet — upload one to start reading.</p>
           </li>
         )}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Icon from "../../components/Icon";
 
 /**
  * Compact share control for the Companion's Saved tab: create a read-only
@@ -82,7 +83,7 @@ export default function SharePanel({ bookId }: { bookId: string }) {
       {token ? (
         <>
           <p className="share-panel-hint">
-            🔗 Anyone with this link can view your highlights, saved answers, notes, and flashcards for this book —
+            <Icon name="link" /> Anyone with this link can view your highlights, saved answers, notes, and flashcards for this book —
             read-only.
           </p>
           <div className="share-panel-row">
@@ -95,7 +96,7 @@ export default function SharePanel({ bookId }: { bookId: string }) {
               style={{ flex: 1, minWidth: 0 }}
             />
             <button className="btn-primary btn-sm" onClick={copy} type="button">
-              {copied ? "Copied ✓" : "Copy"}
+              {copied ? <><Icon name="check" /> Copied</> : "Copy"}
             </button>
           </div>
           <button className="btn-ghost btn-sm" onClick={stop} disabled={busy} type="button">
@@ -104,7 +105,7 @@ export default function SharePanel({ bookId }: { bookId: string }) {
         </>
       ) : (
         <button className="btn-ghost btn-sm" onClick={start} disabled={busy} type="button" title="Create a read-only public link">
-          {busy ? "Creating…" : "🔗 Share book"}
+          {busy ? "Creating…" : <><Icon name="link" /> Share book</>}
         </button>
       )}
     </div>

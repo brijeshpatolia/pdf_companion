@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Icon from "../components/Icon";
 
 interface BookUsage {
   bookId: string | null;
@@ -126,7 +127,7 @@ export default function UsagePage() {
           </p>
         </div>
         <Link href="/" className="btn-ghost btn-sm" style={{ whiteSpace: "nowrap" }}>
-          ← Library
+          <Icon name="arrow-left" /> Library
         </Link>
       </div>
 
@@ -146,7 +147,7 @@ export default function UsagePage() {
 
       {loaded && data && data.chatCount === 0 && (
         <div className="card" style={{ marginTop: "1.5rem", padding: "2rem 1rem", textAlign: "center", color: "var(--muted)", borderStyle: "dashed" }}>
-          <p style={{ margin: 0, fontSize: "1.4rem" }}>📊</p>
+          <p style={{ margin: 0, fontSize: "1.4rem" }}><Icon name="chart" /></p>
           <p style={{ margin: "0.5rem 0 0" }}>No usage yet — ask the companion a question and your cost breakdown will appear here.</p>
         </div>
       )}

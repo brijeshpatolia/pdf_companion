@@ -29,6 +29,41 @@ function cleanPage(value: unknown): number | null {
   return page >= 1 ? page : null;
 }
 
+/**
+ * A reader's current page, broadcast on every turn.
+ *
+ * Position travels over broadcast rather than presence, and that distinction
+ * is load-bearing: presence is a membership fact reconciled on a heartbeat, and
+ * repeated `track()` calls do *not* reliably reach the other clients — verified
+ * against live Realtime, where only the first update propagated and every
+ * later one was dropped. Broadcast delivered all five of five. Presence still
+ * carries a starting page so someone who joins late sees where everyone is
+ * before the next turn happens.
+ */
+export function parsePosition(raw: unknown): { userId: string; page: number } | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  const userId = cleanString(r.userId, 64);
+  const page = cleanPage(r.page);
+  if (!userId || page === null) return null;
+  return { userId, page };
+}
+
+/**
+ * Live page for each participant: the newest broadcast position, falling back
+ * to the page they announced when they joined.
+ */
+export function withLivePages(
+  participants: Participant[],
+  positions: Record<string, number>,
+): Participant[] {
+  return participants.map((p) =>
+    positions[p.userId] !== undefined && positions[p.userId] !== p.page
+      ? { ...p, page: positions[p.userId]! }
+      : p,
+  );
+}
+
 /** Validates one presence entry; null if it isn't usable. */
 export function parsePresenceMeta(raw: unknown): PresenceMeta | null {
   if (!raw || typeof raw !== "object") return null;

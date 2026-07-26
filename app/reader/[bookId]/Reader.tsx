@@ -9,9 +9,11 @@ import Companion from "./Companion";
 import SelectionTooltip from "./SelectionTooltip";
 import EpubPage from "./EpubPage";
 import RoomBar from "./RoomBar";
+import ShareCardPanel from "./ShareCardPanel";
 import { useReadingRoom } from "./useReadingRoom";
 import { buildIntentQuestion } from "@/core/chat/intents.js";
 import type { Intent } from "@/core/chat/intents.js";
+import Icon from "../../components/Icon";
 
 pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 
@@ -40,11 +42,19 @@ export default function Reader({ bookId, title, pageCount, format = "pdf", fileU
   const [savedVersion, setSavedVersion] = useState(0);
   const [flash, setFlash] = useState<{ text: string; ok: boolean } | null>(null);
   const [roomToken, setRoomToken] = useState<string | null>(joinedRoomToken);
+  const [sharingCard, setSharingCard] = useState(false);
   const pdfSectionRef = useRef<HTMLElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const flashRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const room = useReadingRoom({ token: roomToken, userId, name: readerName, page });
+  const room = useReadingRoom({
+    token: roomToken,
+    userId,
+    name: readerName,
+    page,
+    // Following means their page turns become yours.
+    onFollow: (n) => setPage(n),
+  });
 
   const onLoad = useCallback(({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
@@ -120,7 +130,7 @@ export default function Reader({ bookId, title, pageCount, format = "pdf", fileU
         // Anyone reading along sees it appear. Broadcast only — it stays in
         // this reader's account, and is never written to anyone else's.
         room.shareHighlight(selection, page);
-        showFlash("Highlight saved ✓", true);
+        showFlash("Highlight saved", true);
       } catch {
         showFlash("Couldn't save highlight", false);
       }
@@ -169,13 +179,21 @@ export default function Reader({ bookId, title, pageCount, format = "pdf", fileU
           flexWrap: "wrap",
         }}
       >
-        <Link href="/">← Library</Link>
+        <Link href="/"><Icon name="arrow-left" /> Library</Link>
         <strong style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {title}
         </strong>
         <Link href={`/reader/${bookId}/flashcards`} className="btn-ghost btn-sm" style={{ whiteSpace: "nowrap" }}>
-          🃏 Flashcards
+          <Icon name="cards" /> Flashcards
         </Link>
+        <button
+          className="btn-ghost btn-sm"
+          onClick={() => setSharingCard(true)}
+          style={{ whiteSpace: "nowrap" }}
+          title="Make a shareable card from this book"
+        >
+          <Icon name="share" /> Share card
+        </button>
         <span style={{ flex: 1 }} />
         {flash && (
           <span className={`badge ${flash.ok ? "badge-ok" : "badge-danger"} fade-in`} role="status">
@@ -189,7 +207,7 @@ export default function Reader({ bookId, title, pageCount, format = "pdf", fileU
             aria-label="Previous page"
             title="Previous page (←)"
           >
-            ‹ Prev
+            <Icon name="chevron-left" /> Prev
           </button>
           <span style={{ color: "var(--muted)", minWidth: 90, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>
             Page {page} / {numPages || pageCount}
@@ -205,7 +223,7 @@ export default function Reader({ bookId, title, pageCount, format = "pdf", fileU
             aria-label="Next page"
             title="Next page (→)"
           >
-            Next ›
+            Next <Icon name="chevron-right" />
           </button>
           <form onSubmit={onJump} className="jump-form">
             <input
@@ -231,6 +249,8 @@ export default function Reader({ bookId, title, pageCount, format = "pdf", fileU
           connected={room.connected}
           participants={room.participants}
           liveHighlights={room.liveHighlights}
+          following={room.following}
+          onFollowChange={room.setFollowing}
           onJumpToPage={(n) => {
             go(n);
             setMobileView("book");
@@ -255,7 +275,7 @@ export default function Reader({ bookId, title, pageCount, format = "pdf", fileU
           className={`tab${mobileView === "book" ? " active" : ""}`}
           onClick={() => setMobileView("book")}
         >
-          📖 Book
+          <Icon name="book" /> Book
         </button>
         <button
           role="tab"
@@ -263,7 +283,7 @@ export default function Reader({ bookId, title, pageCount, format = "pdf", fileU
           className={`tab${mobileView === "chat" ? " active" : ""}`}
           onClick={() => setMobileView("chat")}
         >
-          💬 Companion
+          <Icon name="chat" /> Companion
         </button>
       </div>
 
@@ -310,6 +330,15 @@ export default function Reader({ bookId, title, pageCount, format = "pdf", fileU
           mobileHidden={mobileView === "book"}
         />
       </div>
+
+      {sharingCard && (
+        <ShareCardPanel
+          bookId={bookId}
+          title={title}
+          page={page}
+          onClose={() => setSharingCard(false)}
+        />
+      )}
     </div>
   );
 }
