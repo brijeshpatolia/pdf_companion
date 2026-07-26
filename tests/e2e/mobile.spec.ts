@@ -27,6 +27,8 @@ const books = [
     pages_done: 318,
   },
   { id: "ee55", title: "An Enquiry Concerning Human Understanding", page_count: 210, status: "failed" },
+  // Ready but unstarted — the row whose readout says "Start".
+  { id: "dd44", title: "Middlemarch", page_count: 712, status: "ready" },
 ];
 
 /**
@@ -268,4 +270,38 @@ test("the library offers a way back to what this is", async ({ page }) => {
     "href",
     "/welcome",
   );
+});
+
+/**
+ * The shelf's readout.
+ *
+ * "Start" and "p. 5" are a verb and a destination — they read as controls. They
+ * were plain text, so tapping them did nothing and the only way into a book
+ * was its title.
+ */
+test("the shelf readout opens the book", async ({ page }) => {
+  await stubApi(page);
+  await page.goto("/");
+  await settle(page, "/");
+
+  const start = page.getByRole("link", { name: "Start" });
+  await expect(start).toHaveAttribute("href", "/reader/dd44");
+
+  const resume = page.getByRole("link", { name: "p. 5" });
+  await expect(resume).toHaveAttribute("href", "/reader/aa11");
+
+  // And big enough to actually hit.
+  for (const control of [start, resume]) {
+    const box = (await control.boundingBox())!;
+    expect(box.height).toBeGreaterThanOrEqual(40);
+  }
+});
+
+test("a book that can't be opened yet offers nothing to tap", async ({ page }) => {
+  await stubApi(page);
+  await page.goto("/");
+  await settle(page, "/");
+
+  // The processing row's percentage is a readout, not an invitation.
+  await expect(page.getByRole("link", { name: "50%" })).toHaveCount(0);
 });

@@ -1935,6 +1935,15 @@ a.shelf-title:hover { color: var(--accent); text-decoration: none; }
   color: var(--text-700);
   flex-shrink: 0;
 }
+/* As a link it's the same readout, with a target under it and something that
+   answers when you point at it. */
+a.shelf-right {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 40px;
+}
+a.shelf-right:hover { color: var(--text-400); text-decoration: none; }
 
 /*
  * The four states have to be tellable apart at a glance — that is the whole
