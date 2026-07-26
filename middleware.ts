@@ -9,7 +9,7 @@ import { createServerClient } from "@supabase/ssr";
  * its own unguessable token rather than a session. `/welcome` is the landing
  * page — the point of it is to be seen by people who have no account.
  */
-const PUBLIC_PATHS = ["/login", "/auth", "/api/ingest", "/share", "/welcome"];
+const PUBLIC_PATHS = ["/login", "/auth", "/api/ingest", "/share", "/welcome", "/offline"];
 
 function isPublic(path: string): boolean {
   return PUBLIC_PATHS.some((p) => path === p || path.startsWith(p + "/"));
@@ -72,7 +72,13 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Everything except Next internals and public static assets.
-    "/((?!_next/static|_next/image|favicon.ico|pdf.worker.min.mjs|icon.svg|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    /*
+     * Everything except Next internals and public static assets.
+     *
+     * `sw.js` and `manifest.webmanifest` have to be here: the browser fetches
+     * both without a session in mind, and a redirect to the login page in
+     * place of either one silently breaks installing the app.
+     */
+    "/((?!_next/static|_next/image|favicon.ico|pdf.worker.min.mjs|icon.svg|sw.js|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

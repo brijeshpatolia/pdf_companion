@@ -61,14 +61,21 @@ not a secret.
 ### Browser tests
 
 A few things are only *behaviour* in a real browser: text selection, the order
-DOM events arrive in, and whether a click is dispatched at all. jsdom models
-none of it, so those live in Playwright **component** tests, which mount a
-component directly rather than booting the app:
+DOM events arrive in, whether a click is dispatched at all, and whether
+something is actually on screen. jsdom models none of it. Two suites cover it:
 
 ```bash
 npx playwright install chromium   # once
-npm run test:browser
+npm run test:browser              # components, mounted in isolation
+npm run test:e2e                  # whole pages, at phone size
 ```
+
+`test:e2e` starts its own dev server with the Supabase variables blanked.
+That's deliberate: `middleware.ts` doesn't gate anything when auth isn't
+configured, so every route is reachable without standing up a database, and
+the API is stubbed per test. Routes whose *server* component needs Supabase —
+the reader, the share page — can't be reached that way, and are covered by
+component tests instead.
 
 They're component tests rather than end-to-end because the alternative — a
 signed-in session, a stored book and a rendered PDF before you can select a
@@ -88,11 +95,40 @@ already on the machine, point at it:
 PLAYWRIGHT_CHROMIUM_PATH=/path/to/chrome npm run test:browser
 ```
 
-**Why this exists.** The selection popover shipped broken twice. First the
-browser's own selection menu opened on top of it; the fix cleared the selection
-on mouseup, which then made the popover unmount between `mouseup` and `click`,
-so every action in it silently did nothing. Both are asserted here, and both
-tests were confirmed to fail against the broken code before being kept.
+**Why this exists.** Three things shipped broken and were found by a person,
+not a test run.
+
+The selection popover broke twice: first the browser's own selection menu
+opened on top of it, then the fix for that cleared the selection on mouseup,
+which made the popover unmount between `mouseup` and `click` so every action in
+it silently did nothing.
+
+Then the whole mobile layout — the nav bar sat exactly one viewport below the
+fold, and the reader's top bar stretched the document wider than the screen.
+Neither was catchable by the checks in place, because those were full-page
+screenshots: they capture the whole *document*, so anything pushed past the
+viewport still appears in them, looking fine.
+
+That's why the assertions here are about the **viewport** — `toBeInViewport`,
+`scrollWidth` against `clientWidth`, measured tap targets — rather than about
+the document. Every one of them was confirmed to fail against the broken code
+before being kept; a regression test that passes on the bug is decoration.
+
+### Installing it (PWA)
+
+The app is installable: `app/manifest.ts` describes it, `scripts/make-icons.mjs`
+draws the icons (`npm run icons` after editing), and `public/sw.js` is a
+deliberately small service worker.
+
+The worker exists to make the app installable — Chrome wants a fetch handler
+before it offers "add to home screen" — and to make an offline tab say
+something true instead of showing the browser's error page. It is **not** an
+offline reading mode; books live in Supabase behind auth.
+
+Its caching rules are chosen so a stale cache can never serve stale app code:
+`/_next/static/` is content-hashed and therefore safe to cache forever, and
+everything else goes to the network first. It only registers in production
+builds, so it can't make your edits appear not to take.
 
 ## Gotcha: `supabase db reset` desyncs the stack
 
