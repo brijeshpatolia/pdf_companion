@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useLayoutEffect, useState, useCallback, useRef } from "react";
 import type { Intent } from "@/core/chat/intents.js";
+import { placePopover } from "@/core/reading/selectionPopover.js";
 import Icon from "../../components/Icon";
 
 /**
@@ -17,19 +18,27 @@ import Icon from "../../components/Icon";
  * geometry, then clear it, and draw the marks ourselves from the range's
  * client rects so you still see what you picked.
  *
- * **On a touch screen** that trick is exactly wrong, and listening for
+ * **On a touch screen** the same problem is worse, and listening for
  * `touchend` doesn't work either. Selecting means long-pressing, then dragging
  * the handles to extend — a gesture that belongs to the browser's own
  * selection UI. `touchend` frequently never reaches the page, and adjusting a
  * handle produces no touch event on this container at all, so the popover
- * simply never appeared in the installed app. Clearing the selection would be
- * worse still: it destroys the handles mid-gesture, so the selection can't be
- * adjusted.
+ * simply never appeared in the installed app.
  *
- * So touch is driven by `selectionchange` — the one signal that fires however
- * a selection was made or altered — and keeps its selection. The native menu
- * shows up alongside ours there, which is unavoidable and how every reading
- * app on a phone behaves.
+ * So touch is driven by `selectionchange`, the one signal that fires however a
+ * selection was made or altered. It was then left alone, on the reasoning that
+ * clearing it destroys the handles and the selection could never be extended
+ * past the first long-pressed word. That was the wrong trade: keeping the
+ * selection keeps Android's Copy / Share / Select-all bar, which is drawn by
+ * the system directly over this popover, and it keeps Chrome's touch-to-search
+ * panel along the bottom. The reader ended up with three menus, two of them
+ * covering the one that belongs to the app.
+ *
+ * The handles are kept where they are worth keeping. `selectionchange` fires
+ * on every adjustment, so the timer below restarts on each one and the
+ * selection is only taken over once the reader stops moving it — long-press,
+ * drag to extend, pause, and the platform's UI gives way to ours. The cost is
+ * that a selection can't be nudged after that pause; long-press again.
  */
 
 interface SelectionTooltipProps {
@@ -47,10 +56,15 @@ interface Box {
 
 interface TooltipState {
   text: string;
-  x: number;
-  y: number;
+  /** The selection's own box, in container coordinates — what to sit beside. */
+  rect: { left: number; top: number; right: number; bottom: number };
   /** One box per line of the selection, in container coordinates. */
   boxes: Box[];
+  /**
+   * Set for a selection made by touch, where the platform's own menu wants the
+   * space above it.
+   */
+  below: boolean;
 }
 
 const INTENTS: { intent: Intent; label: string }[] = [
@@ -65,8 +79,18 @@ export default function SelectionTooltip({
   onHighlight,
 }: SelectionTooltipProps) {
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
-  /** Touch keeps its selection; a mouse gets it taken away. */
+  /** Which gesture made this selection: it decides the timing and the side. */
   const touchRef = useRef(false);
+  const popoverRef = useRef<HTMLDivElement>(null);
+  /**
+   * Set for the one `selectionchange` our own clearing is about to cause.
+   *
+   * Without it the touch path answers its own event: it clears the selection,
+   * the clearing fires a change, the change schedules another capture, and
+   * that capture finds nothing selected and dismisses the popover it had just
+   * put up — half a second after the reader saw it appear.
+   */
+  const selfClearedRef = useRef(false);
 
   const dismiss = useCallback(() => setTooltip(null), []);
 
@@ -115,19 +139,52 @@ export default function SelectionTooltip({
     const rect = range.getBoundingClientRect();
     setTooltip({
       text,
-      x: rect.left + rect.width / 2 + offsetX,
-      y: rect.top + offsetY - 8,
-      // On touch the real selection stays on screen, so drawing our own marks
-      // over it would just double every highlight.
-      boxes: touchRef.current ? [] : boxes,
+      rect: {
+        left: rect.left + offsetX,
+        right: rect.right + offsetX,
+        top: rect.top + offsetY,
+        bottom: rect.bottom + offsetY,
+      },
+      boxes,
+      below: touchRef.current,
     });
 
-    if (!touchRef.current) {
-      // With nothing selected the browser's own menu has nothing to attach to.
-      // Our marks stand in for the selection from here.
-      sel.removeAllRanges();
-    }
+    // With nothing selected, none of the browser's own menus has anything to
+    // attach to. Our marks stand in for the selection from here.
+    //
+    // The selection is non-empty — its text is what we just read — so this
+    // always dirties it, and the flag is always spent on a real event.
+    selfClearedRef.current = true;
+    sel.removeAllRanges();
   }, [containerRef]);
+
+  /*
+   * Positioned after it exists, because where it goes depends on how big it
+   * turns out to be — four buttons in a row is most of a phone's width, and
+   * one centred on a selection near the edge hangs off the screen.
+   *
+   * A layout effect, so this lands before the browser paints and the popover is
+   * never seen in the wrong place.
+   */
+  useLayoutEffect(() => {
+    const el = popoverRef.current;
+    const container = containerRef.current;
+    if (!el || !container || !tooltip) return;
+
+    const { left, top } = placePopover(
+      tooltip.rect,
+      {
+        left: container.scrollLeft,
+        top: container.scrollTop,
+        width: container.clientWidth,
+        height: container.clientHeight,
+      },
+      { width: el.offsetWidth, height: el.offsetHeight },
+      tooltip.below,
+    );
+    el.style.left = `${left}px`;
+    el.style.top = `${top}px`;
+  }, [tooltip, containerRef]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -139,18 +196,24 @@ export default function SelectionTooltip({
 
     /*
      * The touch path. `selectionchange` fires continuously while a handle is
-     * dragged, so it's debounced until the selection settles — otherwise the
-     * popover would chase the handle around the page.
+     * dragged, so it waits for the selection to settle — otherwise the popover
+     * would chase the handle around the page, and taking the selection over
+     * mid-drag would cut the gesture short.
      *
-     * It also fires when *we* clear the selection after a mouse gesture, which
-     * would immediately dismiss the popover we had just opened; the touch flag
-     * keeps this path off the mouse's back.
+     * Long enough that letting go of one handle to reach for the other doesn't
+     * count as having finished, short enough not to feel like a lag.
+     *
+     * It also fires when *we* clear the selection; that one is spoken for.
      */
     let settleTimer: ReturnType<typeof setTimeout> | undefined;
     const handleSelectionChange = () => {
+      if (selfClearedRef.current) {
+        selfClearedRef.current = false;
+        return;
+      }
       if (!touchRef.current) return;
       clearTimeout(settleTimer);
-      settleTimer = setTimeout(() => capture(), 300);
+      settleTimer = setTimeout(() => capture(), 550);
     };
 
     const handleClickOutside = (e: MouseEvent) => {
@@ -200,15 +263,13 @@ export default function SelectionTooltip({
       ))}
 
       <div
+        ref={popoverRef}
         data-selection-tooltip
         className="sel-popover fade-in"
-        style={{
-          position: "absolute",
-          left: tooltip.x,
-          top: tooltip.y,
-          transform: "translate(-50%, -100%)",
-          zIndex: 100,
-        }}
+        // left and top are set by the layout effect, which needs the rendered
+        // size to work them out. Off-screen until then, so a popover is never
+        // painted at the origin on its way to where it belongs.
+        style={{ position: "absolute", left: -9999, top: 0, zIndex: 100 }}
       >
         {onHighlight && (
           <>

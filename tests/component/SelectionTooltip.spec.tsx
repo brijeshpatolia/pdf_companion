@@ -153,31 +153,106 @@ test("clicking away dismisses without running anything", async ({ page, mount })
  * `selectionchange` is the one signal that fires however the selection was
  * made, so that is what this asserts on.
  */
-test("a selection made without a mouse still raises the popover", async ({ page, mount }) => {
-  const component = await mount(<SelectionHarness />);
 
+/** A long-press and drag, as far as anything in the page can observe it. */
+async function touchSelect(component: Locator, to = 49) {
   // A long-press does fire touchstart on the container — it's the touchend
   // afterwards that never reliably arrives, because the browser has taken the
   // gesture over by then.
   await component.getByTestId("prose").dispatchEvent("touchstart");
-
-  await component.getByTestId("prose").evaluate((el: HTMLElement) => {
+  await component.getByTestId("prose").evaluate((el: HTMLElement, end: number) => {
     const range = new Range();
     range.setStart(el.firstChild!, 10);
-    range.setEnd(el.firstChild!, 49);
+    range.setEnd(el.firstChild!, end);
     const sel = window.getSelection()!;
     sel.removeAllRanges();
     sel.addRange(range);
-  });
+  }, to);
+}
+
+test("a selection made without a mouse still raises the popover", async ({ mount }) => {
+  const component = await mount(<SelectionHarness />);
+  await touchSelect(component);
 
   await expect(component.locator("[data-selection-tooltip]")).toBeVisible();
   await expect(component.getByRole("button", { name: "Highlight", exact: true })).toBeVisible();
+});
 
-  // The selection is left alone on touch. Clearing it destroys the drag
-  // handles, so the reader could never extend past the first long-pressed word.
-  expect(await page.evaluate(() => window.getSelection()?.toString().trim() ?? "")).not.toBe("");
-  // And no marks of our own, which would just double the real highlight.
-  await expect(component.locator(".sel-mark")).toHaveCount(0);
+/**
+ * The regression behind the screenshot from the phone.
+ *
+ * Leaving the selection alive on touch kept the drag handles — and kept
+ * Android's Copy / Share / Select-all bar, which the system draws straight
+ * over this popover, and Chrome's touch-to-search panel along the bottom. The
+ * app's own actions were on screen and unreachable.
+ *
+ * So touch now does what the mouse does, once the selection stops moving:
+ * takes it over and draws its own marks.
+ */
+test("a settled touch selection is taken over, so the platform's menu goes with it", async ({
+  page,
+  mount,
+}) => {
+  const component = await mount(<SelectionHarness />);
+  await touchSelect(component);
+
+  await expect(component.locator("[data-selection-tooltip]")).toBeVisible();
+  await expect(component.locator(".sel-mark").first()).toBeVisible();
+  expect(await page.evaluate(() => window.getSelection()?.toString() ?? "")).toBe("");
+});
+
+test("the popover survives the selection being taken over", async ({ page, mount }) => {
+  // Clearing the selection fires `selectionchange`, which is the very signal
+  // the touch path listens on. Left unguarded it answers its own event: the
+  // next capture finds nothing selected and dismisses the popover it had just
+  // raised, half a second after the reader watched it appear.
+  const component = await mount(<SelectionHarness />);
+  await touchSelect(component);
+  await expect(component.locator("[data-selection-tooltip]")).toBeVisible();
+
+  // Comfortably past the settle window, so a rescheduled capture would have
+  // run by now.
+  await page.waitForTimeout(1200);
+  await expect(component.locator("[data-selection-tooltip]")).toBeVisible();
+  await expect(component.getByRole("button", { name: "Highlight", exact: true })).toBeVisible();
+});
+
+test("on touch the popover goes below the selection, out of the platform's way", async ({
+  mount,
+}) => {
+  const component = await mount(<SelectionHarness />);
+  await touchSelect(component);
+
+  const popover = component.locator("[data-selection-tooltip]");
+  await expect(popover).toBeVisible();
+
+  const [pop, mark] = await Promise.all([
+    popover.boundingBox(),
+    component.locator(".sel-mark").first().boundingBox(),
+  ]);
+  // Android anchors its own bar above the selection, which is where this used
+  // to sit — and it lost.
+  expect(pop!.y).toBeGreaterThanOrEqual(mark!.y + mark!.height);
+});
+
+test("a selection at the edge of a narrow pane keeps the popover on screen", async ({
+  page,
+  mount,
+}) => {
+  await page.setViewportSize({ width: 393, height: 760 });
+  try {
+    const component = await mount(<SelectionHarness narrow />);
+    await touchSelect(component, 20);
+
+    const popover = component.locator("[data-selection-tooltip]");
+    await expect(popover).toBeVisible();
+
+    const box = (await popover.boundingBox())!;
+    expect(box.x, "the popover runs off the left").toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width, "the popover runs off the right").toBeLessThanOrEqual(393);
+  } finally {
+    await page.setViewportSize({ width: 1280, height: 720 });
+  }
 });
 
 test("adjusting a touch selection keeps one popover, not a trail of them", async ({ mount }) => {

@@ -12,13 +12,15 @@ import SelectionTooltip from "../../app/reader/[bookId]/SelectionTooltip";
  * against the container's box and draws its marks in container coordinates —
  * a bare <div> would be a different component.
  */
-export default function SelectionHarness() {
+export default function SelectionHarness({ narrow = false }: { narrow?: boolean }) {
   const ref = useRef<HTMLElement>(null);
   const [calls, setCalls] = useState<string[]>([]);
 
   return (
     <section ref={ref} className="pane-book" style={{ height: "100vh", position: "relative" }}>
-      <div className="paper reader-paper is-text" style={{ width: 600 }}>
+      {/* Narrow enough that the popover is wider than the space either side of
+          a selection, which is the phone case and the one that overflowed. */}
+      <div className="paper reader-paper is-text" style={{ width: narrow ? 340 : 600 }}>
         <div className="epub-page">
           <p data-testid="prose">
             It is not the thing itself that troubles a person, but the account they keep giving of
