@@ -58,6 +58,42 @@ npm test        # now includes the integration test
 `SUPABASE_SERVICE_ROLE_KEY` for local dev is the well-known Supabase demo key —
 not a secret.
 
+### Browser tests
+
+A few things are only *behaviour* in a real browser: text selection, the order
+DOM events arrive in, and whether a click is dispatched at all. jsdom models
+none of it, so those live in Playwright **component** tests, which mount a
+component directly rather than booting the app:
+
+```bash
+npx playwright install chromium   # once
+npm run test:browser
+```
+
+They're component tests rather than end-to-end because the alternative — a
+signed-in session, a stored book and a rendered PDF before you can select a
+word — is a lot of moving parts to stand up in order to test event plumbing.
+Mounting the component keeps the test about the thing that breaks, and keeps
+the harness out of the app: nothing test-only is shipped to production.
+
+The fixture lives in `tests/component/`. `SelectionHarness.tsx` reproduces just
+enough of the reader's book pane for the popover to position itself against,
+and records what its callbacks receive; the spec drives a real mouse drag over
+real prose.
+
+If Playwright's browser download is unavailable but a compatible Chromium is
+already on the machine, point at it:
+
+```bash
+PLAYWRIGHT_CHROMIUM_PATH=/path/to/chrome npm run test:browser
+```
+
+**Why this exists.** The selection popover shipped broken twice. First the
+browser's own selection menu opened on top of it; the fix cleared the selection
+on mouseup, which then made the popover unmount between `mouseup` and `click`,
+so every action in it silently did nothing. Both are asserted here, and both
+tests were confirmed to fail against the broken code before being kept.
+
 ## Gotcha: `supabase db reset` desyncs the stack
 
 `db reset` swaps the Postgres DB out from under the running `storage`/`kong`

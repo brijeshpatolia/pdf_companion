@@ -212,7 +212,7 @@ export default function Reader({ bookId, title, pageCount, format = "pdf", fileU
           <span className="reader-title">{title}</span>
         </span>
 
-        <span style={{ flex: 1 }} />
+        <span className="reader-spacer" />
 
         {flash && (
           <span className={`badge ${flash.ok ? "badge-ok" : "badge-danger"} fade-in`} role="status">
