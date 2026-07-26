@@ -35,6 +35,14 @@ export interface ShelfRow {
   percent: number;
   /** Right-aligned readout: a page, a percentage, or a call to action. */
   right: string;
+  /**
+   * Whether that readout is a way *into* the book rather than a status.
+   *
+   * "Start" and "p. 84" are a verb and a destination — they read as controls,
+   * so they have to behave like them. A percentage is neither: the book can be
+   * opened while it embeds, but tapping its progress is not how you'd do it.
+   */
+  rightOpens: boolean;
   /** True when the title should link into the reader. */
   openable: boolean;
 }
@@ -59,6 +67,7 @@ export function shelfRow(b: ShelfBook): ShelfRow {
       // The Retry control sits beside this row and already says "Retry" —
       // repeating it here reads as two different offers.
       right: "",
+      rightOpens: false,
       openable: false,
     };
   }
@@ -73,6 +82,7 @@ export function shelfRow(b: ShelfBook): ShelfRow {
       meta: pages > 0 ? `embedding ${done} of ${pages}` : "embedding…",
       percent: pct(done, pages),
       right: pages > 0 ? `${pct(done, pages)}%` : "—",
+      rightOpens: false,
       openable: true, // reading is allowed while the rest embeds
     };
   }
@@ -85,6 +95,7 @@ export function shelfRow(b: ShelfBook): ShelfRow {
       meta: `${pages} pages`,
       percent: pct(page, pages),
       right: `p. ${page}`,
+      rightOpens: true,
       openable: true,
     };
   }
@@ -97,6 +108,7 @@ export function shelfRow(b: ShelfBook): ShelfRow {
     // carries that difference, not the width.
     percent: 100,
     right: "Start",
+    rightOpens: true,
     openable: true,
   };
 }

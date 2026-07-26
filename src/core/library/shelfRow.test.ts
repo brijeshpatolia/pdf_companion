@@ -157,3 +157,42 @@ describe("shelfSummary", () => {
     );
   });
 });
+
+describe("rightOpens", () => {
+  it("treats Start as a way into the book", () => {
+    const r = shelfRow(book());
+    expect(r.right).toBe("Start");
+    expect(r.rightOpens).toBe(true);
+  });
+
+  it("treats the page you reached as a way back to it", () => {
+    expect(shelfRow(book({ current_page: 84 })).rightOpens).toBe(true);
+  });
+
+  it("does not make a progress percentage tappable", () => {
+    // The book *is* openable while it embeds — but you'd open it by its title,
+    // not by prodding its progress.
+    const r = shelfRow(book({ status: "processing", pages_done: 100 }));
+    expect(r.openable).toBe(true);
+    expect(r.rightOpens).toBe(false);
+  });
+
+  it("offers nothing on a failed book", () => {
+    const r = shelfRow(book({ status: "failed" }));
+    expect(r.right).toBe("");
+    expect(r.rightOpens).toBe(false);
+  });
+
+  it("never claims a readout opens when there is no readout", () => {
+    for (const b of [
+      book(),
+      book({ current_page: 9 }),
+      book({ status: "processing" }),
+      book({ status: "failed" }),
+      book({ page_count: 0, status: "processing" }),
+    ]) {
+      const r = shelfRow(b);
+      if (r.rightOpens) expect(r.right.length).toBeGreaterThan(0);
+    }
+  });
+});

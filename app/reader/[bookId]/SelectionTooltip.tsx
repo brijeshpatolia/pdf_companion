@@ -1,22 +1,35 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import type { Intent } from "@/core/chat/intents.js";
 import Icon from "../../components/Icon";
 
 /**
  * Select-to-ask.
  *
- * The browser puts its own menu on a *live* text selection — Edge's mini menu
- * (Explore more / Translate / Search / Copy / Snapshot), and the equivalents in
- * Chrome and on iOS — and no page code can suppress it. It landed on top of
- * this popover, so one gesture produced two competing menus.
+ * Two very different gestures have to end in the same popover.
  *
- * The way out is to stop having a live selection. The moment a drag ends we
- * take the text and the geometry, then clear the selection: with nothing
- * selected, the browser has nothing to decorate. We draw the marks ourselves
- * from the range's client rects, so you still see exactly what you picked —
- * which is the part that would otherwise feel broken.
+ * **With a mouse**, the browser puts its own menu on a *live* selection —
+ * Edge's mini menu (Explore more / Translate / Search / Copy), and the
+ * equivalents elsewhere — and no page code can suppress it. It landed on top
+ * of this popover, so one gesture produced two competing menus. The way out is
+ * to stop having a live selection: on mouseup we take the text and the
+ * geometry, then clear it, and draw the marks ourselves from the range's
+ * client rects so you still see what you picked.
+ *
+ * **On a touch screen** that trick is exactly wrong, and listening for
+ * `touchend` doesn't work either. Selecting means long-pressing, then dragging
+ * the handles to extend — a gesture that belongs to the browser's own
+ * selection UI. `touchend` frequently never reaches the page, and adjusting a
+ * handle produces no touch event on this container at all, so the popover
+ * simply never appeared in the installed app. Clearing the selection would be
+ * worse still: it destroys the handles mid-gesture, so the selection can't be
+ * adjusted.
+ *
+ * So touch is driven by `selectionchange` — the one signal that fires however
+ * a selection was made or altered — and keeps its selection. The native menu
+ * shows up alongside ours there, which is unavoidable and how every reading
+ * app on a phone behaves.
  */
 
 interface SelectionTooltipProps {
@@ -52,10 +65,12 @@ export default function SelectionTooltip({
   onHighlight,
 }: SelectionTooltipProps) {
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
+  /** Touch keeps its selection; a mouse gets it taken away. */
+  const touchRef = useRef(false);
 
   const dismiss = useCallback(() => setTooltip(null), []);
 
-  const handleMouseUp = useCallback((e?: Event) => {
+  const capture = useCallback((e?: Event) => {
     // The popover lives inside the container, so releasing the mouse on one of
     // its buttons bubbles to this same listener. Without this guard the
     // selection is already cleared by then, so we'd read "no text", unmount the
@@ -66,7 +81,7 @@ export default function SelectionTooltip({
 
     const sel = window.getSelection();
     const text = sel?.toString().trim();
-    if (!text || text.length < 2) {
+    if (!sel || !text || text.length < 2) {
       setTooltip(null);
       return;
     }
@@ -102,21 +117,41 @@ export default function SelectionTooltip({
       text,
       x: rect.left + rect.width / 2 + offsetX,
       y: rect.top + offsetY - 8,
-      boxes,
+      // On touch the real selection stays on screen, so drawing our own marks
+      // over it would just double every highlight.
+      boxes: touchRef.current ? [] : boxes,
     });
 
-    // With nothing selected the browser's own menu has nothing to attach to.
-    // Our marks stand in for the selection from here.
-    sel?.removeAllRanges();
+    if (!touchRef.current) {
+      // With nothing selected the browser's own menu has nothing to attach to.
+      // Our marks stand in for the selection from here.
+      sel.removeAllRanges();
+    }
   }, [containerRef]);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    // Touch selection finalizes just after touchend; defer the read, carrying
-    // the event so the guard above still sees where the touch landed.
-    const handleTouchEnd = (e: Event) => setTimeout(() => handleMouseUp(e), 50);
+    const markTouch = () => {
+      touchRef.current = true;
+    };
+
+    /*
+     * The touch path. `selectionchange` fires continuously while a handle is
+     * dragged, so it's debounced until the selection settles — otherwise the
+     * popover would chase the handle around the page.
+     *
+     * It also fires when *we* clear the selection after a mouse gesture, which
+     * would immediately dismiss the popover we had just opened; the touch flag
+     * keeps this path off the mouse's back.
+     */
+    let settleTimer: ReturnType<typeof setTimeout> | undefined;
+    const handleSelectionChange = () => {
+      if (!touchRef.current) return;
+      clearTimeout(settleTimer);
+      settleTimer = setTimeout(() => capture(), 300);
+    };
 
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -126,21 +161,24 @@ export default function SelectionTooltip({
       if (e.key === "Escape") dismiss();
     };
 
-    container.addEventListener("mouseup", handleMouseUp);
-    container.addEventListener("touchend", handleTouchEnd);
+    container.addEventListener("mouseup", capture);
+    container.addEventListener("touchstart", markTouch, { passive: true });
+    document.addEventListener("selectionchange", handleSelectionChange);
     // A mark pinned to text you've scrolled away from is just a stray box.
     container.addEventListener("scroll", dismiss, { passive: true });
     document.addEventListener("mousedown", handleClickOutside);
     document.addEventListener("keydown", handleKey);
 
     return () => {
-      container.removeEventListener("mouseup", handleMouseUp);
-      container.removeEventListener("touchend", handleTouchEnd);
+      clearTimeout(settleTimer);
+      container.removeEventListener("mouseup", capture);
+      container.removeEventListener("touchstart", markTouch);
+      document.removeEventListener("selectionchange", handleSelectionChange);
       container.removeEventListener("scroll", dismiss);
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleKey);
     };
-  }, [containerRef, handleMouseUp, dismiss]);
+  }, [containerRef, capture, dismiss]);
 
   if (!tooltip) return null;
 

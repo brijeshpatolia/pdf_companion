@@ -139,3 +139,61 @@ test("clicking away dismisses without running anything", async ({ page, mount })
   await expect(component.locator("[data-selection-tooltip]")).toHaveCount(0);
   await expect(calls(component)).toHaveText("");
 });
+
+/**
+ * Touch selection.
+ *
+ * On a phone you long-press to select, then drag the handles to extend. That
+ * gesture belongs to the browser's own selection UI: `touchend` frequently
+ * never reaches the page, and adjusting a handle produces no touch event on
+ * the container at all. A popover that only listens for mouseup and touchend
+ * therefore never appears — which is exactly what was reported from the
+ * installed app.
+ *
+ * `selectionchange` is the one signal that fires however the selection was
+ * made, so that is what this asserts on.
+ */
+test("a selection made without a mouse still raises the popover", async ({ page, mount }) => {
+  const component = await mount(<SelectionHarness />);
+
+  // A long-press does fire touchstart on the container — it's the touchend
+  // afterwards that never reliably arrives, because the browser has taken the
+  // gesture over by then.
+  await component.getByTestId("prose").dispatchEvent("touchstart");
+
+  await component.getByTestId("prose").evaluate((el: HTMLElement) => {
+    const range = new Range();
+    range.setStart(el.firstChild!, 10);
+    range.setEnd(el.firstChild!, 49);
+    const sel = window.getSelection()!;
+    sel.removeAllRanges();
+    sel.addRange(range);
+  });
+
+  await expect(component.locator("[data-selection-tooltip]")).toBeVisible();
+  await expect(component.getByRole("button", { name: "Highlight", exact: true })).toBeVisible();
+
+  // The selection is left alone on touch. Clearing it destroys the drag
+  // handles, so the reader could never extend past the first long-pressed word.
+  expect(await page.evaluate(() => window.getSelection()?.toString().trim() ?? "")).not.toBe("");
+  // And no marks of our own, which would just double the real highlight.
+  await expect(component.locator(".sel-mark")).toHaveCount(0);
+});
+
+test("adjusting a touch selection keeps one popover, not a trail of them", async ({ mount }) => {
+  const component = await mount(<SelectionHarness />);
+  await component.getByTestId("prose").dispatchEvent("touchstart");
+
+  for (const end of [20, 30, 49]) {
+    await component.getByTestId("prose").evaluate((el: HTMLElement, to: number) => {
+      const range = new Range();
+      range.setStart(el.firstChild!, 10);
+      range.setEnd(el.firstChild!, to);
+      const sel = window.getSelection()!;
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }, end);
+  }
+
+  await expect(component.locator("[data-selection-tooltip]")).toHaveCount(1);
+});

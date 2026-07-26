@@ -227,7 +227,7 @@ export default function Home() {
 
                 <span className="shelf-main" style={{ flex: 1, minWidth: 0 }}>
                   <span className="shelf-titleline" style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-                    {row.openable ? (
+                    {row.rightOpens ? (
                       <Link href={`/reader/${b.id}`} className="shelf-title">
                         {b.title}
                       </Link>
@@ -246,7 +246,18 @@ export default function Home() {
                   </span>
                 </span>
 
-                <span className="shelf-right tabular">{row.right}</span>
+                {/*
+                  "Start" and "p. 5" are a verb and a destination — they read
+                  as controls, so they behave like them. They used to be plain
+                  text, and tapping them did nothing.
+                */}
+                {row.rightOpens ? (
+                  <Link href={`/reader/${b.id}`} className="shelf-right tabular">
+                    {row.right}
+                  </Link>
+                ) : (
+                  <span className="shelf-right tabular">{row.right}</span>
+                )}
 
                 <span style={{ display: "flex", gap: 6, flexShrink: 0 }}>
                   {/*
