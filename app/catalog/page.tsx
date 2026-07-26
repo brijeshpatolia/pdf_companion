@@ -276,20 +276,15 @@ function Catalog() {
   return (
     <div className="rail-layout">
       <AppRail />
-    <main style={{ maxWidth: 900, margin: "0 auto", padding: "2.5rem 1.25rem" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem" }}>
-        <div>
-          <h1 className="wordmark" style={{ marginBottom: "0.25rem", fontSize: "1.8rem" }}>
-            Free books
-          </h1>
-          <p style={{ color: "var(--muted)", marginTop: 0 }}>
+    <main className="page-pad">
+      <header className="page-head">
+        <div style={{ minWidth: 0 }}>
+          <h1 style={{ fontSize: 32, margin: 0 }}>Free books</h1>
+          <p style={{ margin: "6px 0 0", fontSize: 14, color: "var(--text-600)" }}>
             Search public-domain books, or pick from the {curatedSource || "Project Gutenberg"} shelf below.
           </p>
         </div>
-        <Link href="/" className="btn-ghost btn-sm" style={{ whiteSpace: "nowrap" }}>
-          <Icon name="arrow-left" /> Library
-        </Link>
-      </div>
+      </header>
 
       <div style={{ marginTop: "1.25rem", position: "relative" }}>
         <input

@@ -91,9 +91,7 @@ export default function AskLibraryPage() {
       <AppRail />
     <main className="ask-page">
       <div className="ask-head">
-        <Link href="/" className="btn-ghost btn-sm" style={{ whiteSpace: "nowrap" }}>
-          <Icon name="arrow-left" /> Library
-        </Link>
+
         <h1 className="wordmark" style={{ fontSize: "1.6rem", margin: 0 }}>
           <Icon name="search" /> Ask your library
         </h1>

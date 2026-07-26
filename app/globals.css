@@ -1609,11 +1609,19 @@ a.shelf-title:hover { color: var(--accent); text-decoration: none; }
 /* The stage recedes so the page can be the subject. */
 .pane-book {
   background: var(--ink-850);
+  /*
+   * The pane is a flex container, so by default the paper stretched to the
+   * pane's full height and its text spilled out below the cream onto the dark
+   * stage. Aligning to the start lets the paper size to its own content.
+   */
+  align-items: flex-start;
 }
 
 .reader-paper {
   width: 100%;
   max-width: 700px;
+  /* Shrinking is what made the paper end mid-paragraph on a long page. */
+  flex-shrink: 0;
   margin: 38px auto;
   padding: 30px 34px 40px;
 }
@@ -1796,4 +1804,27 @@ mark.hl-peer { background: var(--highlight-peer); }
   margin: 0;
   font-size: 11px;
   color: var(--text-900);
+}
+
+/* ---------- our own selection mark ---------- */
+
+/*
+ * We clear the browser's selection the instant a drag ends, so its menu has
+ * nothing to attach to — these boxes stand in for it. One per line of the
+ * selection, drawn from the range's client rects.
+ *
+ * `pointer-events: none` matters: a mark sitting over the text must not
+ * swallow the click that dismisses it.
+ */
+.sel-mark {
+  position: absolute;
+  pointer-events: none;
+  background: rgba(233, 161, 59, 0.28);
+  border-radius: 2px;
+  z-index: 50;
+  animation: sel-in 140ms var(--ease);
+}
+@keyframes sel-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
