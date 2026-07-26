@@ -932,7 +932,13 @@ input, button {
  */
 .pdf-highlight {
   background: rgba(251, 191, 36, 0.32);
-  color: transparent;              /* the glyphs come from the page beneath */
+  /*
+   * Load-bearing, not decoration. pdf.js hides the text layer with
+   * `color: transparent` on its spans, but `<mark>` carries a UA default of
+   * `color: MarkText`, which overrides that inheritance and paints a second
+   * set of black glyphs slightly off from the ones on the page beneath.
+   */
+  color: transparent;
   border-radius: 2px;
   box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.18);
   padding: 0.05em 0;
