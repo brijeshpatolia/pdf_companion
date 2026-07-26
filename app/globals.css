@@ -1350,3 +1350,158 @@ a.shelf-title:hover { color: var(--accent); text-decoration: none; }
   .shelf-row { flex-wrap: wrap; }
   .shelf-right { width: auto; }
 }
+
+/* ---------- reader ---------- */
+
+.reader-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 20px;
+  height: 60px;
+  background: var(--ink-750);
+  border-bottom: 1px solid var(--line-800);
+  flex-shrink: 0;
+}
+
+.reader-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--text-600);
+  white-space: nowrap;
+}
+.reader-back:hover { color: var(--text-100); text-decoration: none; }
+
+.reader-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--line-700);
+  flex-shrink: 0;
+}
+
+.reader-title {
+  font-family: var(--font-display-stack);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text-100);
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* One control for position and movement, rather than three unrelated buttons. */
+.pager {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  background: var(--ink-600);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-pill);
+  flex-shrink: 0;
+}
+.pager-step {
+  border: none;
+  background: transparent;
+  padding: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  color: var(--text-600);
+  font-size: 13px;
+}
+.pager-step:hover:not(:disabled) { background: var(--ink-500); color: var(--text-100); }
+.pager-step:disabled { opacity: 0.3; }
+.pager-count {
+  display: inline-flex;
+  gap: 5px;
+  padding: 0 8px;
+  font-size: 12.5px;
+  color: var(--text-100);
+  white-space: nowrap;
+}
+.pager-total { color: var(--text-800); }
+
+/* The stage recedes so the page can be the subject. */
+.pane-book {
+  background: var(--ink-850);
+}
+
+.reader-paper {
+  width: 100%;
+  max-width: 700px;
+  margin: 38px auto;
+  padding: 30px 34px 40px;
+}
+/* An EPUB has no paper of its own, so the wrapper is the page and needs the
+   generous measure a book would have. */
+.reader-paper.is-text { padding: 52px 62px; }
+.reader-paper .paper-running-head { margin-bottom: 22px; }
+.reader-paper .epub-page {
+  padding: 0;
+  max-width: none;
+  font-family: var(--font-reading-stack);
+  font-size: 17px;
+  line-height: 1.8;
+  color: var(--paper-ink);
+}
+.reader-paper .epub-page p { margin: 0 0 1.05em; }
+/* react-pdf's canvas carries its own white; keep it flush inside the paper. */
+.reader-paper .react-pdf__Page { background: transparent !important; }
+.reader-paper canvas { display: block; margin: 0 auto; border-radius: 2px; }
+
+/* ---------- highlights, two species ---------- */
+
+/*
+ * Yours is marigold, a peer's is blue, and where they overlap yours wins
+ * outright — two translucent marks over each other make a third colour that
+ * means nothing.
+ *
+ * The `color` declarations are load-bearing over a PDF: pdf.js hides its text
+ * layer with `color: transparent` on the spans, but <mark> carries a UA
+ * default of `color: MarkText`, which overrides that inheritance and paints a
+ * second set of glyphs slightly off from the page beneath.
+ */
+mark.hl-mine, mark.hl-peer {
+  color: transparent;
+  border-radius: 2px;
+  padding: 0.05em 0;
+}
+mark.hl-mine { background: var(--highlight-user); }
+mark.hl-peer { background: var(--highlight-peer); }
+
+/* On real text the mark behaves like an ordinary highlighter, and yours sits
+   on a faint underline so it reads as ink rather than a wash. */
+.epub-page mark.hl-mine {
+  color: inherit;
+  background: rgba(233, 161, 59, 0.32);
+  box-shadow: 0 1px 0 rgba(200, 130, 30, 0.35);
+}
+.epub-page mark.hl-peer {
+  color: inherit;
+  background: rgba(120, 150, 200, 0.28);
+}
+
+/* ---------- selection popover ---------- */
+
+.sel-popover {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  background: #1b1917;
+  border: 1px solid #38332d;
+  border-radius: 10px;
+  box-shadow: 0 14px 34px -8px rgba(0, 0, 0, 0.7);
+}
+.sel-popover button { border: none; padding: 5px 11px; font-size: 12.5px; }
+.sel-popover .sel-divider {
+  width: 1px;
+  align-self: stretch;
+  background: #38332d;
+  margin: 2px 3px;
+}

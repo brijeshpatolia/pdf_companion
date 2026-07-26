@@ -101,19 +101,50 @@ export function findRanges(text: string, highlights: string[]): Range[] {
   return mergeRanges(ranges);
 }
 
+/** Subtracts `taken` from `range`, returning whatever is left of it. */
+function without(range: Range, taken: Range[]): Range[] {
+  let pieces: Range[] = [range];
+  for (const t of taken) {
+    const next: Range[] = [];
+    for (const p of pieces) {
+      if (t.end <= p.start || t.start >= p.end) {
+        next.push(p);
+        continue;
+      }
+      if (t.start > p.start) next.push({ start: p.start, end: t.start });
+      if (t.end < p.end) next.push({ start: t.end, end: p.end });
+    }
+    pieces = next;
+  }
+  return pieces;
+}
+
 /**
- * `text` as HTML, with the highlighted parts wrapped in `<mark>`.
+ * `text` as HTML, with highlighted parts wrapped in `<mark>`.
+ *
+ * Two species, because in a reading room your mark and someone else's have to
+ * be tellable apart on the same page. Where they cover the same words yours
+ * wins outright rather than blending — overlapping translucent marks make a
+ * third colour that means nothing.
+ *
  * Returns escaped text unchanged when nothing matches.
  */
-export function markHighlights(text: string, highlights: string[]): string {
-  const ranges = findRanges(text, highlights);
-  if (ranges.length === 0) return escapeHtml(text);
+export function markHighlights(text: string, mine: string[], theirs: string[] = []): string {
+  const own = findRanges(text, mine);
+  const peer = mergeRanges(findRanges(text, theirs).flatMap((r) => without(r, own)));
+
+  const all = [
+    ...own.map((r) => ({ ...r, cls: "hl-mine" })),
+    ...peer.map((r) => ({ ...r, cls: "hl-peer" })),
+  ].sort((a, b) => a.start - b.start);
+
+  if (all.length === 0) return escapeHtml(text);
 
   let out = "";
   let cursor = 0;
-  for (const r of ranges) {
+  for (const r of all) {
     out += escapeHtml(text.slice(cursor, r.start));
-    out += `<mark class="pdf-highlight">${escapeHtml(text.slice(r.start, r.end))}</mark>`;
+    out += `<mark class="${r.cls}">${escapeHtml(text.slice(r.start, r.end))}</mark>`;
     cursor = r.end;
   }
   return out + escapeHtml(text.slice(cursor));
