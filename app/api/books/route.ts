@@ -108,8 +108,25 @@ export async function GET() {
     }),
   );
 
+  // Where the reader actually is in each book — the library's most useful
+  // fact, and what separates a book being merely `ready` from one being read.
+  // One query for the whole shelf rather than one per book.
+  const reading = new Map<string, number>();
+  if ((data ?? []).length > 0) {
+    const { data: rows } = await client
+      .from("reading_progress")
+      .select("book_id, current_page");
+    for (const r of (rows ?? []) as { book_id: string; current_page: number }[]) {
+      reading.set(r.book_id, r.current_page);
+    }
+  }
+
   return NextResponse.json(
-    (data ?? []).map((b) => ({ ...b, pages_done: progress.get(b.id) ?? null })),
+    (data ?? []).map((b) => ({
+      ...b,
+      pages_done: progress.get(b.id) ?? null,
+      current_page: reading.get(b.id) ?? null,
+    })),
   );
 }
 

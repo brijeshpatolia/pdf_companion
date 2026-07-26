@@ -1187,3 +1187,166 @@ input, button {
 @media (max-width: 760px) {
   .rail-layout { flex-direction: column; }
 }
+
+/* ---------- library shelf ---------- */
+
+.shelf {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 34px 48px 40px;
+  max-width: 1080px;
+  min-height: 100dvh;
+}
+
+.shelf-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* The dropzone is a target, so it reads as an opening rather than a card. */
+.shelf-drop {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 26px;
+  border: 1.5px dashed var(--line-400);
+  border-radius: 16px;
+  background: #121110;
+  cursor: pointer;
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.shelf-drop:hover, .shelf-drop.is-dragover {
+  border-color: var(--accent-line);
+  background: var(--ink-750);
+}
+
+.shelf-drop-tile {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--accent-wash);
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+/* A label, a rule that eats the remaining width, then the sort note. */
+.shelf-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.shelf-rule {
+  flex: 1;
+  height: 1px;
+  background: var(--line-900);
+}
+
+.shelf-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.shelf-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  background: var(--ink-750);
+  border: 1px solid var(--line-800);
+  border-radius: 14px;
+  transition: border-color var(--dur) var(--ease);
+}
+.shelf-row:hover { border-color: var(--line-600); }
+
+/* A book seen edge-on: the inset gutter is what makes it read as a spine
+   rather than a coloured rectangle. */
+.shelf-spine {
+  width: 38px;
+  height: 52px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  box-shadow: inset -6px 0 0 rgba(0, 0, 0, 0.22);
+}
+
+.shelf-title {
+  font-family: var(--font-display-stack);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text-100);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+a.shelf-title:hover { color: var(--accent); text-decoration: none; }
+
+.shelf-bar {
+  display: block;
+  height: 3px;
+  max-width: 320px;
+  border-radius: 2px;
+  background: #252220;
+  overflow: hidden;
+}
+.shelf-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  transition: width var(--dur-slow) var(--ease);
+}
+
+.shelf-right {
+  width: 74px;
+  text-align: right;
+  font-size: 12.5px;
+  color: var(--text-700);
+  flex-shrink: 0;
+}
+
+/*
+ * The four states have to be tellable apart at a glance — that is the whole
+ * job of this screen. Colour carries the difference, so the bar and the badge
+ * always agree and never rely on the label alone.
+ */
+.shelf-row[data-state="reading"] .shelf-bar > span { background: var(--accent); }
+.shelf-row[data-state="reading"] .shelf-badge { color: var(--accent); background: var(--accent-wash); }
+.shelf-row[data-state="reading"] .shelf-right { color: var(--accent); }
+
+/* Ready means finished embedding, not finished reading — so the bar is full
+   but inert, and deliberately not the accent. */
+.shelf-row[data-state="ready"] .shelf-bar > span { background: #3a362f; }
+.shelf-row[data-state="ready"] .shelf-badge { color: var(--success); background: rgba(134, 179, 106, 0.13); }
+
+.shelf-row[data-state="processing"] .shelf-bar > span { background: var(--info); }
+.shelf-row[data-state="processing"] .shelf-badge { color: var(--info); background: rgba(143, 169, 201, 0.13); }
+
+.shelf-row[data-state="failed"] .shelf-bar > span { background: var(--danger); }
+.shelf-row[data-state="failed"] .shelf-badge { color: var(--danger); background: rgba(224, 116, 94, 0.13); }
+.shelf-row[data-state="failed"] .shelf-title { color: var(--text-600); }
+.shelf-row[data-state="failed"] .shelf-right { color: var(--danger); }
+
+.shelf-dot {
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--line-400);
+  margin: 0 8px;
+  vertical-align: middle;
+}
+
+@media (max-width: 760px) {
+  .shelf { padding: 24px 18px 32px; }
+  .shelf-row { flex-wrap: wrap; }
+  .shelf-right { width: auto; }
+}
