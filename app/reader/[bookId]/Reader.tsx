@@ -11,6 +11,7 @@ import EpubPage from "./EpubPage";
 import RoomBar from "./RoomBar";
 import ShareCardPanel from "./ShareCardPanel";
 import { useReadingRoom } from "./useReadingRoom";
+import { usePageTurn } from "./usePageTurn";
 import { markHighlights } from "@/core/reading/markHighlights.js";
 import { buildIntentQuestion } from "@/core/chat/intents.js";
 import type { Intent } from "@/core/chat/intents.js";
@@ -49,6 +50,39 @@ export default function Reader({ bookId, title, pageCount, format = "pdf", fileU
   const pdfSectionRef = useRef<HTMLElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const flashRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /**
+   * The page as of *now*, which during a burst of taps runs ahead of the page
+   * React has committed. A turn copies the page you were actually looking at,
+   * so it has to read from here rather than from state.
+   */
+  const pageRef = useRef(page);
+
+  const turn = usePageTurn();
+  const { start: startTurn } = turn;
+
+  /**
+   * The one door every page change goes through — the pager, the arrow keys,
+   * the jump box, a citation in the companion, someone else's page turn in a
+   * reading room. The turn is started from here, before the state changes,
+   * because it works by copying the page that is still on screen.
+   */
+  const go = useCallback(
+    (n: number) => {
+      const target = Math.min(Math.max(1, n), numPages || pageCount);
+      const from = pageRef.current;
+      if (target === from) return;
+      pageRef.current = target;
+      startTurn(from, target);
+      setPage(target);
+    },
+    [numPages, pageCount, startTurn],
+  );
+
+  // `go` keeps this current on its own; this is here so that a page arriving
+  // from anywhere else can't leave the two disagreeing about where we are.
+  useEffect(() => {
+    pageRef.current = page;
+  }, [page]);
 
   const room = useReadingRoom({
     token: roomToken,
@@ -56,7 +90,7 @@ export default function Reader({ bookId, title, pageCount, format = "pdf", fileU
     name: readerName,
     page,
     // Following means their page turns become yours.
-    onFollow: (n) => setPage(n),
+    onFollow: (n) => go(n),
   });
 
   useEffect(() => {
@@ -95,11 +129,6 @@ export default function Reader({ bookId, title, pageCount, format = "pdf", fileU
     setNumPages(numPages);
   }, []);
 
-  const go = useCallback(
-    (n: number) => setPage(Math.min(Math.max(1, n), numPages || pageCount)),
-    [numPages, pageCount],
-  );
-
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
@@ -112,15 +141,15 @@ export default function Reader({ bookId, title, pageCount, format = "pdf", fileU
       }
       if (e.key === "ArrowLeft") {
         e.preventDefault();
-        setPage((p) => Math.max(1, p - 1));
+        go(pageRef.current - 1);
       } else if (e.key === "ArrowRight") {
         e.preventDefault();
-        setPage((p) => Math.min(numPages || pageCount, p + 1));
+        go(pageRef.current + 1);
       }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [numPages, pageCount]);
+  }, [go]);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -330,36 +359,61 @@ export default function Reader({ bookId, title, pageCount, format = "pdf", fileU
             and running head around it; an EPUB has none, so the wrapper is
             the paper.
           */}
-          <div className={`paper reader-paper${format === "epub" ? " is-text" : ""}`}>
-            <div className="paper-running-head" aria-hidden="true">
-              <span>{title}</span>
-              <span className="tabular">{page}</span>
+          {/* The stage the turn happens on: the live page, and the copy of the
+              one you are leaving or returning to. */}
+          <div className="page-stage">
+            <div
+              ref={turn.paperRef}
+              className={`paper reader-paper${format === "epub" ? " is-text" : ""}${turn.arriving ? " is-arriving" : ""}`}
+            >
+              <div className="paper-running-head" aria-hidden="true">
+                <span>{title}</span>
+                <span className="tabular">{page}</span>
+              </div>
+
+              {format === "epub" ? (
+                // Keyed by page so a page already fetched arrives with its text
+                // in place, instead of mounting empty and filling in a frame
+                // later — a turn that lands on a spinner is not a page turn.
+                <EpubPage
+                  key={`${bookId}:${page}`}
+                  bookId={bookId}
+                  page={page}
+                  highlights={pageHighlights}
+                  peerHighlights={peerHighlights}
+                />
+              ) : fileUrl ? (
+                <Document
+                  file={fileUrl}
+                  onLoadSuccess={onLoad}
+                  loading={
+                    <p style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--paper-meta)" }}>
+                      <span className="spinner" /> Loading page…
+                    </p>
+                  }
+                >
+                  <Page
+                    pageNumber={page}
+                    renderTextLayer
+                    renderAnnotationLayer={false}
+                    width={pageWidth}
+                    customTextRenderer={textRenderer}
+                  />
+                </Document>
+              ) : (
+                <p style={{ color: "var(--danger)" }}>Could not load the file.</p>
+              )}
             </div>
 
-            {format === "epub" ? (
-              <EpubPage bookId={bookId} page={page} highlights={pageHighlights} peerHighlights={peerHighlights} />
-            ) : fileUrl ? (
-              <Document
-                file={fileUrl}
-                onLoadSuccess={onLoad}
-                loading={
-                  <p style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--paper-meta)" }}>
-                    <span className="spinner" /> Loading page…
-                  </p>
-                }
-              >
-                <Page
-                  pageNumber={page}
-                  renderTextLayer
-                  renderAnnotationLayer={false}
-                  width={pageWidth}
-                  customTextRenderer={textRenderer}
-                />
-              </Document>
-            ) : (
-              <p style={{ color: "var(--danger)" }}>Could not load the file.</p>
-            )}
+            {/* Where the copy goes. React never puts anything in here — the
+                turn does, and takes it out again when the page has settled. */}
+            <div
+              ref={turn.leafRef}
+              className={`page-leaf${turn.arriving ? " is-behind" : ""}`}
+              aria-hidden="true"
+            />
           </div>
+
           <SelectionTooltip
             containerRef={pdfSectionRef}
             onSelect={onSelectToAsk}
