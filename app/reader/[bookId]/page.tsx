@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { supabaseUser } from "@/adapters/supabase/userClient.js";
 import { supabaseProgress } from "@/adapters/supabase/supabaseProgress.js";
 import { getProgress } from "@/core/progress/progress.js";
+import { isValidTokenFormat } from "@/core/sharing/token.js";
 import Reader from "./Reader";
 
 export const runtime = "nodejs";
@@ -31,10 +32,10 @@ export default async function ReaderPage({
   searchParams,
 }: {
   params: Promise<{ bookId: string }>;
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; room?: string }>;
 }) {
   const { bookId } = await params;
-  const { page: pageParam } = await searchParams;
+  const { page: pageParam, room: roomParam } = await searchParams;
   const client = await supabaseUser();
   const {
     data: { user },
@@ -89,6 +90,11 @@ export default async function ReaderPage({
       fileUrl={fileUrl}
       initialPage={initialPage}
       furthestReadPage={progress.furthestReadPage}
+      userId={user.id}
+      // The name others in a room see. The email's local part is the only
+      // display name we have; it beats showing a raw UUID to a book club.
+      readerName={(user.email ?? "").split("@")[0] || "Reader"}
+      joinedRoomToken={isValidTokenFormat(roomParam) ? roomParam : null}
     />
   );
 }

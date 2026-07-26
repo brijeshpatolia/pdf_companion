@@ -82,7 +82,7 @@ A reading companion for hard books. Instead of breaking your flow to paste a pag
 ### F · Share — *your annotated copy, handed to someone else*
 - Snapshot share of your marked-up reading `[V2]`
 - Study groups · teacher → student `[V2]`
-- Live co-reading `[V2]`
+- Live co-reading `[V2]` ✅
 
 *On the horizon, past V2:* cross-book Q&A ("compare Plato and Kant on the soul"), a concept map of the book, read-aloud audio, reading stats.
 
@@ -131,7 +131,7 @@ A reading companion for hard books. Instead of breaking your flow to paste a pag
 |---|---|
 | **Snapshot** `[V2]` | A frozen, read-only view of your book as you marked it up — highlights, notes, saved AI answers. Matches "share the current condition." Simple and viral. |
 | **Fork** *(later)* | The recipient gets an editable copy to build on. Easy once snapshots exist. |
-| **Live co-read** *(later)* | A book club annotating together in real time. Needs real-time sync + presence — a bigger build. |
+| **Live co-read** `[V2]` ✅ | A book club reading together in real time — presence, each reader's page, and highlights as they happen, over a Realtime channel. Nothing is stored: the room's state exists only while people are in it. Each participant reads their own copy, so the annotation layer is shared and the file never is. |
 
 > ⚠️ **Copyright — do not skip.** Share the **annotation layer**, never the raw PDF. Redistributing a copyrighted book file to other users is piracy, and it's the platform's liability. Safe design: the recipient brings their own copy; the app overlays the shared notes. Share files freely only for public-domain or user-owned content.
 
