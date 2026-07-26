@@ -100,3 +100,43 @@ describe("buildReadingCard", () => {
     expect(buildReadingCard({ ...stats, author: undefined }).author).toBeNull();
   });
 });
+
+describe("card variant", () => {
+  it("lets the quote be the hero when there is one", () => {
+    const card = buildReadingCard(stats, { text: "Know thyself.", page: 4 });
+    expect(card.variant).toBe("quote");
+    expect(card.titleSize).toBe(62); // a credit line, not the subject
+  });
+
+  it("promotes the title when there is nothing to quote", () => {
+    // Otherwise the card is mostly empty space with a page number adrift in it.
+    const card = buildReadingCard(stats, null);
+    expect(card.variant).toBe("title");
+    expect(card.titleSize).toBeGreaterThan(62);
+  });
+
+  it("shrinks a long hero title so it doesn't wrap to four lines", () => {
+    const long = buildReadingCard(
+      { ...stats, title: "A Vindication of the Rights of Woman / With Strictures on Political Subjects" },
+      null,
+    );
+    expect(long.titleSize).toBeLessThan(buildReadingCard(stats, null).titleSize);
+  });
+
+  it("says 'just started' rather than 'now reading' at the very beginning", () => {
+    expect(buildReadingCard({ ...stats, currentPage: 3, pageCount: 390 }, null).eyebrow).toBe(
+      "JUST STARTED",
+    );
+  });
+
+  it("keeps 'now reading' once you're properly into it", () => {
+    expect(buildReadingCard({ ...stats, currentPage: 100, pageCount: 200 }, null).eyebrow).toBe(
+      "NOW READING",
+    );
+  });
+
+  it("never says 'just started' when a quote carries the card", () => {
+    const card = buildReadingCard({ ...stats, currentPage: 1 }, { text: "Know thyself.", page: 1 });
+    expect(card.eyebrow).toBe("NOW READING");
+  });
+});

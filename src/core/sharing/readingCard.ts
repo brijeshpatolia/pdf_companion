@@ -36,6 +36,18 @@ export interface ReadingCard {
   /** Font size in px, chosen so the quote fills the card without overflowing. */
   quoteSize: number;
   stats: { value: string; label: string }[];
+  /**
+   * Which element carries the card.
+   *
+   * With a highlight, the quote is the hero and the title is a credit line.
+   * Without one there is nothing to quote, so the title takes the space
+   * instead — the alternative is a mostly-empty card with a lonely "page 3 of
+   * 390" in the middle, which is not something anyone would post.
+   */
+  variant: "quote" | "title";
+  /** Title size in px — larger when the title is doing the work. */
+  titleSize: number;
+  eyebrow: string;
 }
 
 /** Longer than this and no font size saves it, so it gets an ellipsis. */
@@ -84,13 +96,27 @@ export function buildReadingCard(stats: CardStats, quote?: CardQuote | null): Re
     cards.push({ value: String(stats.noteCount), label: plural(stats.noteCount, "note").split(" ")[1]! });
   }
 
+  const title = stats.title.trim() || "Untitled";
+
   return {
-    title: stats.title.trim() || "Untitled",
+    title,
     author: stats.author?.trim() || null,
     percent,
     progressLabel: pageCount > 0 ? `page ${current} of ${pageCount}` : `page ${current}`,
     quote: text ? { text, page: quote!.page } : null,
     quoteSize: quoteFontSize(text.length),
     stats: cards,
+    variant: text ? "quote" : "title",
+    // A credit line when a quote is the hero; the hero itself when it isn't.
+    titleSize: text ? 62 : titleFontSize(title.length),
+    eyebrow: text ? "NOW READING" : percent < 5 ? "JUST STARTED" : "NOW READING",
   };
+}
+
+/** Hero-title sizing — long titles have to come down or they wrap to four lines. */
+export function titleFontSize(length: number): number {
+  if (length <= 22) return 104;
+  if (length <= 40) return 84;
+  if (length <= 70) return 66;
+  return 52;
 }

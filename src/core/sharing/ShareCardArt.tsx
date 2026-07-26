@@ -33,7 +33,18 @@ export function ShareCardArt({ card }: { card: ReadingCard }) {
         fontFamily: "Lora, serif",
       }}
     >
-      <div style={{ display: "flex", flexDirection: "column" }}>
+      {/* With a quote, this is a credit line sitting above it. Without one it
+          grows to fill the card and centres, so the title reads as the subject
+          rather than floating at the top of empty space. */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          ...(card.variant === "title"
+            ? { flex: 1, justifyContent: "center" as const }
+            : {}),
+        }}
+      >
         <div
           style={{
             display: "flex",
@@ -43,13 +54,13 @@ export function ShareCardArt({ card }: { card: ReadingCard }) {
             marginBottom: 18,
           }}
         >
-          NOW READING
+          {card.eyebrow}
         </div>
-        <div style={{ display: "flex", fontSize: 62, lineHeight: 1.1, marginBottom: 10 }}>
+        <div style={{ display: "flex", fontSize: card.titleSize, lineHeight: 1.08, marginBottom: 12 }}>
           {card.title}
         </div>
         {card.author ? (
-          <div style={{ display: "flex", fontSize: 32, color: "#9aa4b2" }}>{card.author}</div>
+          <div style={{ display: "flex", fontSize: card.variant === "title" ? 38 : 32, color: "#9aa4b2" }}>{card.author}</div>
         ) : null}
       </div>
 
@@ -71,13 +82,16 @@ export function ShareCardArt({ card }: { card: ReadingCard }) {
             page {card.quote.page}
           </div>
         </div>
-      ) : (
-        <div style={{ display: "flex", fontSize: 44, color: "#6b7686", fontStyle: "italic" }}>
-          {card.progressLabel}
-        </div>
-      )}
+      ) : null}
 
       <div style={{ display: "flex", flexDirection: "column" }}>
+        {/* Where you are, spelled out. In the quote variant the page already
+            sits under the quote, so this would just repeat it. */}
+        {card.variant === "title" ? (
+          <div style={{ display: "flex", fontSize: 28, color: "#6b7686", marginBottom: 20 }}>
+            {card.progressLabel}
+          </div>
+        ) : null}
         <div
           style={{
             display: "flex",
