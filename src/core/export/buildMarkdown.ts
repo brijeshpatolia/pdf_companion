@@ -51,7 +51,7 @@ export function buildExportMarkdown(input: ExportInput): string {
 
   const out: string[] = [];
   out.push(`# ${bookTitle.trim() || "Untitled"}`);
-  out.push(`*Exported from PDF Companion on ${day(exportedAt)}*`);
+  out.push(`*Exported from Studiolo on ${day(exportedAt)}*`);
 
   if (highlights.length === 0 && answers.length === 0 && notes.length === 0) {
     out.push("");

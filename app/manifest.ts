@@ -12,11 +12,10 @@ import type { MetadataRoute } from "next";
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "PDF Companion",
-    // What fits under an icon. The full name truncates on most launchers.
-    short_name: "Companion",
+    name: "Studiolo",
+    short_name: "Studiolo",
     description:
-      "An AI that reads with you — always on your page, holding the whole book in mind.",
+      "A reading companion for hard books — always on your page, holding the whole book in mind.",
     start_url: "/",
     scope: "/",
     display: "standalone",

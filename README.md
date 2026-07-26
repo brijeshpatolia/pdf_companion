@@ -1,8 +1,14 @@
-# PDF Companion 📖
+# Studiolo 📖
 
-> An AI that reads with you — always on your page, holding the whole book in mind.
+> The book, and someone to think with.
 
-A reading companion for hard books. Instead of pausing to paste a page into ChatGPT — or Googling a term with none of the book's context — the AI sits beside the page you're on, **remembers everything you've read**, and answers grounded in the book itself.
+**A reading companion for hard books.** Instead of pausing to paste a page into ChatGPT — or Googling a term with none of the book's context — the companion sits beside the page you're on, **remembers everything you've read**, and answers grounded in the book itself.
+
+*A* studiolo *was the small private room a Renaissance reader kept for study and contemplation — Federico da Montefeltro's at Urbino has walls inlaid with trompe-l'œil books. One lit page, and quiet around it. That is the room this is trying to be.*
+
+### What it isn't
+
+Not a summariser. Blinkist, "TL;DR this PDF" and "read 100 books a year" all optimise for getting *through* a book. This optimises for getting *it* — the Critique, the Republic, *Designing Data-Intensive Applications*: the ones you'd finish if you had someone to read them with. Nothing here is built to help you skip the book.
 
 **Status:** 🚀 Working MVP — split-view reader, page-aware chat, select-to-ask, local embeddings, and rolling book memory are all live.
 
@@ -67,4 +73,4 @@ The complete product spec lives in **[SPEC.md](./SPEC.md)** — problem, feature
 
 ---
 
-*Working name — candidates: Gloss · Marginalia · Sidenote · Codex · Recto.*
+*Named for the* studiolo *— the room kept for reading.*

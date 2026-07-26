@@ -13,7 +13,7 @@ export default function ShareNotFound() {
           The link may be mistyped, or the owner may have stopped sharing this book.
         </p>
         <Link href="/" className="btn-primary btn-sm">
-          Go to PDF Companion <Icon name="arrow-right" />
+          Go to Studiolo <Icon name="arrow-right" />
         </Link>
       </div>
     </main>

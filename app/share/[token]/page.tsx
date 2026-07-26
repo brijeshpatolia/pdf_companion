@@ -79,9 +79,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { token } = await params;
   const shared = await loadShared(token);
-  if (!shared) return { title: "Shared notes · PDF Companion" };
+  if (!shared) return { title: "Shared notes · Studiolo" };
   return {
-    title: `${shared.bookTitle} — shared notes · PDF Companion`,
+    title: `${shared.bookTitle} — shared notes · Studiolo`,
     description: `Highlights, answers, notes, and flashcards kept while reading ${shared.bookTitle}.`,
   };
 }
