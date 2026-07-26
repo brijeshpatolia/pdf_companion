@@ -38,3 +38,9 @@ Thumbs.db
 # Claude Code — ignore local/machine settings; project skills (.claude/skills) stay tracked
 .claude/settings.local.json
 .claude/*.local.json
+
+# Playwright component tests
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

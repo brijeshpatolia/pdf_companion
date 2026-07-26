@@ -31,7 +31,9 @@ A reading companion for hard books. Instead of pausing to paste a page into Chat
 
 ## Stack
 
-Next.js (App Router) · PDF.js / react-pdf · fflate (EPUB parsing) · Supabase (Postgres + pgvector + Auth + Storage) · OpenRouter / Anthropic gateways · @huggingface/transformers (local embedder) · Vitest
+Next.js (App Router) · PDF.js / react-pdf · fflate (EPUB parsing) · Supabase (Postgres + pgvector + Auth + Storage) · OpenRouter / Anthropic gateways · @huggingface/transformers (local embedder) · Vitest · Playwright (component tests)
+
+> **On tests:** the domain logic is pure and tested with Vitest against injected fakes. A handful of behaviours only *exist* in a browser — text selection, DOM event order, whether a click is dispatched at all — so those run in real Chromium via Playwright component tests (`npm run test:browser`). Both live in CI.
 
 > **Note on Kindle books:** Amazon Kindle purchases are DRM-locked with no API for third-party access, so they can't be imported. EPUB (the open standard, widely sold DRM-free) is the supported path for bringing your own books.
 
