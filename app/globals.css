@@ -1505,3 +1505,115 @@ mark.hl-peer { background: var(--highlight-peer); }
   background: #38332d;
   margin: 2px 3px;
 }
+
+/* ---------- companion pane ---------- */
+
+.pane-companion {
+  background: var(--ink-700);
+  border-left: 1px solid var(--line-800);
+}
+
+.companion-tabs {
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--line-800);
+}
+.companion-tabs .tab {
+  border: none;
+  background: transparent;
+  border-radius: 0;
+  padding: 16px 12px 13px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-700);
+  border-bottom: 2px solid transparent;
+}
+.companion-tabs .tab:hover:not(:disabled) { color: var(--text-400); background: transparent; }
+.companion-tabs .tab.active {
+  color: var(--text-100);
+  font-weight: 600;
+  border-bottom-color: var(--accent);
+}
+.tab-count { color: var(--text-900); }
+
+.companion-model {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-900);
+}
+
+/*
+ * The asymmetry is deliberate. Your question is a bubble — a thing you
+ * handed over. The answer is bare text on the pane, because the companion
+ * speaks in the room rather than passing you a card.
+ */
+.answer {
+  font-size: 13.5px;
+  line-height: 1.68;
+  color: var(--text-300);
+  max-width: 100%;
+}
+.answer + .bubble-user { margin-top: 4px; }
+.answer .md strong { color: var(--accent); font-weight: 600; }
+/* A hairline between exchanges, not around each one. */
+.answer:not(:last-child)::after {
+  content: "";
+  display: block;
+  height: 1px;
+  background: var(--line-900);
+  margin: 16px 0 0;
+}
+
+.bubble-user {
+  background: var(--ink-500);
+  color: var(--text-100);
+  border-radius: 14px 14px 5px 14px;
+  max-width: 82%;
+  font-size: 13.5px;
+}
+
+/* ---------- composer ---------- */
+
+.composer {
+  border-top: 1px solid var(--line-800);
+  padding: 14px 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.composer-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.composer-row { display: flex; align-items: center; gap: 8px; }
+
+.composer-field {
+  flex: 1;
+  min-width: 0;
+  background: var(--ink-550);
+  border: 1px solid var(--line-600);
+  border-radius: 14px;
+  color: var(--text-100);
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 13.5px;
+}
+.composer-field::placeholder { color: var(--text-800); }
+.composer-field:focus { outline: none; border-color: var(--accent-line); }
+
+.composer-send {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--accent);
+  border-color: transparent;
+  color: var(--accent-ink);
+  flex-shrink: 0;
+}
+.composer-send:hover:not(:disabled) { background: var(--accent-hover); border-color: transparent; }
+
+.composer-foot {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-900);
+}
