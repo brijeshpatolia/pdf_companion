@@ -5,27 +5,18 @@ import Link from "next/link";
 import AuthButton from "./AuthButton";
 import Icon from "./components/Icon";
 import AppRail from "./components/AppRail";
+import {
+  shelfRow,
+  spineColour,
+  spineInk,
+  shelfSummary,
+  inFlight,
+  type ShelfBook,
+} from "@/core/library/shelfRow.js";
 
-interface BookSummary {
-  id: string;
-  title: string;
-  page_count: number;
-  status: string;
-  /** Pages embedded so far; only sent while a book is still being processed. */
-  pages_done?: number | null;
-}
-
-const STATUS_BADGES: Record<string, { className: string; label: string; spinning?: boolean }> = {
-  uploaded: { className: "badge-info", label: "Uploaded" },
-  processing: { className: "badge-warn", label: "Processing", spinning: true },
-  ready: { className: "badge-ok", label: "Ready" },
-  failed: { className: "badge-danger", label: "Failed" },
-};
+type BookSummary = ShelfBook;
 
 const MAX_SIZE = 50 * 1024 * 1024; // 50 MB
-
-/** A book that is queued for or partway through ingestion. */
-const inFlight = (b: BookSummary) => b.status === "processing" || b.status === "uploaded";
 
 export default function Home() {
   const [books, setBooks] = useState<BookSummary[]>([]);
@@ -52,7 +43,7 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (!books.some(inFlight)) return;
+    if (!books.some((b) => inFlight(b.status))) return;
     const id = setInterval(refresh, 2000);
     return () => clearInterval(id);
   }, [books]);
@@ -147,162 +138,169 @@ export default function Home() {
     if (file) void uploadFile(file);
   }
 
+  const lastOpened =
+    books.filter((b) => (b.current_page ?? 0) > 1).sort((a, b) => (b.current_page ?? 0) - (a.current_page ?? 0))[0]
+      ?.title ?? null;
+
   return (
     <div className="rail-layout">
       <AppRail />
-    <main style={{ maxWidth: 720, margin: "0 auto", padding: "2.5rem 1.25rem" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem" }}>
-        <div>
-          <h1 className="wordmark" style={{ marginBottom: "0.25rem", fontSize: "2rem" }}>
-            PDF Companion
-          </h1>
-          <p style={{ color: "var(--muted)", marginTop: 0 }}>
-            An AI that reads with you — always on your page, holding the whole book in mind.
-          </p>
-        </div>
-        <AuthButton />
-      </div>
+      <main className="shelf">
+        <header className="shelf-head">
+          <div style={{ minWidth: 0 }}>
+            <h1 style={{ fontSize: 34, margin: 0 }}>Your library</h1>
+            <p style={{ margin: "6px 0 0", fontSize: 14, color: "var(--text-600)" }}>
+              {loaded ? shelfSummary(books, lastOpened) : "\u00a0"}
+            </p>
+          </div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
+            <Link href="/ask" className="btn-ghost btn-sm">
+              Ask across library
+            </Link>
+            <label className="btn-primary btn-sm" style={{ cursor: busy ? "default" : "pointer" }}>
+              {busy ? "Uploading…" : "Upload"}
+              <input
+                type="file"
+                accept="application/pdf,application/epub+zip,.pdf,.epub"
+                onChange={onUpload}
+                disabled={busy}
+                style={{ display: "none" }}
+              />
+            </label>
+            <AuthButton />
+          </div>
+        </header>
 
-      <p style={{ marginTop: "1rem", marginBottom: 0, display: "flex", gap: "1.25rem", flexWrap: "wrap" }}>
-        <Link href="/catalog"><Icon name="library" /> Browse free public-domain books <Icon name="arrow-right" /></Link>
-        <Link href="/ask"><Icon name="search" /> Ask your library <Icon name="arrow-right" /></Link>
-        <Link href="/usage"><Icon name="chart" /> Usage &amp; cost <Icon name="arrow-right" /></Link>
-      </p>
-
-      <label
-        className={`dropzone${dragover ? " is-dragover" : ""}${busy ? " is-busy" : ""}`}
-        style={{ marginTop: "0.75rem" }}
-        onDragOver={(e) => {
-          e.preventDefault();
-          if (!busy) setDragover(true);
-        }}
-        onDragLeave={() => setDragover(false)}
-        onDrop={onDrop}
-      >
-        {busy ? (
-          <span style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
-            <span className="spinner" /> Uploading…
+        <label
+          className={`shelf-drop${dragover ? " is-dragover" : ""}`}
+          onDragOver={(e) => {
+            e.preventDefault();
+            if (!busy) setDragover(true);
+          }}
+          onDragLeave={() => setDragover(false)}
+          onDrop={onDrop}
+        >
+          <span className="shelf-drop-tile" aria-hidden="true">
+            <Icon name="download" size={20} />
           </span>
-        ) : (
-          <>
-            <span style={{ fontWeight: 600 }}>Drop a PDF or EPUB here, or click to browse</span>
-            <span style={{ color: "var(--faint)", fontSize: "0.8rem" }}>Up to 50 MB</span>
-          </>
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <span style={{ display: "block", fontSize: 15, fontWeight: 600 }}>
+              {busy ? "Uploading…" : "Drop a PDF or EPUB here"}
+            </span>
+            <span style={{ display: "block", fontSize: 12.5, color: "var(--text-700)", marginTop: 3 }}>
+              Up to 50&nbsp;MB · text is embedded page by page, and you can start reading immediately
+            </span>
+          </span>
+          <span className="btn-ghost btn-sm" style={{ flexShrink: 0 }}>
+            Browse files
+          </span>
+          <input
+            type="file"
+            accept="application/pdf,application/epub+zip,.pdf,.epub"
+            onChange={onUpload}
+            disabled={busy}
+            style={{ display: "none" }}
+          />
+        </label>
+
+        {error && (
+          <p role="alert" className="fade-in" style={{ color: "var(--danger)", fontSize: 13, margin: 0 }}>
+            {error}
+          </p>
         )}
-        <input
-          type="file"
-          accept="application/pdf,application/epub+zip,.pdf,.epub"
-          onChange={onUpload}
-          disabled={busy}
-          style={{ display: "none" }}
-        />
-      </label>
 
-      {error && (
-        <p role="alert" className="fade-in" style={{ color: "var(--danger)" }}>
-          {error}
-        </p>
-      )}
+        <div className="shelf-section">
+          <span className="eyebrow">Books</span>
+          <span className="shelf-rule" />
+          <span style={{ fontSize: 12, color: "var(--text-800)" }}>Recent first</span>
+        </div>
 
-      <ul style={{ listStyle: "none", padding: 0, marginTop: "1.5rem" }}>
-        {!loaded &&
-          [0, 1, 2].map((i) => (
-            <li key={i} className="skeleton" style={{ height: 58, marginBottom: "0.6rem" }} />
-          ))}
+        <ul className="shelf-list">
+          {!loaded && [0, 1, 2].map((i) => <li key={i} className="skeleton" style={{ height: 84 }} />)}
 
-        {books.map((b) => {
-          const badge = STATUS_BADGES[b.status] ?? STATUS_BADGES.uploaded!;
-          return (
-            <li
-              key={b.id}
-              className="card card-interactive fade-in"
-              style={{
-                padding: "0.8rem 1rem",
-                marginBottom: "0.6rem",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                gap: "0.5rem",
-              }}
-            >
-              <span style={{ flex: 1, minWidth: 0 }}>
-                {b.status === "ready" ? (
-                  <Link href={`/reader/${b.id}`} style={{ fontWeight: 500 }}>
-                    {b.title}
-                  </Link>
-                ) : (
-                  <span style={{ color: b.status === "failed" ? "var(--danger)" : "var(--text)" }}>
-                    {b.title}
+          {books.map((b) => {
+            const row = shelfRow(b);
+            const spine = spineColour(b.id);
+            return (
+              <li key={b.id} className="shelf-row fade-in" data-state={row.state}>
+                <span className="shelf-spine" style={{ background: spine, color: spineInk(spine) }} aria-hidden="true" />
+
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                    {row.openable ? (
+                      <Link href={`/reader/${b.id}`} className="shelf-title">
+                        {b.title}
+                      </Link>
+                    ) : (
+                      <span className="shelf-title">{b.title}</span>
+                    )}
+                    <span className="badge shelf-badge">{row.label}</span>
                   </span>
-                )}
-                <span style={{ color: "var(--muted)" }}>
-                  {" · "}
-                  {inFlight(b) && b.pages_done != null
-                    ? `${b.pages_done}/${b.page_count} pages`
-                    : `${b.page_count} pages`}
+
+                  <span style={{ display: "block", fontSize: 12.5, color: "var(--text-700)", margin: "3px 0 8px" }}>
+                    {row.meta}
+                  </span>
+
+                  <span className="shelf-bar" aria-hidden="true">
+                    <span style={{ width: `${row.percent}%` }} />
+                  </span>
                 </span>
-                <span className={`badge ${badge.className}`} style={{ marginLeft: "0.5rem" }}>
-                  {badge.spinning && <span className="spinner" style={{ width: 9, height: 9 }} />}
-                  {badge.label}
+
+                <span className="shelf-right tabular">{row.right}</span>
+
+                <span style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                  {/*
+                    Ingestion is resumable, so this is safe to press at any time:
+                    on a failed book it starts over, and on one that stalled
+                    mid-way it picks up from the pages already embedded.
+                  */}
+                  {(b.status === "failed" || inFlight(b.status)) && (
+                    <button
+                      className="btn-ghost btn-sm"
+                      onClick={() => onRetry(b.id)}
+                      disabled={retrying === b.id}
+                      title={
+                        b.status === "failed"
+                          ? "Process this book again"
+                          : "Pick up where processing left off"
+                      }
+                    >
+                      {retrying === b.id ? "Working…" : b.status === "failed" ? "Retry" : "Resume"}
+                    </button>
+                  )}
+                  {confirmDelete === b.id ? (
+                    <button
+                      className="btn-danger btn-sm"
+                      onClick={() => onDelete(b.id)}
+                      disabled={deleting === b.id}
+                    >
+                      Confirm?
+                    </button>
+                  ) : (
+                    <button
+                      className="btn-text"
+                      onClick={() => armDelete(b.id)}
+                      disabled={deleting === b.id}
+                    >
+                      {deleting === b.id ? "Deleting…" : "Delete"}
+                    </button>
+                  )}
                 </span>
-              </span>
-              <div style={{ display: "flex", gap: "0.4rem", flexShrink: 0 }}>
-                {/*
-                  Ingestion is resumable, so this is safe to press at any time:
-                  on a failed book it starts over, and on one that stalled
-                  mid-way it picks up from the pages already embedded.
-                */}
-                {(b.status === "failed" || inFlight(b)) && (
-                  <button
-                    className="btn-warn btn-sm"
-                    onClick={() => onRetry(b.id)}
-                    disabled={retrying === b.id}
-                    title={
-                      b.status === "failed"
-                        ? "Process this book again"
-                        : "Pick up where processing left off"
-                    }
-                  >
-                    {retrying === b.id ? "Working…" : b.status === "failed" ? "Retry" : "Resume"}
-                  </button>
-                )}
-                {confirmDelete === b.id ? (
-                  <button
-                    className="btn-danger-solid btn-sm"
-                    onClick={() => onDelete(b.id)}
-                    disabled={deleting === b.id}
-                  >
-                    Confirm delete?
-                  </button>
-                ) : (
-                  <button
-                    className="btn-danger btn-sm"
-                    onClick={() => armDelete(b.id)}
-                    disabled={deleting === b.id}
-                  >
-                    {deleting === b.id ? "Deleting…" : "Delete"}
-                  </button>
-                )}
-              </div>
-            </li>
-          );
-        })}
+              </li>
+            );
+          })}
+        </ul>
 
         {loaded && books.length === 0 && (
-          <li
-            className="card fade-in"
-            style={{
-              padding: "2rem 1rem",
-              textAlign: "center",
-              color: "var(--muted)",
-              borderStyle: "dashed",
-            }}
-          >
-            <p style={{ margin: 0, fontSize: "1.5rem" }}><Icon name="book" /></p>
-            <p style={{ margin: "0.5rem 0 0" }}>No books yet — upload one to start reading.</p>
-          </li>
+          <p style={{ fontSize: 12.5, color: "var(--text-700)", marginTop: "auto" }}>
+            Nothing here yet? Start with{" "}
+            <Link href="/catalog?q=Meditations">Meditations</Link>
+            <span className="shelf-dot" />
+            <Link href="/catalog?q=Walden">Walden</Link>
+            <span className="shelf-dot" />
+            <Link href="/catalog?q=Frankenstein">Frankenstein</Link>
+          </p>
         )}
-      </ul>
       </main>
     </div>
   );

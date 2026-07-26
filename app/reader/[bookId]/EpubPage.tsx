@@ -9,13 +9,15 @@ interface EpubPageProps {
   page: number;
   /** Saved highlight text for this page, painted onto the prose. */
   highlights?: string[];
+  /** Marks made by others in the reading room, shown in their own colour. */
+  peerHighlights?: string[];
 }
 
 /**
  * Renders one synthetic EPUB page as text, fetched from /api/page-text.
  * The selection tooltip works over this text just like the PDF text layer.
  */
-export default function EpubPage({ bookId, page, highlights = [] }: EpubPageProps) {
+export default function EpubPage({ bookId, page, highlights = [], peerHighlights = [] }: EpubPageProps) {
   const [text, setText] = useState<string | null>(null);
   const [error, setError] = useState(false);
 
@@ -53,7 +55,7 @@ export default function EpubPage({ bookId, page, highlights = [] }: EpubPageProp
       {text.split(/\n{2,}/).map((para, i) => (
         // Marked HTML rather than a text node: the marker escapes everything
         // it emits, and the book's own text is never trusted as markup.
-        <p key={i} dangerouslySetInnerHTML={{ __html: markHighlights(para, highlights) }} />
+        <p key={i} dangerouslySetInnerHTML={{ __html: markHighlights(para, highlights, peerHighlights) }} />
       ))}
     </article>
   );

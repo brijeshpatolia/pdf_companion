@@ -89,9 +89,7 @@ describe("findRanges", () => {
 describe("markHighlights", () => {
   it("wraps the matched part and leaves the rest alone", () => {
     const out = markHighlights("before the unexamined life after", ["the unexamined life"]);
-    expect(out).toBe(
-      'before <mark class="pdf-highlight">the unexamined life</mark> after',
-    );
+    expect(out).toBe('before <mark class="hl-mine">the unexamined life</mark> after');
   });
 
   it("escapes text it doesn't mark", () => {
@@ -126,5 +124,41 @@ describe("markHighlights", () => {
 
   it("leaves a line with no highlights untouched", () => {
     expect(markHighlights("plain line", ["something else"])).toBe("plain line");
+  });
+});
+
+describe("two highlight species", () => {
+  it("marks a peer's highlight with its own class", () => {
+    const out = markHighlights("alpha bravo charlie", [], ["bravo"]);
+    expect(out).toContain('<mark class="hl-peer">bravo</mark>');
+  });
+
+  it("keeps yours and theirs distinguishable on one line", () => {
+    const out = markHighlights("alpha bravo charlie delta", ["alpha"], ["charlie"]);
+    expect(out).toContain('class="hl-mine">alpha<');
+    expect(out).toContain('class="hl-peer">charlie<');
+  });
+
+  it("lets your mark win where both cover the same words", () => {
+    // Two translucent marks over each other make a third colour that means
+    // nothing, so the overlap is given to one of them outright.
+    const out = markHighlights("alpha bravo charlie", ["bravo"], ["bravo"]);
+    expect(out.match(/<mark/g)).toHaveLength(1);
+    expect(out).toContain("hl-mine");
+    expect(out).not.toContain("hl-peer");
+  });
+
+  it("keeps the part of a peer's highlight yours doesn't cover", () => {
+    const out = markHighlights("alpha bravo charlie", ["alpha"], ["alpha bravo"]);
+    expect(out).toContain("hl-mine");
+    expect(out).toContain("hl-peer");
+    // Still exactly the original text once markup is stripped.
+    expect(out.replace(/<\/?mark[^>]*>/g, "")).toBe("alpha bravo charlie");
+  });
+
+  it("behaves as before when there are no peers", () => {
+    expect(markHighlights("alpha bravo", ["bravo"])).toBe(
+      'alpha <mark class="hl-mine">bravo</mark>',
+    );
   });
 });

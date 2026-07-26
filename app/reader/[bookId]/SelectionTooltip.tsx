@@ -84,19 +84,12 @@ export default function SelectionTooltip({
   return (
     <div
       data-selection-tooltip
-      className="fade-in"
+      className="sel-popover fade-in"
       style={{
         position: "absolute",
         left: tooltip.x,
         top: tooltip.y,
         transform: "translate(-50%, -100%)",
-        display: "flex",
-        gap: "0.25rem",
-        padding: "0.35rem 0.5rem",
-        background: "var(--surface)",
-        border: "1px solid var(--border-strong)",
-        borderRadius: "var(--radius)",
-        boxShadow: "var(--shadow-pop)",
         zIndex: 100,
       }}
     >
@@ -109,17 +102,18 @@ export default function SelectionTooltip({
               setTooltip(null);
               window.getSelection()?.removeAllRanges();
             }}
-            style={{ whiteSpace: "nowrap", color: "var(--warn)" }}
+            style={{ whiteSpace: "nowrap", color: "var(--accent)" }}
           >
             <Icon name="highlight" /> Highlight
           </button>
-          <span style={{ width: 1, background: "var(--border)", margin: "0.15rem 0.1rem" }} />
+          <span className="sel-divider" aria-hidden="true" />
         </>
       )}
-      {INTENTS.map(({ intent, label }) => (
+      {INTENTS.map(({ intent, label }, i) => (
         <button
           key={intent}
-          className="btn-ghost btn-sm"
+          // Define is what you want most of the time, so it looks like it.
+          className={i === 0 ? "btn-primary btn-sm" : "btn-ghost btn-sm"}
           onClick={() => {
             onSelect(tooltip.text, intent);
             setTooltip(null);

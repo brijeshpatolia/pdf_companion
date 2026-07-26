@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/TextLayer.css";
@@ -77,11 +77,18 @@ export default function Reader({ bookId, title, pageCount, format = "pdf", fileU
     };
   }, [bookId, page, savedVersion]);
 
+  // What the others in the room have marked on this page. Broadcast-only, so
+  // it lives as long as the room does and is never written to your account.
+  const peerHighlights = useMemo(
+    () => room.liveHighlights.filter((h) => h.page === page).map((h) => h.text),
+    [room.liveHighlights, page],
+  );
+
   // react-pdf hands each text fragment through this and assigns the result as
   // innerHTML, so the marker escapes everything it returns.
   const textRenderer = useCallback(
-    ({ str }: { str: string }) => markHighlights(str, pageHighlights),
-    [pageHighlights],
+    ({ str }: { str: string }) => markHighlights(str, pageHighlights, peerHighlights),
+    [pageHighlights, peerHighlights],
   );
 
   const onLoad = useCallback(({ numPages }: { numPages: number }) => {
@@ -196,77 +203,81 @@ export default function Reader({ bookId, title, pageCount, format = "pdf", fileU
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
       {/* top bar */}
-      <header
-        className="reader-header"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "1rem",
-          padding: "0.6rem 1rem",
-          borderBottom: "1px solid var(--border)",
-          flexWrap: "wrap",
-        }}
-      >
-        <Link href="/"><Icon name="arrow-left" /> Library</Link>
-        <strong style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          {title}
-        </strong>
-        <Link href={`/reader/${bookId}/flashcards`} className="btn-ghost btn-sm" style={{ whiteSpace: "nowrap" }}>
-          <Icon name="cards" /> Flashcards
+      <header className="reader-bar">
+        <Link href="/" className="reader-back">
+          <Icon name="chevron-left" /> Library
         </Link>
-        <button
-          className="btn-ghost btn-sm"
-          onClick={() => setSharingCard(true)}
-          style={{ whiteSpace: "nowrap" }}
-          title="Make a shareable card from this book"
-        >
-          <Icon name="share" /> Share card
-        </button>
+        <span className="reader-divider" aria-hidden="true" />
+        <span style={{ minWidth: 0 }}>
+          <span className="reader-title">{title}</span>
+        </span>
+
         <span style={{ flex: 1 }} />
+
         {flash && (
           <span className={`badge ${flash.ok ? "badge-ok" : "badge-danger"} fade-in`} role="status">
             {flash.text}
           </span>
         )}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+
+        {/* One control for where you are and how to move — a pager, not three
+            separate buttons pretending to be unrelated. */}
+        <span className="pager">
           <button
+            className="pager-step"
             onClick={() => go(page - 1)}
             disabled={page <= 1}
             aria-label="Previous page"
             title="Previous page (←)"
           >
-            <Icon name="chevron-left" /> Prev
+            <Icon name="chevron-left" />
           </button>
-          <span style={{ color: "var(--muted)", minWidth: 90, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>
-            Page {page} / {numPages || pageCount}
+          <span className="pager-count tabular">
+            <span>{page}</span>
+            <span className="pager-total">/ {numPages || pageCount}</span>
           </span>
-          {furthest > 1 && (
-            <span className="badge badge-info" title="Furthest page read sequentially">
-              read to p{furthest}
-            </span>
-          )}
           <button
+            className="pager-step"
             onClick={() => go(page + 1)}
             disabled={page >= (numPages || pageCount)}
             aria-label="Next page"
             title="Next page (→)"
           >
-            Next <Icon name="chevron-right" />
+            <Icon name="chevron-right" />
           </button>
-          <form onSubmit={onJump} className="jump-form">
-            <input
-              className="input"
-              value={jump}
-              onChange={(e) => setJump(e.target.value)}
-              inputMode="numeric"
-              placeholder="Go to…"
-              aria-label="Jump to page"
-              style={{ width: 70 }}
-            />
-            <button type="submit">Go</button>
-          </form>
-        </div>
+        </span>
+
+        <form onSubmit={onJump} className="jump-form">
+          <input
+            className="input"
+            value={jump}
+            onChange={(e) => setJump(e.target.value)}
+            inputMode="numeric"
+            placeholder="Go to…"
+            aria-label="Jump to page"
+            style={{ width: 70 }}
+          />
+        </form>
+
+        <Link href={`/reader/${bookId}/flashcards`} className="btn-ghost btn-sm">
+          Flashcards
+        </Link>
+        <button
+          className="btn-primary btn-sm"
+          onClick={() => setSharingCard(true)}
+          title="Make a shareable card from this book"
+        >
+          Share
+        </button>
       </header>
+
+      {/* reading progress */}
+      <div className="progress-track" aria-hidden="true">
+        <div
+          className="progress-fill"
+          style={{ width: `${(page / (numPages || pageCount || 1)) * 100}%` }}
+        />
+      </div>
 
       {/* co-reading: who else is in this book right now */}
       <div style={{ padding: "0.5rem 1rem", borderBottom: "1px solid var(--border)" }}>
@@ -284,14 +295,6 @@ export default function Reader({ bookId, title, pageCount, format = "pdf", fileU
             setMobileView("book");
           }}
           isGuest={joinedRoomToken !== null}
-        />
-      </div>
-
-      {/* reading progress */}
-      <div className="progress-track" aria-hidden="true">
-        <div
-          className="progress-fill"
-          style={{ width: `${(page / (numPages || pageCount || 1)) * 100}%` }}
         />
       </div>
 
@@ -321,29 +324,42 @@ export default function Reader({ bookId, title, pageCount, format = "pdf", fileU
           ref={pdfSectionRef}
           className={`pane-book${mobileView === "chat" ? " hidden-narrow" : ""}`}
         >
-          {format === "epub" ? (
-            <EpubPage bookId={bookId} page={page} highlights={pageHighlights} />
-          ) : fileUrl ? (
-            <Document
-              file={fileUrl}
-              onLoadSuccess={onLoad}
-              loading={
-                <p style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--muted)" }}>
-                  <span className="spinner" /> Loading PDF…
-                </p>
-              }
-            >
-              <Page
-                pageNumber={page}
-                renderTextLayer
-                renderAnnotationLayer={false}
-                width={pageWidth}
-                customTextRenderer={textRenderer}
-              />
-            </Document>
-          ) : (
-            <p style={{ color: "var(--danger)" }}>Could not load the file.</p>
-          )}
+          {/*
+            The page is the only lit object on screen. A PDF brings its own
+            paper — the rendered canvas — so the wrapper supplies the shadow
+            and running head around it; an EPUB has none, so the wrapper is
+            the paper.
+          */}
+          <div className={`paper reader-paper${format === "epub" ? " is-text" : ""}`}>
+            <div className="paper-running-head" aria-hidden="true">
+              <span>{title}</span>
+              <span className="tabular">{page}</span>
+            </div>
+
+            {format === "epub" ? (
+              <EpubPage bookId={bookId} page={page} highlights={pageHighlights} peerHighlights={peerHighlights} />
+            ) : fileUrl ? (
+              <Document
+                file={fileUrl}
+                onLoadSuccess={onLoad}
+                loading={
+                  <p style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--paper-meta)" }}>
+                    <span className="spinner" /> Loading page…
+                  </p>
+                }
+              >
+                <Page
+                  pageNumber={page}
+                  renderTextLayer
+                  renderAnnotationLayer={false}
+                  width={pageWidth}
+                  customTextRenderer={textRenderer}
+                />
+              </Document>
+            ) : (
+              <p style={{ color: "var(--danger)" }}>Could not load the file.</p>
+            )}
+          </div>
           <SelectionTooltip
             containerRef={pdfSectionRef}
             onSelect={onSelectToAsk}

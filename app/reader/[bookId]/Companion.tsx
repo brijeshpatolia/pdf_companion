@@ -260,16 +260,18 @@ export default function Companion({
 
   return (
     <aside className={`pane-companion${mobileHidden ? " hidden-narrow" : ""}`}>
-      <div style={{ display: "flex", borderBottom: "1px solid var(--border)" }}>
+      <div className="companion-tabs">
         <button className={`tab${tab === "chat" ? " active" : ""}`} onClick={() => setTab("chat")}>
           Chat
         </button>
         <button className={`tab${tab === "saved" ? " active" : ""}`} onClick={() => setTab("saved")}>
-          Saved{saved.length > 0 ? ` (${saved.length})` : ""}
+          Kept {saved.length > 0 && <span className="tab-count">{saved.length}</span>}
         </button>
         <button className={`tab${tab === "notes" ? " active" : ""}`} onClick={() => setTab("notes")}>
-          Notes{notesCount > 0 ? ` (${notesCount})` : ""}
+          Notes {notesCount > 0 && <span className="tab-count">{notesCount}</span>}
         </button>
+        <span style={{ flex: 1 }} />
+        <span className="companion-model">Sonnet</span>
       </div>
 
       {tab === "chat" ? (
@@ -298,7 +300,7 @@ export default function Companion({
                 m.role === "assistant" && m.content && !(streaming && isLast);
               const question = messages[i - 1]?.role === "user" ? messages[i - 1]!.content : undefined;
               return (
-                <div key={i} className={`bubble fade-in ${m.role === "user" ? "bubble-user" : "bubble-assistant"}`}>
+                <div key={i} className={`fade-in ${m.role === "user" ? "bubble bubble-user" : "answer"}`}>
                   {isTyping ? (
                     <span className="typing-dots" aria-label="Thinking…">
                       <span /><span /><span />
@@ -354,34 +356,40 @@ export default function Companion({
             <div ref={bottomRef} />
           </div>
 
-          <form
-            onSubmit={onSubmit}
-            style={{
-              display: "flex",
-              gap: "0.5rem",
-              padding: "0.75rem 1rem",
-              borderTop: "1px solid var(--border)",
-            }}
-          >
-            <input
-              className="input"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder={`Ask about page ${currentPage}…`}
-              disabled={streaming}
-              aria-label="Ask a question"
-              style={{ flex: 1, fontSize: "0.9rem" }}
-            />
-            {streaming ? (
-              <button type="button" className="btn-danger" onClick={stop} aria-label="Stop generating">
-                ◼ Stop
-              </button>
-            ) : (
-              <button type="submit" className="btn-primary" disabled={!input.trim()} aria-label="Send question">
-                Ask
-              </button>
-            )}
-          </form>
+          <div className="composer">
+            {/* What the question will actually be asked against — the reason
+                you can ask "what does he mean" without saying where you are. */}
+            <div className="composer-chips">
+              <span className="chip-cite">Context · p. {currentPage}</span>
+            </div>
+
+            <form onSubmit={onSubmit} className="composer-row">
+              <input
+                className="composer-field"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder={`Ask about page ${currentPage}…`}
+                disabled={streaming}
+                aria-label="Ask a question"
+              />
+              {streaming ? (
+                <button type="button" className="btn-danger btn-sm" onClick={stop} aria-label="Stop generating">
+                  Stop
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  className="composer-send"
+                  disabled={!input.trim()}
+                  aria-label="Send question"
+                >
+                  <Icon name="arrow-right" />
+                </button>
+              )}
+            </form>
+
+            <p className="composer-foot">↵ to send · the page you're on is the context</p>
+          </div>
         </>
       ) : tab === "notes" ? (
         <Notes

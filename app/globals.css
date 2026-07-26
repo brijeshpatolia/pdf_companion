@@ -756,70 +756,131 @@ input, button {
 .share-panel .btn-ghost { align-self: flex-start; }
 
 /* ── Public share page (/share/[token]) ──────────────────────────────── */
+/*
+ * The share page inverts to cream.
+ *
+ * It is the only light surface in the app, and deliberately so: it's the one
+ * a stranger sees. Everywhere else the dark chrome exists to make the page
+ * the subject — here the whole page *is* the page, so it takes the paper.
+ */
 .share-page {
+  background: var(--paper);
+  color: var(--paper-ink);
+  min-height: 100dvh;
   max-width: 720px;
   margin: 0 auto;
-  padding: 2.5rem 1.25rem 4rem;
+  padding: 64px 40px 72px;
+  font-family: var(--font-sans-stack);
 }
+
 .share-page-head {
   text-align: center;
-  padding-bottom: 1.25rem;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--paper-line);
+  padding-bottom: 30px;
+  margin-bottom: 38px;
 }
+
 .share-eyebrow {
-  margin: 0 0 0.4rem;
-  font-size: 0.8rem;
-  letter-spacing: 0.04em;
-  color: var(--faint);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--paper-meta-2);
+  margin: 0 0 14px;
 }
-.share-title { font-size: 2rem; margin: 0; line-height: 1.15; }
+
+.share-title {
+  font-family: var(--font-display-stack);
+  font-size: 46px;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+  margin: 0;
+  /* The wordmark's gradient is for dark chrome; on paper it's just ink. */
+  background: none;
+  -webkit-text-fill-color: currentColor;
+  color: var(--paper-ink);
+}
+
 .share-sub {
-  margin: 0.6rem auto 0;
-  max-width: 34rem;
-  color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--paper-body);
+  margin: 12px 0 0;
 }
+
 .share-counts {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: 8px;
   justify-content: center;
-  margin-top: 0.9rem;
+  flex-wrap: wrap;
+  margin-top: 20px;
 }
-.share-section { margin-bottom: 2rem; }
+.share-counts .badge {
+  background: var(--paper-chip);
+  color: var(--paper-body);
+}
+
+.share-section { margin-bottom: 38px; }
 .share-section > h2 {
-  font-size: 1.05rem;
-  margin: 0 0 0.75rem;
-  padding-bottom: 0.35rem;
-  border-bottom: 1px solid var(--border);
-  color: var(--text);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--paper-meta-2);
+  font-family: var(--font-sans-stack);
+  font-weight: 400;
+  margin: 0 0 18px;
 }
+
+/*
+ * A highlight is the object here, so it gets no card and no quote marks —
+ * just the accent rule a marked passage would have in a book.
+ */
 .share-quote {
-  margin: 0 0 0.75rem;
-  padding: 0.6rem 0 0.6rem 1rem;
-  border-left: 3px solid var(--accent);
-  color: var(--text);
-  font-style: italic;
-  line-height: 1.55;
+  border-left: 2px solid var(--accent);
+  padding-left: 22px;
+  margin: 0 0 24px;
+  font-family: var(--font-display-stack);
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: -0.015em;
+  color: var(--paper-ink);
 }
 .share-quote cite {
   display: block;
-  margin-top: 0.35rem;
+  margin-top: 8px;
+  font-family: var(--font-sans-stack);
+  font-size: 12px;
+  font-weight: 400;
   font-style: normal;
-  font-size: 0.78rem;
-  color: var(--faint);
+  color: var(--paper-meta-2);
 }
-.share-answer, .share-note { margin-bottom: 0.75rem; padding: 0.9rem 1rem; }
-.share-answer-q { margin: 0; font-weight: 600; }
-.share-answer-meta { margin: 0.15rem 0 0; font-size: 0.75rem; color: var(--faint); }
-.share-answer-a { margin: 0.5rem 0 0; line-height: 1.55; white-space: pre-wrap; }
+
+.share-page .card,
+.share-answer, .share-note, .share-card {
+  background: var(--paper-card);
+  border: 1px solid var(--paper-card-line);
+  border-radius: 14px;
+  padding: 22px 24px;
+  margin-bottom: 12px;
+  color: var(--paper-ink);
+}
+.share-answer-q { margin: 0; font-weight: 600; font-size: 15px; }
+.share-answer-meta { margin: 4px 0 0; font-size: 12px; color: var(--paper-meta-2); }
+.share-answer-a {
+  margin: 12px 0 0;
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: var(--paper-body-2);
+  white-space: pre-wrap;
+}
+
 .share-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
 }
-.share-card { padding: 0.9rem 1rem; }
+.share-card { margin: 0; }
 .share-card-front { margin: 0; font-weight: 600; }
 .share-card-back {
   margin: 0.5rem 0 0;
@@ -1186,4 +1247,434 @@ input, button {
 
 @media (max-width: 760px) {
   .rail-layout { flex-direction: column; }
+}
+
+/* ---------- library shelf ---------- */
+
+.shelf {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 34px 48px 40px;
+  max-width: 1080px;
+  min-height: 100dvh;
+}
+
+.shelf-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* The dropzone is a target, so it reads as an opening rather than a card. */
+.shelf-drop {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 26px;
+  border: 1.5px dashed var(--line-400);
+  border-radius: 16px;
+  background: #121110;
+  cursor: pointer;
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.shelf-drop:hover, .shelf-drop.is-dragover {
+  border-color: var(--accent-line);
+  background: var(--ink-750);
+}
+
+.shelf-drop-tile {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--accent-wash);
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+/* A label, a rule that eats the remaining width, then the sort note. */
+.shelf-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.shelf-rule {
+  flex: 1;
+  height: 1px;
+  background: var(--line-900);
+}
+
+.shelf-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.shelf-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  background: var(--ink-750);
+  border: 1px solid var(--line-800);
+  border-radius: 14px;
+  transition: border-color var(--dur) var(--ease);
+}
+.shelf-row:hover { border-color: var(--line-600); }
+
+/* A book seen edge-on: the inset gutter is what makes it read as a spine
+   rather than a coloured rectangle. */
+.shelf-spine {
+  width: 38px;
+  height: 52px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  box-shadow: inset -6px 0 0 rgba(0, 0, 0, 0.22);
+}
+
+.shelf-title {
+  font-family: var(--font-display-stack);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text-100);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+a.shelf-title:hover { color: var(--accent); text-decoration: none; }
+
+.shelf-bar {
+  display: block;
+  height: 3px;
+  max-width: 320px;
+  border-radius: 2px;
+  background: #252220;
+  overflow: hidden;
+}
+.shelf-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  transition: width var(--dur-slow) var(--ease);
+}
+
+.shelf-right {
+  width: 74px;
+  text-align: right;
+  font-size: 12.5px;
+  color: var(--text-700);
+  flex-shrink: 0;
+}
+
+/*
+ * The four states have to be tellable apart at a glance — that is the whole
+ * job of this screen. Colour carries the difference, so the bar and the badge
+ * always agree and never rely on the label alone.
+ */
+.shelf-row[data-state="reading"] .shelf-bar > span { background: var(--accent); }
+.shelf-row[data-state="reading"] .shelf-badge { color: var(--accent); background: var(--accent-wash); }
+.shelf-row[data-state="reading"] .shelf-right { color: var(--accent); }
+
+/* Ready means finished embedding, not finished reading — so the bar is full
+   but inert, and deliberately not the accent. */
+.shelf-row[data-state="ready"] .shelf-bar > span { background: #3a362f; }
+.shelf-row[data-state="ready"] .shelf-badge { color: var(--success); background: rgba(134, 179, 106, 0.13); }
+
+.shelf-row[data-state="processing"] .shelf-bar > span { background: var(--info); }
+.shelf-row[data-state="processing"] .shelf-badge { color: var(--info); background: rgba(143, 169, 201, 0.13); }
+
+.shelf-row[data-state="failed"] .shelf-bar > span { background: var(--danger); }
+.shelf-row[data-state="failed"] .shelf-badge { color: var(--danger); background: rgba(224, 116, 94, 0.13); }
+.shelf-row[data-state="failed"] .shelf-title { color: var(--text-600); }
+.shelf-row[data-state="failed"] .shelf-right { color: var(--danger); }
+
+.shelf-dot {
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--line-400);
+  margin: 0 8px;
+  vertical-align: middle;
+}
+
+@media (max-width: 760px) {
+  .shelf { padding: 24px 18px 32px; }
+  .shelf-row { flex-wrap: wrap; }
+  .shelf-right { width: auto; }
+}
+
+/* ---------- reader ---------- */
+
+.reader-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 20px;
+  height: 60px;
+  background: var(--ink-750);
+  border-bottom: 1px solid var(--line-800);
+  flex-shrink: 0;
+}
+
+.reader-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--text-600);
+  white-space: nowrap;
+}
+.reader-back:hover { color: var(--text-100); text-decoration: none; }
+
+.reader-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--line-700);
+  flex-shrink: 0;
+}
+
+.reader-title {
+  font-family: var(--font-display-stack);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text-100);
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* One control for position and movement, rather than three unrelated buttons. */
+.pager {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  background: var(--ink-600);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-pill);
+  flex-shrink: 0;
+}
+.pager-step {
+  border: none;
+  background: transparent;
+  padding: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  color: var(--text-600);
+  font-size: 13px;
+}
+.pager-step:hover:not(:disabled) { background: var(--ink-500); color: var(--text-100); }
+.pager-step:disabled { opacity: 0.3; }
+.pager-count {
+  display: inline-flex;
+  gap: 5px;
+  padding: 0 8px;
+  font-size: 12.5px;
+  color: var(--text-100);
+  white-space: nowrap;
+}
+.pager-total { color: var(--text-800); }
+
+/* The stage recedes so the page can be the subject. */
+.pane-book {
+  background: var(--ink-850);
+}
+
+.reader-paper {
+  width: 100%;
+  max-width: 700px;
+  margin: 38px auto;
+  padding: 30px 34px 40px;
+}
+/* An EPUB has no paper of its own, so the wrapper is the page and needs the
+   generous measure a book would have. */
+.reader-paper.is-text { padding: 52px 62px; }
+.reader-paper .paper-running-head { margin-bottom: 22px; }
+.reader-paper .epub-page {
+  padding: 0;
+  max-width: none;
+  font-family: var(--font-reading-stack);
+  font-size: 17px;
+  line-height: 1.8;
+  color: var(--paper-ink);
+}
+.reader-paper .epub-page p { margin: 0 0 1.05em; }
+/* react-pdf's canvas carries its own white; keep it flush inside the paper. */
+.reader-paper .react-pdf__Page { background: transparent !important; }
+.reader-paper canvas { display: block; margin: 0 auto; border-radius: 2px; }
+
+/* ---------- highlights, two species ---------- */
+
+/*
+ * Yours is marigold, a peer's is blue, and where they overlap yours wins
+ * outright — two translucent marks over each other make a third colour that
+ * means nothing.
+ *
+ * The `color` declarations are load-bearing over a PDF: pdf.js hides its text
+ * layer with `color: transparent` on the spans, but <mark> carries a UA
+ * default of `color: MarkText`, which overrides that inheritance and paints a
+ * second set of glyphs slightly off from the page beneath.
+ */
+mark.hl-mine, mark.hl-peer {
+  color: transparent;
+  border-radius: 2px;
+  padding: 0.05em 0;
+}
+mark.hl-mine { background: var(--highlight-user); }
+mark.hl-peer { background: var(--highlight-peer); }
+
+/* On real text the mark behaves like an ordinary highlighter, and yours sits
+   on a faint underline so it reads as ink rather than a wash. */
+.epub-page mark.hl-mine {
+  color: inherit;
+  background: rgba(233, 161, 59, 0.32);
+  box-shadow: 0 1px 0 rgba(200, 130, 30, 0.35);
+}
+.epub-page mark.hl-peer {
+  color: inherit;
+  background: rgba(120, 150, 200, 0.28);
+}
+
+/* ---------- selection popover ---------- */
+
+.sel-popover {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  background: #1b1917;
+  border: 1px solid #38332d;
+  border-radius: 10px;
+  box-shadow: 0 14px 34px -8px rgba(0, 0, 0, 0.7);
+}
+.sel-popover button { border: none; padding: 5px 11px; font-size: 12.5px; }
+.sel-popover .sel-divider {
+  width: 1px;
+  align-self: stretch;
+  background: #38332d;
+  margin: 2px 3px;
+}
+
+/* ---------- companion pane ---------- */
+
+.pane-companion {
+  background: var(--ink-700);
+  border-left: 1px solid var(--line-800);
+}
+
+.companion-tabs {
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--line-800);
+}
+.companion-tabs .tab {
+  border: none;
+  background: transparent;
+  border-radius: 0;
+  padding: 16px 12px 13px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-700);
+  border-bottom: 2px solid transparent;
+}
+.companion-tabs .tab:hover:not(:disabled) { color: var(--text-400); background: transparent; }
+.companion-tabs .tab.active {
+  color: var(--text-100);
+  font-weight: 600;
+  border-bottom-color: var(--accent);
+}
+.tab-count { color: var(--text-900); }
+
+.companion-model {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-900);
+}
+
+/*
+ * The asymmetry is deliberate. Your question is a bubble — a thing you
+ * handed over. The answer is bare text on the pane, because the companion
+ * speaks in the room rather than passing you a card.
+ */
+.answer {
+  font-size: 13.5px;
+  line-height: 1.68;
+  color: var(--text-300);
+  max-width: 100%;
+}
+.answer + .bubble-user { margin-top: 4px; }
+.answer .md strong { color: var(--accent); font-weight: 600; }
+/* A hairline between exchanges, not around each one. */
+.answer:not(:last-child)::after {
+  content: "";
+  display: block;
+  height: 1px;
+  background: var(--line-900);
+  margin: 16px 0 0;
+}
+
+.bubble-user {
+  background: var(--ink-500);
+  color: var(--text-100);
+  border-radius: 14px 14px 5px 14px;
+  max-width: 82%;
+  font-size: 13.5px;
+}
+
+/* ---------- composer ---------- */
+
+.composer {
+  border-top: 1px solid var(--line-800);
+  padding: 14px 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.composer-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.composer-row { display: flex; align-items: center; gap: 8px; }
+
+.composer-field {
+  flex: 1;
+  min-width: 0;
+  background: var(--ink-550);
+  border: 1px solid var(--line-600);
+  border-radius: 14px;
+  color: var(--text-100);
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 13.5px;
+}
+.composer-field::placeholder { color: var(--text-800); }
+.composer-field:focus { outline: none; border-color: var(--accent-line); }
+
+.composer-send {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--accent);
+  border-color: transparent;
+  color: var(--accent-ink);
+  flex-shrink: 0;
+}
+.composer-send:hover:not(:disabled) { background: var(--accent-hover); border-color: transparent; }
+
+.composer-foot {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-900);
 }
