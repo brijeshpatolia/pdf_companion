@@ -9,7 +9,12 @@ import Icon from "../../components/Icon";
 
 export const runtime = "nodejs";
 
-export const metadata = { title: "Join a reading room" };
+// An invitation to one person's reading room, not an address to publish.
+// Stated rather than inherited, for the same reason as the share page.
+export const metadata = {
+  title: "Join a reading room",
+  robots: { index: false, follow: false, noarchive: true, nosnippet: true },
+};
 
 /**
  * Following a room link.

@@ -1,10 +1,53 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { supabaseUser } from "@/adapters/supabase/userClient.js";
+import { indexable } from "@/core/site/siteUrl.js";
 
-export const metadata = {
+/**
+ * The only page here that wants to be found.
+ *
+ * The root layout marks the whole site `noindex`, which is right for a private
+ * library and wrong for the one page written for strangers. This is where that
+ * is undone — and the only place, so nothing else is exposed by accident.
+ *
+ * The description is written for the two audiences that actually read it: a
+ * search result, and the preview card that appears when someone pastes the
+ * link into a chat. It has to say what the thing *is* in the first few words,
+ * because both truncate.
+ */
+export const metadata: Metadata = {
   title: "The book, and someone to think with",
   description:
-    "Studiolo is a reading companion for hard books. Not a summary — a companion on the page you're on, holding the whole book in mind.",
+    "Studiolo is a reading companion for hard books — PDF and EPUB. Not a summary: a companion that stays on the page you're on, holds the whole book in mind, and keeps what mattered.",
+  // Except on a preview deployment, which is a copy and should not compete
+  // with the page it was copied from.
+  robots: indexable(process.env)
+    ? { index: true, follow: true }
+    : { index: false, follow: false },
+  alternates: { canonical: "/welcome" },
+  openGraph: {
+    type: "website",
+    siteName: "Studiolo",
+    locale: "en",
+    url: "/welcome",
+    title: "Studiolo — the book, and someone to think with",
+    description:
+      "A reading companion for hard books. Not a summary: it stays on the page you're on, holds the whole book in mind, and keeps what mattered.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Studiolo — the book, and someone to think with",
+    description:
+      "A reading companion for hard books. Not a summary: it stays on the page you're on, holds the whole book in mind, and keeps what mattered.",
+  },
+  keywords: [
+    "reading companion",
+    "read PDF with AI",
+    "EPUB reader",
+    "study hard books",
+    "AI reading assistant",
+    "ask questions about a book",
+  ],
 };
 
 /**

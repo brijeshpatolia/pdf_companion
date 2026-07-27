@@ -56,6 +56,9 @@ export default defineConfig({
       // must run unauthenticated so every route is reachable.
       NEXT_PUBLIC_SUPABASE_URL: "",
       NEXT_PUBLIC_SUPABASE_ANON_KEY: "",
+      // A known origin, so the SEO tests can assert on exact canonical and
+      // sitemap URLs rather than on whatever host the runner happened to use.
+      NEXT_PUBLIC_SITE_URL: "https://studiolo.test",
     },
   },
 });
