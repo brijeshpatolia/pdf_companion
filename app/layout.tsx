@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Fraunces, Instrument_Sans, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 import ServiceWorker from "./components/ServiceWorker";
+import { siteUrl } from "@/core/site/siteUrl.js";
 
 /*
  * Three families, each with one job — the split is the design, not decoration.
@@ -14,6 +15,10 @@ const sans = Instrument_Sans({ subsets: ["latin"], variable: "--font-sans", disp
 const reading = Source_Serif_4({ subsets: ["latin"], variable: "--font-reading", display: "swap" });
 
 export const metadata: Metadata = {
+  // Everything absolute — a canonical link, a preview image, a sitemap entry —
+  // is resolved against this. Without it Next has no way to turn `/welcome`
+  // into a URL a crawler or a chat client can follow.
+  metadataBase: new URL(siteUrl(process.env)),
   title: {
     default: "Studiolo",
     template: "%s · Studiolo",
@@ -27,8 +32,17 @@ export const metadata: Metadata = {
     // The chrome is dark, so the status bar should be too.
     statusBarStyle: "black-translucent",
   },
-  // Nothing here is worth indexing on someone's behalf, and a library is
-  // private by construction.
+  /*
+   * Closed by default, opened one page at a time.
+   *
+   * A library is private by construction, and a shared book is someone's
+   * reading behind a link they chose who to give it to — neither belongs in a
+   * search index. But this applied to *every* page, including the landing
+   * page, which meant the one surface written to explain the product to a
+   * stranger was the one surface no stranger could find. `/welcome` opts back
+   * in; nothing else does, and anything added later stays out until someone
+   * decides otherwise.
+   */
   robots: { index: false, follow: false },
 };
 

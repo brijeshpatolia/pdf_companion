@@ -79,10 +79,24 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { token } = await params;
   const shared = await loadShared(token);
-  if (!shared) return { title: "Shared notes · Studiolo" };
+
+  /*
+   * Never indexed, and stated here rather than relied upon.
+   *
+   * This is somebody's reading, published to a link they chose who to give to.
+   * The root layout marks everything `noindex` today, but that is a default,
+   * and a default is the wrong thing to be standing between a private page and
+   * a search result. `noarchive` and `nosnippet` go further: without them a
+   * crawler that reached the page before this shipped can keep showing a cached
+   * copy of it.
+   */
+  const robots = { index: false, follow: false, noarchive: true, nosnippet: true };
+
+  if (!shared) return { title: "Shared notes · Studiolo", robots };
   return {
     title: `${shared.bookTitle} — shared notes · Studiolo`,
     description: `Highlights, answers, notes, and flashcards kept while reading ${shared.bookTitle}.`,
+    robots,
   };
 }
 
