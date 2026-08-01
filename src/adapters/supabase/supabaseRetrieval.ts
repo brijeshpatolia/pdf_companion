@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { RetrievalPort } from "../../core/chat/context.js";
+import { MODEL_ID } from "../embedder/localEmbedder.js";
 
 export function supabaseRetrieval(
   client: SupabaseClient,
@@ -14,6 +15,9 @@ export function supabaseRetrieval(
         match_book_id: bookId,
         max_page: maxPage,
         match_count: limit,
+        // Only vectors this query can be compared against — a book part-way
+        // through a model change holds both, and the old ones score randomly.
+        match_model: MODEL_ID,
       });
 
       if (error) throw new Error(`retrieval search failed: ${error.message}`);

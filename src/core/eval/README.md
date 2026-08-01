@@ -31,78 +31,79 @@ filter shrinks the candidate set, which can only help. Treat it as a ceiling,
 measured exactly.
 
 It runs at **fp32**, while production ships **q8** — see the stability section
-below for why, which is the most important thing on this page.
+below.
 
 ## Where it stands
 
-Measured 2026-07-28, `all-MiniLM-L6-v2`, 1800-char pages, fp32:
+Measured 2026-08-01, `bge-small-en-v1.5`, 1800-char pages, fp32, query prefix
+applied — i.e. what production does:
 
 | k | hit rate | recall |
 |---|---|---|
-| 1 | 30.8% | 30.8% |
-| 3 | 42.3% | 41.0% |
-| 5 | 51.9% | 50.6% |
-| 10 | 57.7% | 57.7% |
+| 1 | 50.0% | 48.7% |
+| 3 | 67.3% | 66.0% |
+| 5 | 75.0% | 73.7% |
+| 10 | 78.8% | 78.8% |
 
-MRR **0.393**. At the `k=5` the chat actually uses, the page that answers the
-question is missing **about half the time**.
+MRR **0.601**. Misses at k=5: **13 of 52**.
 
-Two things are visible in the failures. The same handful of pages (1, 4, 7, 91,
-111) come back for unrelated questions, which is what an embedding keyed on
-register rather than content looks like — and this corpus is uniformly
-aphoristic, so register is nearly constant. And no page exceeds the model's
-512-token context here (longest 434), because EPUB pages are capped at 1800
-characters; a **PDF** page is whatever length the PDF has, and that case is not
-covered by this corpus.
+Before the model swap, on `all-MiniLM-L6-v2`: hit@1 30.8%, hit@5 51.9%, MRR
+0.393, and 28 of 52 missed. Roughly half the failures went away.
 
-## The embedding is not stable — `npm run eval` found a bug
+No page here exceeds the model's 512-token context (longest 434), because EPUB
+pages are capped at 1800 characters. A **PDF** page is whatever length the PDF
+has, and that case is not covered by this corpus.
 
-`embedding.eval.ts`. The same text, embedded twice, does not reliably produce
-the same vector. One run, 36 comparisons per precision:
+## The embedding stability scare
 
-| precision | median | worst | not identical | < 0.99 | < 0.9 |
-|---|---|---|---|---|---|
-| q8 (ships) | 1.0000 | 0.7545 | 15/36 | 15 | 2 |
-| fp32 | 1.0000 | 1.0000 | 0/36 | 0 | 0 |
+`embedding.eval.ts` exists because the retrieval eval once refused to give the
+same answer twice — hit@1 moving six points between identical runs. int8
+embeddings were caught coming back at cosine 0.237, at 0.14, and once with 15
+of 36 comparisons drifting. Those were real measurements.
 
-So it is usually right — the median is exact — but roughly four in ten drift,
-and a few per cent come back as a materially different vector. Severity varies
-between runs: cosine between a page and *itself re-embedded* has been observed
-as low as **0.14**.
+**They have not reproduced since** — several hundred comparisons, vitest and
+plain node, q8 and fp32, with and without other work interleaved. Every
+observation came from a window when large models were also being downloaded and
+loaded, which points at memory pressure rather than quantization as such. That
+is a hypothesis, not a finding, and an intermittent fault that cannot be
+reproduced also cannot be verified fixed.
 
-It is the quantization. `localEmbedder` ships `dtype: "q8"` to fit a serverless
-memory limit, and int8 inference in this stack is intermittently wrong — usually
-the vector is right, occasionally it is barely related. At fp32 the same graph
-is exact, every time, which is what makes this a bug rather than a complaint
-about floating point.
+So the test now measures and reports rather than asserting a fault. An earlier
+version asserted that q8 *must* drift, which inverted the point of a test: it
+went red the moment the thing it watched started behaving. Current reading is
+0/36 at both precisions.
 
-The consequence in production is quiet and permanent: a page embedded on a bad
-pass is stored with a vector that means nothing, and is then unfindable for the
-life of the book. No error, no retry, nothing to see. A question embedded on a
-bad pass simply retrieves the wrong pages once.
-
-This is almost certainly dragging the numbers above down, and it was invisible
-until an eval asked for the same answer twice.
+If it returns, what is at stake: a page embedded on a bad pass is stored with a
+vector that means nothing and is unfindable for the life of the book — no
+error, no retry, nothing to see.
 
 ## What the sweep says to do
 
-Same 52 questions, fp32, judged by text overlap so page sizes are comparable:
+Same 52 questions, fp32, at the production page size. `npm run eval:sweep`
+(set `EVAL_PAGE_SIZES` to sweep pagination too):
 
-| model | page chars | hit@1 | hit@5 | hit@10 | MRR |
+| model | hit@1 | hit@5 | hit@10 | MRR | weights |
 |---|---|---|---|---|---|
-| all-MiniLM-L6-v2 | 1800 | 30.8% | 51.9% | 57.7% | 0.393 |
-| all-MiniLM-L6-v2 | 800 | 30.8% | 59.6% | 73.1% | 0.424 |
-| **bge-small-en-v1.5** | **1800** | **50.0%** | **75.0%** | **78.8%** | **0.601** |
-| bge-small-en-v1.5 | 800 | 40.4% | 67.3% | 75.0% | 0.522 |
+| all-MiniLM-L6-v2 | 30.8% | 51.9% | 57.7% | 0.393 | 23 MB |
+| **bge-small-en-v1.5** | **50.0%** | **75.0%** | **78.8%** | **0.601** | **32 MB** |
+| Qwen3-Embedding-0.6B (→384) | 51.9% | 84.6% | 90.4% | 0.655 | 585 MB |
 
-The model is the lever, not the page size. `bge-small-en-v1.5` at the page size
-already in use lifts hit@1 by 19 points and hit@5 by 23, and it is also
-384-dimensional — so `chunks.embedding vector(384)` is unchanged and there is no
-schema migration.
+`bge-small-en-v1.5` ships. It is 384-dimensional, so `chunks.embedding
+vector(384)` was untouched.
 
-It is not free: embeddings from different models are not comparable, so
-adopting it means **re-ingesting every book already in the system**. That is a
-real operational cost and the reason the swap has not simply been made.
+**Qwen3-Embedding-0.6B is the better model and cannot be used here.** It wins
+clearly at k=5 and k=10 even truncated to 384 dimensions via Matryoshka — but
+it is 585 MB against bge-small's 32, and embedding runs *inside* the serverless
+function, so that is downloaded on every cold start into a 60-second budget
+shared with the work itself. It becomes viable only by moving embedding out of
+the request path, which is a different architecture rather than a config
+change. The numbers above are what would justify that work.
+
+One caution about that row, because it nearly went the other way: Qwen3 is a
+decoder and needs **last-token** pooling. Mean-pooled — correct for the two
+encoders — it scored 21.2% hit@1, *below MiniLM*. The first version of this
+table said exactly that, and it was an artefact of the harness, not a property
+of the model.
 
 Smaller pages are not the answer they look like — they help MiniLM slightly,
 hurt BGE, and changing page size renumbers every page, which would invalidate

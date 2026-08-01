@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { LibraryPassage } from "../../core/library/qa.js";
+import { MODEL_ID } from "../embedder/localEmbedder.js";
 
 export interface LibrarySearchPort {
   /** Nearest chunks across all of the caller's books (RLS-scoped). */
@@ -17,6 +18,7 @@ export function supabaseLibrarySearch(
       const { data, error } = await client.rpc("match_chunks_all", {
         query_embedding: JSON.stringify(queryEmbedding),
         match_count: limit,
+        match_model: MODEL_ID,
       });
 
       if (error) throw new Error(`library search failed: ${error.message}`);

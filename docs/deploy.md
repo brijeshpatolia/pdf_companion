@@ -131,7 +131,7 @@ is live.
 ## ⚠️ Ingestion caveat (read this)
 
 Ingestion — the step that turns an uploaded/added book into searchable chunks —
-runs the **embedding model (`all-MiniLM-L6-v2`) in-process** inside the
+runs the **embedding model (`bge-small-en-v1.5`) in-process** inside the
 `/api/ingest` serverless function. The embedder uses the **quantized (q8, ~23 MB)**
 model precisely so it fits inside serverless memory limits (e.g. Vercel Hobby's
 1 GB), so books ingest fine on the free tier.
@@ -166,3 +166,32 @@ to `dtype: "fp32"` if you want maximum embedding quality and have the memory.)
 
 Everything else in the app — reader, chat streaming, catalog search, auth,
 dashboard, notes — is ordinary Next.js and deploys without special handling.
+
+## Re-indexing after an embedding-model change
+
+Vectors from two models are not comparable — they are points in unrelated
+spaces that happen to share a number of axes. `chunks.embedding_model` records
+which model produced each row, and both search functions filter on it, so a
+book that has not been re-indexed simply returns nothing rather than nonsense.
+
+Nothing re-indexes automatically. A mass re-embed of every book in the system
+is a lot of function-minutes to trigger from a deploy, so it is a decision you
+make, per book or all at once, by putting books back into `processing`:
+
+```sql
+-- All books whose chunks predate the current model.
+update public.books set status = 'processing'
+where id in (
+  select distinct book_id from public.chunks
+  where embedding_model <> 'Xenova/bge-small-en-v1.5'
+);
+```
+
+The library then shows them as processing with a **Resume** control, and the
+ordinary self-continuing ingestion re-embeds each one from page 1 — pages
+carrying the old model's vectors read as not-yet-done, so no special path is
+involved. Highlights, notes, saved answers and reading progress are keyed to
+page numbers, not to chunks, and are untouched.
+
+Until a book is re-indexed its chat and library search find nothing in it. If
+you would rather stage that, update the books a few at a time.

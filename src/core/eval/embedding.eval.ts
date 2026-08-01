@@ -10,17 +10,26 @@ import { loadCorpus } from "./corpus.js";
  * compared against a question embedded months later, and cosine similarity
  * between them only means anything if both are what the model would produce.
  *
- * It is not a silly question here. This was found by the retrieval eval
- * refusing to give the same answer twice — hit@1 moving six points between
- * identical runs — and it traces to the quantized weights the app ships in
- * order to fit a serverless memory limit. int8 inference in this stack is
- * intermittently wrong: usually the vector is right, occasionally it is barely
- * related to the one the same text produced a moment earlier.
+ * It has not always been one here, and the history is the reason this file
+ * exists rather than a claim it still makes. The retrieval eval was once
+ * unable to give the same answer twice — hit@1 moving six points between
+ * identical runs — and int8 embeddings were caught coming back at cosine 0.237,
+ * 0.14, and once 15 of 36 comparisons drifting at all. Those were real
+ * measurements.
  *
- * The consequence in production is quiet and permanent. A page embedded on a
- * bad pass is stored with a vector that means nothing, and that page is then
- * unfindable for the life of the book — no error, no retry, nothing to see. A
- * question embedded on a bad pass simply retrieves the wrong pages once.
+ * They have not reproduced since, across several hundred comparisons in both
+ * vitest and plain node, at q8 and fp32, with and without other work
+ * interleaved. Every observation of the fault came from a window when large
+ * models were also being downloaded and loaded, which points at memory
+ * pressure rather than at quantization as such — but that is a hypothesis, not
+ * a finding, and an intermittent fault that cannot be reproduced also cannot
+ * be verified fixed.
+ *
+ * So this measures and reports rather than asserting a fault. If it ever comes
+ * back the number below says so, which is the most that can honestly be
+ * claimed. What is at stake if it does: a page embedded on a bad pass is
+ * stored with a vector that means nothing and is unfindable for the life of
+ * the book — no error, no retry, nothing to see.
  */
 
 const REPEATS = 12;
@@ -81,16 +90,17 @@ test("the same text embeds to the same vector", { timeout: 900_000 }, async () =
   // complaint about floating point: the same graph at full precision is exact.
   expect(full.worst, "fp32 should be exactly reproducible").toBeGreaterThan(SAME);
 
-  // Deliberately asserted against the *known* broken behaviour rather than the
-  // behaviour we want. Flipping this to `toBeGreaterThan(SAME)` is the check to
-  // make once q8 is either fixed upstream or abandoned; until then, a passing
-  // assertion here would be a lie about what ships.
+  /*
+   * Asserted on what production actually ships, in the direction we want it to
+   * hold. An earlier version of this test asserted the *fault* — that q8 must
+   * drift — which inverted the point of a test: it went red the moment the
+   * thing it was watching started behaving.
+   */
+  expect(PRODUCTION_PRECISION, "if this changes, re-measure before trusting the number above").toBe(
+    "q8",
+  );
   expect(
-    PRODUCTION_PRECISION,
-    "production precision changed — revisit this test's expectations",
-  ).toBe("q8");
-  expect(
-    quantized.drifted,
-    "q8 has become stable — good news; tighten this test",
-  ).toBeGreaterThan(0);
+    quantized.wrong,
+    "an embedding came back unrelated to the same text — the intermittent fault is back",
+  ).toBe(0);
 });

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { ChunksPort, Chunk } from "../../core/ingestion/types.js";
+import type { ChunksPort } from "../../core/ingestion/types.js";
+import { MODEL_ID } from "../embedder/localEmbedder.js";
 
 export function supabaseChunks(client: SupabaseClient): ChunksPort {
   return {
@@ -24,6 +25,9 @@ export function supabaseChunks(client: SupabaseClient): ChunksPort {
         page: c.page,
         text: c.text,
         embedding: JSON.stringify(c.embedding),
+        // Stamped so a later model change can tell these apart rather than
+        // comparing them against vectors from a space they share nothing with.
+        embedding_model: MODEL_ID,
       }));
 
       const { error } = await client.from("chunks").insert(rows);
@@ -33,7 +37,17 @@ export function supabaseChunks(client: SupabaseClient): ChunksPort {
     async embeddedPages(bookId) {
       // Selecting only `page` keeps this cheap even for a long book — the
       // embeddings themselves are never fetched.
-      const { data, error } = await client.from("chunks").select("page").eq("book_id", bookId);
+      //
+      // Scoped to the current model, which is what makes changing the model
+      // safe: pages embedded by the previous one read as not yet done, so the
+      // ordinary resumable pass re-embeds them. No backfill script, and a book
+      // half-way through the change is simply a book half-way through
+      // ingestion — a state this pipeline already handles.
+      const { data, error } = await client
+        .from("chunks")
+        .select("page")
+        .eq("book_id", bookId)
+        .eq("embedding_model", MODEL_ID);
       if (error) throw new Error(`Failed to read ingested pages: ${error.message}`);
       return [...new Set((data ?? []).map((r: { page: number }) => r.page))];
     },
