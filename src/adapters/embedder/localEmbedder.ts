@@ -1,7 +1,27 @@
 import { env, pipeline, type FeatureExtractionPipeline } from "@huggingface/transformers";
 import type { EmbedderPort } from "../../core/ingestion/types.js";
 
-const MODEL_ID = "Xenova/all-MiniLM-L6-v2";
+/**
+ * The embedding model, and the name written beside every vector it produces.
+ *
+ * Was `Xenova/all-MiniLM-L6-v2`. Measured on the retrieval eval, BGE finds the
+ * page that answers a question far more often — hit@1 30.8% -> 50.0%, hit@5
+ * 51.9% -> 75.0%, MRR 0.393 -> 0.601 — at the page size already in use, and it
+ * is also 384-dimensional, so `chunks.embedding vector(384)` is untouched.
+ *
+ * Exported because it is stored: `chunks.embedding_model` records which model
+ * made each row, and the ingester treats a page embedded by any other model as
+ * not yet embedded.
+ */
+export const MODEL_ID = "Xenova/bge-small-en-v1.5";
+
+/**
+ * BGE is trained with an asymmetry: passages are embedded bare, questions are
+ * embedded behind this instruction. Skipping it costs real accuracy, and using
+ * it on the passage side costs some too — so it belongs on queries only, which
+ * is why `embedSingle` (retrieval) applies it and `embed` (ingestion) does not.
+ */
+export const QUERY_PREFIX = "Represent this sentence for searching relevant passages: ";
 
 // transformers.js caches downloaded model weights in a folder inside its own
 // package directory. On serverless (Vercel/Lambda) the deployment tree at
@@ -57,8 +77,9 @@ export function createLocalEmbedder(
   };
 }
 
+/** Embeds a *question*, for searching against stored passages. */
 export async function embedSingle(text: string): Promise<number[]> {
   const embedder = await getEmbedder(PRODUCTION_PRECISION);
-  const output = await embedder(text, { pooling: "mean", normalize: true });
+  const output = await embedder(QUERY_PREFIX + text, { pooling: "mean", normalize: true });
   return Array.from(output.data as Float32Array);
 }

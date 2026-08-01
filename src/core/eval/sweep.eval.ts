@@ -26,18 +26,47 @@ import { summarise, type Judged } from "./metrics.js";
 env.cacheDir = process.env.TRANSFORMERS_CACHE ?? "/tmp/transformers-cache";
 
 const MODELS = [
-  // What ships today.
-  { id: "Xenova/all-MiniLM-L6-v2", queryPrefix: "" },
-  // Trained for retrieval rather than general similarity, and asks for a
-  // prefix on the query side so questions and passages land in the same space.
+  // What shipped before 2026-08-01.
+  { id: "Xenova/all-MiniLM-L6-v2", queryPrefix: "", weightsMb: 23 },
+  // What ships now. Trained for retrieval rather than general similarity, and
+  // asks for a prefix on the query side so questions and passages land in the
+  // same space.
   {
     id: "Xenova/bge-small-en-v1.5",
     queryPrefix: "Represent this sentence for searching relevant passages: ",
+    weightsMb: 32,
+  },
+  /*
+   * Qwen3-Embedding-0.6B, top of the open-weight MTEB leaderboards and the
+   * obvious thing to reach for. Included to be measured rather than assumed —
+   * but note the weights column: 585 MB quantized against bge-small's 32.
+   *
+   * That is the deciding number here regardless of accuracy. Embedding runs
+   * *inside* the serverless function, so those megabytes are downloaded on
+   * every cold start, into a 60-second budget shared with the work itself. It
+   * would only become viable by moving embedding out of the request path
+   * altogether, which is a different architecture, not a config change.
+   *
+   * Its native width is 1024; MRL truncation to 384 keeps the existing column,
+   * at some cost to quality. Both are measured below.
+   */
+  {
+    id: "onnx-community/Qwen3-Embedding-0.6B-ONNX",
+    queryPrefix: "Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: ",
+    weightsMb: 585,
+    truncateTo: 384,
+    // Qwen3-Embedding is a decoder: it is trained so the *final* token carries
+    // the sequence representation. Mean-pooling it — which is right for the
+    // two encoders above — scores it below MiniLM, and that number says
+    // nothing about the model.
+    pooling: "last" as const,
   },
 ];
 
 /** 1800 is production. The rest ask whether a page is simply too much text. */
-const PAGE_SIZES = [1800, 1200, 800, 500];
+const PAGE_SIZES = process.env.EVAL_PAGE_SIZES
+  ? process.env.EVAL_PAGE_SIZES.split(",").map(Number)
+  : [1800, 1200, 800, 500];
 
 const FIXTURE = join(process.cwd(), "src/core/eval/__fixtures__/meditations.txt");
 const CHAPTER_BREAK = /\n\n(?=THE \w+ BOOK\b)/;
@@ -70,7 +99,11 @@ function shareASentence(a: string, b: string): boolean {
   return false;
 }
 
-async function embedderFor(modelId: string) {
+async function embedderFor(
+  modelId: string,
+  truncateTo?: number,
+  pooling: "mean" | "last" = "mean",
+) {
   // fp32 for the same reason the retrieval eval uses it: a comparison drawn
   // from a non-reproducible measurement is not a comparison.
   const pipe = (await pipeline("feature-extraction", modelId, {
@@ -79,8 +112,30 @@ async function embedderFor(modelId: string) {
   return async (texts: string[]): Promise<number[][]> => {
     const out: number[][] = [];
     for (const text of texts) {
-      const r = await pipe(text, { pooling: "mean", normalize: true });
-      out.push(Array.from(r.data as Float32Array));
+      let v: number[];
+      if (pooling === "last") {
+        // [1, tokens, dim] — take the final token's row.
+        const r = await pipe(text, { pooling: "none", normalize: false });
+        const dims = r.dims as number[];
+        const dim = dims[dims.length - 1]!;
+        const tokens = dims[dims.length - 2]!;
+        const all = r.data as Float32Array;
+        v = Array.from(all.slice((tokens - 1) * dim, tokens * dim));
+        const n0 = Math.sqrt(v.reduce((s, x) => s + x * x, 0)) || 1;
+        v = v.map((x) => x / n0);
+      } else {
+        const r = await pipe(text, { pooling: "mean", normalize: true });
+        v = Array.from(r.data as Float32Array);
+      }
+      if (truncateTo && v.length > truncateTo) {
+        // Matryoshka: the first N dimensions are trained to stand alone, but
+        // truncating denormalises, so the vector has to be re-normalised for
+        // cosine to mean what it means everywhere else here.
+        v = v.slice(0, truncateTo);
+        const n = Math.sqrt(v.reduce((s, x) => s + x * x, 0)) || 1;
+        v = v.map((x) => x / n);
+      }
+      out.push(v);
     }
     return out;
   };
@@ -96,7 +151,7 @@ test("which model and page size retrieve best", { timeout: 3_600_000 }, async ()
 
   const rows: string[] = [];
   for (const model of MODELS) {
-    const embed = await embedderFor(model.id);
+    const embed = await embedderFor(model.id, model.truncateTo, model.pooling);
     const queries = await embed(GOLDENS.map((g) => model.queryPrefix + g.question));
 
     for (const size of PAGE_SIZES) {
@@ -127,7 +182,7 @@ test("which model and page size retrieve best", { timeout: 3_600_000 }, async ()
           `   ${(at(1) * 100).toFixed(1).padStart(5)}%` +
           `   ${(at(5) * 100).toFixed(1).padStart(5)}%` +
           `   ${(at(10) * 100).toFixed(1).padStart(5)}%` +
-          `   ${report.mrr.toFixed(3)}   (${pages.length} pages)`,
+          `   ${report.mrr.toFixed(3)}   (${pages.length} pages, ${model.weightsMb} MB)`,
       );
       console.log(rows[rows.length - 1]);
     }
